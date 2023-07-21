@@ -1,7 +1,10 @@
 :root {
-    --main-bg-color: #29314d; 
-    --menu-item-color: #8bc6aa;
-    --name-title-color: #c6aa8b;
+    --main-bg-color: #1e2439; 
+    --menu-item-color: #95d5b7;
+    --name-title-color: #d9bb98;
+    --link-active-color: #8bc6aa;
+    --link-color:  #4974a5; 
+    --link-visited-color: #7a49a5;
 }
 
 
@@ -9,34 +12,25 @@ body {
     display: flex;
     margin: 0;
     padding: 0;
-    font-family: 'Lora', serif; /* Change this to any font you like */
+    font-family: 'Lora', serif; 
 }
 
 #menu {
     background-color: var(--main-bg-color);
-    width: 20%;
+    font-family: 'Bitter', sans-serif;
+    /* margin-left: 10%; */
+    width: 30%;
     min-height: 100vh; /* adjust as needed */
     position: static;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    min-width: 200px; /* adjust as needed */
+    min-width: 230px; /* adjust as needed */
     padding-top: 20px; /* adjust as needed */
     padding: 0 20px; /* add some padding on the sides */
 }
-#menu {
-    background-color: var(--main-bg-color);
-    width: 20%;
-    min-height: 100vh;
-    position: static;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    min-width: 200px;
-    padding: 0 20px;
-}
+
 
 #fixed-elements {
     position: sticky;
@@ -61,103 +55,72 @@ body {
     display: block;
     padding: 10px;
     text-decoration: none;
-    font-size: 1.2em; /* Adjust this to make the font larger or smaller */
+    font-size: 1.5em; /* Adjust this to make the font larger or smaller */
+    font-weight: bold; /* Add this line */
+}
+
+#menu ul li a:hover {
+    text-shadow: 0.03em 0.1em 0.2em var(--name-title-color); /* Add a shadow to the text when hovered over */
 }
 
 #profile-pic {
     border-radius: 50%;
-    width: 70%;
-    padding-top: 20%;
+    width: 50%;
+    padding-top: 30%;
     margin-bottom: 20px;
-    /* margin-top: 20px; */
-}
-
-#content {
-    width: 100%;
-    margin-left: 5%; /* This should be the same as the width of the #menu element plus 200px */
-    padding: 30px;
+    margin-top: -20%;
+    /* border: 5px solid #6196CF; Add a border 
+    box-shadow: 0px 0px 10px #6196CF;  Add a shadow for a 3D effect */
 }
 
 
 #name {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1.5em; /* adjust as needed */
+    font-family: 'Bitter', sans-serif;
+    font-size: 1.8em; /* adjust as needed */
     color: var(--name-title-color); 
     margin: 0;
 }
 
 #job-title {
-    font-family: 'Roboto', sans-serif;
-    font-size: 0.9em; /* adjust as needed */
+    font-family: 'Bitter', sans-serif;
+    font-size: 1.1em; /* adjust as needed */
     color: var(--name-title-color); 
     margin: 0;
 }
 
-.header-container {
-    display: flex;
-    align-items: center;
+
+#content {
+    width: 100%;
+    /* margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 5%; */
+    padding: 5%;
+    text-align: justify;
+    font-size: 1.1em;
 }
 
-.all-publications-button {
-    font-size: 1.5em; /* adjust as needed */
-    margin-left: 20px; /* adjust as needed */
-    border: 2px solid var(--main-bg-color); /* adjust as needed */
-    padding: 5px; /* adjust as needed */
-    border-radius: 10px; /* adjust as needed */
+#content a {
+    color: var(--link-color); /* Change the color of the link */
+    text-decoration: none; /* Remove the underline */
+    transition: color 0.2s ease; /* Add a transition effect when the color changes */
 }
 
-.all-publications-button img {
-    width: 1em; /* adjust as needed */
-    height: auto;
+#content a:visited {
+    color: var(--link-visited-color); /* Change the color of the link after it has been visited */
 }
 
-.all-publications-button a {
-    font-family: 'Roboto', sans-serif; /* replace with your preferred font */
+#content a:hover {
+    color: var(--link-active-color); /* Change the color of the link when hovered or clicked */
 }
 
-.contact-info {
-    list-style-type: none;
+#content a:active {
+    color: #fff; /* Change the color of the link when hovered or clicked */
+    text-shadow: 0.00em 0.0em 0.2em #000; /* Add a shadow to the text when hovered over */
 }
 
-.contact-info h3 {
-    font-size: 1.2em; /* adjust as needed */
-}
-
-.contact-info a {
-    font-size: 1em; /* adjust as needed */
-}
+/* #content p {
+    text-align: justify;
+} */
 
 
-.belliavesha {
-    width: 30px;
-    height: 30px;
-    background: linear-gradient(to top, black 50%, transparent 50%);
-    border-radius: 50%;
-    vertical-align: middle;
-}
 
-
-.contact-info {
-    list-style-type: none;
-    display: flex;
-    justify-content: flex-start; 
-    /* border-bottom: 1px solid grey; */
-}
-
-
-.contact-info li {
-    border-right: 1px solid grey;
-    padding: 0 10px;
-}
-
-.contact-info li:last-child {
-    border-right: none;
-}
-
-.contact-info h3 {
-    font-size: 1em; /* adjust as needed */
-}
-
-.contact-info a {
-    font-size: 1.2em; /* adjust as needed */
-}
