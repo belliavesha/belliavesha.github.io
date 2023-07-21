@@ -1,0 +1,38 @@
+
+.contact-info {
+    list-style-type: none;
+}
+
+.contact-info h3 {
+    font-size: 1.2em; /* adjust as needed */
+}
+
+.contact-info a {
+    font-size: 1em; /* adjust as needed */
+}
+
+
+.contact-info {
+    list-style-type: none;
+    display: flex;
+    justify-content: flex-start; 
+    /* border-bottom: 1px solid grey; */
+}
+
+
+.contact-info li {
+    border-right: 1px solid grey;
+    padding: 0 10px;
+}
+
+.contact-info li:last-child {
+    border-right: none;
+}
+
+.contact-info h3 {
+    font-size: 1em; /* adjust as needed */
+}
+
+.contact-info a {
+    font-size: 1.2em; /* adjust as needed */
+}
