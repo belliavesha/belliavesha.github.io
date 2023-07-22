@@ -7,6 +7,9 @@
     --link-visited-color: #7a49a5;
 }
 
+html {
+    overflow-y: scroll;
+}
 
 body {
     display: flex;
@@ -118,6 +121,5 @@ body {
 /* #content p {
     text-align: justify;
 } */
-
 
 
