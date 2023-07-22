@@ -90,12 +90,9 @@ body {
 
 
 #content {
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
     width: 100%;
-    /* margin-left: 5%;
-    margin-right: 5%;
-    margin-top: 5%; */
     padding: 5%;
-    text-align: justify;
     font-size: 1.1em;
 }
 
