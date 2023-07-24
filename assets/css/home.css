@@ -1,5 +1,13 @@
-.bio {
+.bio p {
+    width: 99%;
     text-align: justify;
+    column-width: 30em; /* Minimum column width */
+    column-gap: 2em; /* Space between columns */
+}
+
+#welcome-header{
+    /* margin: 10%; */
+    text-align: center;
 }
 
 .contact-info {
@@ -25,7 +33,7 @@
 
 .contact-info li {
     border-right: 1px solid grey;
-    padding: 0 10px;
+    padding: 1em;
 }
 
 .contact-info li:last-child {
@@ -38,4 +46,16 @@
 
 .contact-info a {
     font-size: 1.2em; /* adjust as needed */
+}
+
+
+#home-wallpaper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; 
+    object-fit: cover; 
+    filter: blur(4px) contrast(75%) brightness(125%) opacity(20%);  
 }

@@ -4,6 +4,18 @@
     --merit-shadow-color: #1e2439;
 }
 
+
+#merits-wallpaper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; 
+    object-fit: cover; 
+    filter: blur(0px) contrast(90%) brightness(120%) opacity(22%);  
+}
+
 #certificates {
     display: flex;
     flex-wrap: wrap;
@@ -12,7 +24,8 @@
 
 .certificate {
     flex: 1 0 200px; 
-    margin: 20px; /* add some space around each certificate */
+    background-color: #fff;
+    margin: 20px;
 }
 
 
@@ -28,6 +41,7 @@
 }
 
 .certificate img {
+    background-color: #fff;
     width: 95%;
     height: auto;
     border-radius: 10px;
