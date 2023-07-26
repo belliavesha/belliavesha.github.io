@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
+
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 
 
@@ -15,22 +16,26 @@
     <link rel="stylesheet" type="text/css" href="assets/css/projects.css">
     <link rel="stylesheet" type="text/css" href="assets/css/talks.css">
     <link rel="stylesheet" type="text/css" href="assets/css/merits.css">
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>    
+
 </head>
 <body>
     <div id="menu">
         <div id="fixed-elements">
             <!-- <img id="menu-image" src="assets/images/clouds.png" alt="Menu Background Image"> -->
-                
-            <img id="profile-pic" src="assets/images/alive_2/frame01.jpg" alt="Profile Picture">
+            <img id="profile-pic" src="assets/images/alive_2/frame01.jpg" alt="Profile Picture" 
+                onclick="redirectToSecondary(1)">
             <h1 id="name">Vladislav Loktev</h1>
-            <h2 id="job-title">Graduate student</h2>
+            <h2 id="job-title" onclick="redirectToSecondary(10)">
+                Graduate student
+                </h2>
             <img id="institute-logo" src="assets/images/logos/UTU_logo.png" alt="Institute Logo">
             <ul>
-                <li><a href="#" onclick="loadContent('Home.html')">Home</a></li>
-                <li><a href="#" onclick="loadContent('Projects.html')">Publications</a></li>
-                <li><a href="#" onclick="loadContent('Talks.html')">Presentations</a></li>
-                <li><a href="#" onclick="loadContent('Merits.html')">Certifications</a></li>
-                <!-- Add more sections as needed -->
+                <li><a href="#" onclick="loadContent('assets/html/Home.html')">Home</a></li>
+                <li><a href="#" onclick="loadContent('assets/html/Projects.html')">Publications</a></li>
+                <li><a href="#" onclick="loadContent('assets/html/Talks.html')">Presentations</a></li>
+                <li><a href="#" onclick="loadContent('assets/html/Merits.html')">Certifications</a></li>
             </ul>
             
         </div>
@@ -40,10 +45,11 @@
         <!-- Content for each section goes here -->
     </div>
     <script src="assets/js/script.js"></script>
+    <script src="assets/js/flipbook.js"></script>
     <script>
         window.onload = function() {
-            loadContent('Home.html');
-            updateIndex(0)
+            loadContent('assets/html/Home.html');
+            updateFlipbookIndex(0)
         };
     </script>
 </body>

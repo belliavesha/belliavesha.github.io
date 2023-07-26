@@ -82,6 +82,7 @@ body {
 }
 
 #institute-logo {
+    margin: 2%;
     width: 35%;
     filter: invert(100%);
     /* border: 5px solid #6196CF; Add a border 

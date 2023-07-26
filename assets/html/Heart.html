@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<div id="heart">
+  <div>
+    <label for="pointsSlider">Number of iterations: </label>
+    <input type="range" id="pointsSlider" name="pointsSlider" min="1" max="8" value="3">
+    <span id="pointsSliderValue">3</span>
+  </div>
+  <div>
+    <label for="binsSlider">Number of bins: </label>
+    <input type="range" id="binsSlider" name="binsSlider" min="50" max="250" value="100">
+    <span id="binsSliderValue">100</span>
+  </div>
+  <div>
+    <label for="startInput">Start seq: </label>
+    <input type="text" id="startInput" name="startInput" value="1, 1, 1, 1">
+  </div>
+  <button id="plotButton">Replot</button>
+  <div id='plotDiv'></div>
+</div>
