@@ -1,15 +1,21 @@
 
 
 function loadContent(htmlFile, jsFile) {
+            
+
     fetch(htmlFile)
         .then(response => response.text())
         .then(data => {
             document.getElementById('content').innerHTML = data;
             if (jsFile) loadScript(jsFile);
         });
+    
 }
 
 function loadScript(jsFile) {
+    let oldScript = document.querySelector(`script[src="${jsFile}"]`);
+    if (oldScript) oldScript.remove();
+
     let script = document.createElement('script');
     script.src = jsFile;
     document.head.appendChild(script);

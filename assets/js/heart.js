@@ -28,6 +28,7 @@ function convert(s, offset = 100, split = 1, slope = null, fold = null, Nbins = 
     let binx = Array.from({length: Nbins}, (_, i) => i*1.0/Nbins+0.5/Nbins);
     let bincounts = Array.from({length: Nbins});
     let binsums = Array.from({length: Nbins});
+    let binsigs = Array.from({length: Nbins});
     
     
     if (slope) {
@@ -35,10 +36,16 @@ function convert(s, offset = 100, split = 1, slope = null, fold = null, Nbins = 
     }
     if (fold) {
         for (let i = 0; i < s.length; i++) {
-            while (x[i] > fold * offset) {
-                x[i] = x[i] / fold;
+            if (i < offset){
+                x[i] = -1;
+            }else{
+                x[i] = (Math.log(x[i])/Math.log(fold)) % 1;
+
             }
-            x[i] = (x[i]/offset-1)/(fold-1);
+            // while (x[i] > fold * offset) {
+            //     x[i] = x[i] / fold;
+            // }
+            // x[i] = (x[i]/offset-1)/(fold-1);
         }
     }
 
@@ -47,7 +54,8 @@ function convert(s, offset = 100, split = 1, slope = null, fold = null, Nbins = 
     for (let j = 0; j < split; j++) {
         bincounts.fill(0)
         binsums.fill(0)
-        console.log("last",j, split);
+        binsigs.fill(0)
+        // console.log("last",j, split);
         let xValues = x.slice(offset - (offset % split) + j).filter((_, index) => index % split === 0);
         let yValues = y.slice(offset - (offset % split) + j).filter((_, index) => index % split === 0);
         for (let i = 0; i < xValues.length; i++) {
@@ -56,12 +64,21 @@ function convert(s, offset = 100, split = 1, slope = null, fold = null, Nbins = 
             if (binIndex >= Nbins) binIndex = Nbins - 1;
             binsums[binIndex] += yValues[i];
             bincounts[binIndex] += 1;
-        }        
-        let averages = binsums.map((bin, i) => bincounts[i] > 0 ? bin/bincounts[i] : 0);
-        data.push([binx, averages]); 
+        }
+        let averages = binsums.map((bin, i) => bincounts[i] > 0 ? bin/bincounts[i] : 0);    
+        for (let i = 0; i < xValues.length; i++) {
+            let binIndex = Math.floor(xValues[i] * Nbins);
+            if (binIndex < 0) binIndex = 0;
+            if (binIndex >= Nbins) binIndex = Nbins - 1;
+            binsigs[binIndex] += (yValues[i]-averages[binIndex])*(yValues[i]-averages[binIndex]);
+        }      
+
+        let sigma = binsigs.map((bin, i) => bincounts[i] > 0 ? Math.sqrt(bin/bincounts[i]) : 0);    
+        data.push([binx, averages, sigma]); 
     }
     return data;
 }
+
 
 
 
@@ -95,10 +112,10 @@ function drawPlot(N, start, Nbins) {
     );
     // data = [generateData(N), generateData(N), generateData(N)];
 
-    for (let i = 0; i < data.length; i++) {
-        console.log(Math.max(...data[i][0]));
-        console.log(Math.max(...data[i][1]));
-    }
+    // for (let i = 0; i < data.length; i++) {
+    //     console.log(Math.max(...data[i][0]));
+    //     console.log(Math.max(...data[i][1]));
+    // }
     let colorMapping = ['rgba(235,24,25,1)', 'rgba(23,243,25,1)', 'rgba(23,24,233,1)','rgba(235,24,252,1)', 'rgba(23,243,245,1)'];
 
 
@@ -121,6 +138,10 @@ function drawPlot(N, start, Nbins) {
     mode: 'markers',
     type: 'scatter',
     name: `scatter ${i}`,
+    error_y: {
+        type: 'data',
+        array: d[2],
+    },
     marker: {
       color: colorMapping[i],  // Adjust this to set color of markers
       size: 6  // Adjust this to change size of markers
@@ -201,6 +222,16 @@ function setupEventListeners() {
     document.getElementById('plotButton').addEventListener('click', replot);
     document.getElementById('startInput').addEventListener('keydown', handleInputKeydown);
 }
+
+renderMathInElement(document.body, {
+    delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\(', right: '\\)', display: false},
+        {left: '\\[', right: '\\]', display: true}
+    ],
+    throwOnError : false
+});
 
 replot();
 setupEventListeners();

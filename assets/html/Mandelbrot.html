@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mandelbrot Set</title>
+</head>
+<body>
+
+    <h3>A dummy text. Do not read. </h3>
+    <p>
+    What is a Mandelbrot set? 
+    Everyone knows that, it is a set of such complex numbers c, such that the process, starting from number 0 and applying and reapplying the transformation $z^2 + c$ never diverges to infinity, stays confined within a circle around the origin.
+    It is a cool fractal. 
+    The said process can also stay confined if it is started with some number, $z_0$. 
+    The sed of such numbers $z_0$ is called a Julia set for some parameter c. 
+    They are also cool fractals. 
+    Moreove, the Mandelbrot set is the set of parameters c, such that the Julia sets are connected. 
+    Everyone knows that. 
+    </p>
+    <p>
+    Let's take a number from the Mandelbrot set and appreciate the fact that it parametrizes a function that is applied to a variable which always stays in sight.
+    What happens to the variable? 
+    Everyone knows that, if it is in the main cardioid, the process has a limit. 
+    Which is boring.
+    If it is not, then it starts oscilating between n 'states', however, we can pick every n'th number from this sequence and then they are going to have a limit.
+    Finally, if the number is exactly on the border of the set, then the process is chaotic and goes all around other points from the exact border of the set. 
+    Which is cool. 
+    But I still declare this to be rather boring, because everyone knows that. 
+    </p><p>
+    In search for something interestin, I first acknowledge the fact that we deal with sequences.  
+    The sequences are defined with a start number $z_0$ and a parameter c, and the function between consequtive numbers never change, so let's change that. 
+    Now the wequence is defined with therule $z_n = f(z_{n-1}, c, n)$. 
+    But this is too random any sequence can be described like that. 
+    I want the dependence on n to be simple, confined, orderly and natural. 
+    Like a circle. 
+    </p><p>
+
+    Now we have $f(z, c, n) =  z^2 + c e^{in}$, let's play with it. Beneath is the new Mandelbrot and Julia sets. 
+    But the numbers of the sequences now align in some wiggly loops. Which is not boring. 
+    </p>
+
+
+    <h3>M1x0 and M1x1</h3>
+    <div>
+    <canvas id="m1x0-canvas" width="300" height="300"></canvas>
+    <canvas id="m1x1-canvas" width="300" height="300"></canvas>
+    </div>
+    <h3>J1</h3>
+    <canvas id="j1-canvas" width="600" height="300"></canvas>
+    <p>
+    But in our quadratic function we completely omitted the linear term. 
+    Which is a miss. 
+    We can add it also as yet one more paramter: $f(z, c, n) =  z^2 + c_1 z \cos(n) - c_0 \sin(n)$. 
+    Playing with the two parameters now, we can observe even wigglier loops.
+    </p>
+    <h3>M2x0 and M2x1</h3>
+    <div>
+    <canvas id="m2x0-canvas" width="300" height="300"></canvas>
+    <canvas id="m2x1-canvas" width="300" height="300"></canvas>
+    </div>
+    <h3>M2x2 and J2</h3>
+    <div>
+    <canvas id="m2x2-canvas" width="300" height="300"></canvas>
+    <canvas id="j2-canvas" width="300" height="300"></canvas>
+    </div>
+</body>

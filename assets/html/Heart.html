@@ -1,5 +1,18 @@
 <!DOCTYPE html>
 <div id="heart">
+  <p> Let's define a meta-fibonacci sequence $a(n)=a(n-a(n-1)) + a(n-a(n-1)-a(n-2)) +  a(a(a(n-2))) $.
+    And also start it with $a(1)=a(2)=a(3)=a(4) = 1$. </p>
+
+    Then for each term we place a point on a plane:
+    the $x$ coordinate is the fractional part of base-$\sqrt{10}$ logarithm of term's number $x_{n} = \{ \log_{\sqrt{10}}(n) \} $ (where $\{x\} = x - \lfloor x \rfloor$);
+    for the $y$ coordinate we set the normalized value of the corresponding term $y_n = \frac{a(n)}{3-\sqrt{5}}$.
+
+    Then for $m = 0,1,2,3$ we consider subsequences where terms's number $n$ equals $m$ modulo 4:  $\{ (x_n, y_n)\}_{n\stackrel{4}{\equiv}m}$. 
+    Each subseqence we bin with $N$ bins and for each bin we plot the average with standard deviation. 
+    The start is always $N$ terms of the sequence and each "iteration" means computation of additional $\sqrt{10}$ -times more terms of the sequence, and the result averages seem more refined. 
+
+
+
   <div>
     <label for="pointsSlider">Number of iterations: </label>
     <input type="range" id="pointsSlider" name="pointsSlider" min="1" max="8" value="3">
