@@ -89,6 +89,10 @@ body {
     box-shadow: 0px 0px 10px #6196CF;  Add a shadow for a 3D effect */
 }
 
+p.small {
+  font-variant: small-caps;
+}
+
 
 
 #name {
