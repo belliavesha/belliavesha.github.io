@@ -60,7 +60,7 @@
 }
 .presentation-container .summary {
     font-family: 'Lora', serif;
-    text-align: left;
+    text-align: justify;
     font-size: 1em;
     color: #000;
     order: 2;
