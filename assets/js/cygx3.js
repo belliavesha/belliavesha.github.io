@@ -2,20 +2,18 @@
   
 
 
-function connectCanvases(canvases){
+function connectCanvases(canvases1, canvases2){
 
-    for (j = 0; j<canvases.length; j++){
-        canvas = canvases[j];
-        for (k = 0; k<canvases.length; k++){
-            if (j==k){
-                canvas.canvas.addEventListener('mousedown', canvas.startDrawing.bind(canvas));
-                canvas.canvas.addEventListener('mousemove', canvas.trace.bind(canvas));
-                canvas.canvas.addEventListener('mouseup', canvas.stopDrawing.bind(canvas));
-                canvas.canvas.addEventListener('wheel', canvas.changeScale.bind(canvas), { passive: false });
-            } else{ 
-                canvas2 = canvases[k];
-                // canvas.canvas.addEventListener('mouseup', canvas2.drawFractal.bind(canvas2));
-            }
+    for (j = 0; j<canvases1.length; j++){
+        canvas = canvases1[j];
+        canvas.canvas.addEventListener('wheel', canvas.changeScale.bind(canvas), { passive: false });
+        for (k = 0; k<canvases2.length; k++){
+            canvas2 = canvases2[k];
+            canvas.canvas.addEventListener('mousedown', canvas2.startDrawing.bind(canvas2));
+            canvas2.canvas.addEventListener('mousedown', canvas.draw.bind(canvas));
+            canvas.canvas.addEventListener('mousemove', canvas2.trace.bind(canvas2));
+            canvas.canvas.addEventListener('mouseup', canvas2.stopDrawing.bind(canvas2));
+
         }            
     }
 }
@@ -29,7 +27,7 @@ function initCygX3(){
     let O = observer.normalize();
     let Ox = O.cross( new Vector3D(0,0,1)).normalize();
     let Oy = O.cross(Ox).normalize();
-    n = Math.floor(n);
+    n = Math.floor(n*N);
     
 
     const z = rotationAxis.normalize();
@@ -78,12 +76,14 @@ function initCygX3(){
 
     var pf = new PolFunction([1,1,1,1], integrateOverCylinder);
 
-    connectCanvases([
-        new PolCanvas('hw-canvas', pf, 1, 1, 0, 0, 0,1),
-        new PolCanvas('iphi-canvas', pf, 1, 1, 0, 0, 1,2),
-        new PolCanvas('qu-canvas', pf, 1, 1, 0, 0, 2,3),
-        new PolCanvas('ip-canvas', pf, 1, 1, 0, 0, 3,1)
-    ]);
+    
+    hwCanvas = new PolCanvas('hw-canvas', pf, 1, 1, 0, 0, 0, 1);
+    iphiCanvas = new PolCanvas('iphi-canvas', pf, 1, 1, 0, 0, 2, 3);
+    quCanvas = new PolCanvas('qu-canvas', pf, 1, 1, 0, 0, 0,1);
+    ipCanvas = new PolCanvas('ip-canvas', pf, 1, 1, 0, 0, 2,3);
+
+    connectCanvases([hwCanvas,iphiCanvas],[quCanvas,ipCanvas]);
+    
 
 }
 

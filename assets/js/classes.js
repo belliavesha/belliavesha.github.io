@@ -234,7 +234,7 @@ class FractalCanvas {
         }
         this.fractalFunction.params[n] =  [cXcopy, cYcopy]; 
         this.store();
-        console.log(this.fractalFunction);
+        // console.log(this.fractalFunction);
     }
 
     setPixel(ix, iy, color){
@@ -411,12 +411,50 @@ class PolCanvas {
             new Vector3D(Math.cos(phi), Math.sin(phi), 0),
             new Vector3D(0, Math.sin(Math.PI/6), Math.cos(Math.PI/6)),
             0, height, 
-            100, 100, width*100
+            20, 4, width
           );
         //   console.log(k,n,m,total[n],total[m],this.toPixelCoords(total[n],total[m]));
-          this.setPixel(...this.toPixelCoords(total[n],total[m]), this.orbitColor(k, K) );
+          this.setPixel(...this.toPixelCoords(total[n],total[m]), this.orbitColor(k, K/2/Math.PI) );
 
         }
+    }
+
+    draw(n = this.n, m = this.m){
+        console.log(this.polFunction,n,m);
+        let cXcopy = this.polFunction.params[n]; 
+        let cYcopy = this.polFunction.params[m]; 
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
+                let p = this.toPlane(x, y);
+                this.polFunction.params[this.n] = p[0];
+                this.polFunction.params[this.m] = p[1];
+                let K = 10;
+                let inclination = this.polFunction.params[0];
+                let azimuth = this.polFunction.params[1];
+                let height = this.polFunction.params[2];
+                let width = this.polFunction.params[3];
+                let m = 0 ;
+                for (let k=0; k<K; k++){
+                    let phi = k*2*Math.PI/K+azimuth;
+                    let total = this.polFunction.total(
+                        new Vector3D(Math.sin(inclination)*Math.cos(phi),Math.sin(inclination)*Math.sin(phi) , Math.cos(inclination)),
+                        new Vector3D(Math.cos(phi), Math.sin(phi), 0),
+                        new Vector3D(0, Math.sin(Math.PI/6), Math.cos(Math.PI/6)),
+                        0, height, 
+                        20, 4, width
+                    );
+                    if (total[1]/total[0] > m){
+                        m = total[1]/total[0];
+                    }
+
+                }
+                this.setPixel(x , y , this.orbitColor(m, 1) );
+            }
+        }
+        this.polFunction.params[n] =  cXcopy;
+        this.polFunction.params[m] =  cYcopy; 
+        this.store();
+        this.display();
     }
 
 
@@ -443,7 +481,9 @@ class PolCanvas {
         let rect = this.canvas.getBoundingClientRect();
         let x = event.clientX - rect.left;
         let y = event.clientY - rect.top;
-        // this.fractalFunction.params[this.n] = this.toPlane(x, y);
+        let p = this.toPlane(x, y);
+        this.polFunction.params[this.n] = p[0];
+        this.polFunction.params[this.m] = p[1];        
         this.restore();
         this.trace();
         this.display();
@@ -474,7 +514,7 @@ class PolCanvas {
         // Update the scale
         this.scaleX = newScaleX;
         this.scaleY = newScaleY;
-        this.drawAll();
+        // this.drawAll();
     }
 }
 
