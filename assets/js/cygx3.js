@@ -11,7 +11,7 @@ function connectCanvases(canvases1, canvases2){
             canvas2 = canvases2[k];
             canvas.canvas.addEventListener('mousedown', canvas2.startDrawing.bind(canvas2));
             canvas2.canvas.addEventListener('mousedown', canvas.draw.bind(canvas));
-            canvas.canvas.addEventListener('mousemove', canvas2.trace.bind(canvas2));
+            canvas.canvas.addEventListener('mousemove', canvas2.drawTrace.bind(canvas2));
             canvas.canvas.addEventListener('mouseup', canvas2.stopDrawing.bind(canvas2));
 
         }            
@@ -19,11 +19,11 @@ function connectCanvases(canvases1, canvases2){
 }
 
 
-function initCygX3(){
+function initCygX3(){ 
 
     
     
-  function integrateOverCylinder(rotationAxis, reference, observer, h1, h2, N, M, n) {
+  function integrateOverCylinderSegment(rotationAxis, reference, observer, h1, h2, N, M, n) {
     let O = observer.normalize();
     let Ox = O.cross( new Vector3D(0,0,1)).normalize();
     let Oy = O.cross(Ox).normalize();
@@ -74,7 +74,7 @@ function initCygX3(){
   
 
 
-    var pf = new PolFunction([1,1,1,1], integrateOverCylinder);
+    var pf = new PolFunction([1,1,1,1], integrateOverCylinderSegment);
 
     
     hwCanvas = new PolCanvas('hw-canvas', pf, 1, 1, 0, 0, 0, 1);

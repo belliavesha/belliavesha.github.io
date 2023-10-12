@@ -411,7 +411,7 @@ class PolCanvas {
             new Vector3D(Math.cos(phi), Math.sin(phi), 0),
             new Vector3D(0, Math.sin(Math.PI/6), Math.cos(Math.PI/6)),
             0, height, 
-            20, 4, width
+            30, 8, width
           );
         //   console.log(k,n,m,total[n],total[m],this.toPixelCoords(total[n],total[m]));
           this.setPixel(...this.toPixelCoords(total[n],total[m]), this.orbitColor(k, K/2/Math.PI) );
@@ -441,7 +441,7 @@ class PolCanvas {
                         new Vector3D(Math.cos(phi), Math.sin(phi), 0),
                         new Vector3D(0, Math.sin(Math.PI/6), Math.cos(Math.PI/6)),
                         0, height, 
-                        20, 4, width
+                        10, 4, width
                     );
                     if (total[1]/total[0] > m){
                         m = total[1]/total[0];
