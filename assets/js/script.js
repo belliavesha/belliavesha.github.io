@@ -58,3 +58,29 @@ function loadVideo(filename) {
     button.appendChild(video);
     button.onclick = null;
 }
+
+
+window.onload = window.onhashchange = function() {
+    // Get the current hash value (without the # symbol)
+    var currentHash = window.location.hash.substring(1);
+
+    
+    // Determine what content to load based on the hash
+    switch (currentHash) {
+        case 'home':
+            loadContent('assets/html/Home.html');
+            break;  
+        case 'projects':    
+            loadContent('assets/html/Projects.html');
+            break;
+        case 'talks':
+            loadContent('assets/html/Talks.html');
+            break;
+        case 'merits':
+            loadContent('assets/html/Merits.html');
+            break;
+        default:
+            loadContent('assets/html/Home.html');
+            break;
+    }
+};
