@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .dice-table, .tournament-table {
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            margin-right: 20px;
+            width: auto;
+        }
+
+        
+        .dice-table td {
+            /* horizontal border should be black, but the vertical should be grey */
+            /* no left border at all */
+            border-right: 1px solid #000000;
+            border-bottom: 1px solid #000000;
+            border-top: 1px solid #000000;
+            /* padding: 3px; */
+            /* //each cell in the table will have the same size independent of the content */
+            width: 25px;
+            height: 25px;
+            text-align: center;
+        }
+        
+        .tournament-table td {
+            border: 1px solid #000000;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+        }
+
+        .dice-set-container {
+            margin-bottom: 20px;
+        }
+
+        .green {
+            background-color: #00d800;
+        }
+
+        .red {
+            background-color: #ff4e4b;
+        }
+
+        .black {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="diceSetsGallery">
+        <!-- Dice sets will be generated here -->
+    </div>
+
+</body>
+</html>
