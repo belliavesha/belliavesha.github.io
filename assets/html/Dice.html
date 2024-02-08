@@ -52,8 +52,17 @@
     <p>I want to call the ragilar set of intransitive dice such a set of intansitive dice that all the faces of all the dice are different (no draws are possible for different dice), 
         the probability of wining 'p' is the same across every pair of two dice, and they all worm a regular tournament. Below I show some regular intransitive dice sets that I have found. 
         Tables show the number on the faces and then the tournament table (green if the dice is winning and red if losing).
-        Interesting question here is what is the maximum possible value p for a regular intransitive dice set. The greatest value here is for the set of 3 5-faced dice that every match is 2 vs 3 chances. </p>
-    </p> 
+        Interesting question here is what is the maximum possible value p for a regular intransitive dice set. 
+        The limit value for three dice would be the golden ratio, approximately 61.8% winrate. 
+        Nice concidence is that 144 is a Fibonacci number and 144 is the number of outcomes for tossing two dodecahedra.
+        Let's consider three following strategies for a dodecahedron dice with faces numbered 1 to 12:
+        <ul>
+            <li> A: throw once. If less than 5 then the score is 1, if more then 5 then score is 8. if exactly 5, then then throw once more. if less then 8 then the score is 1, if more than 8 the score is 8, if exactly 8, then the score is 6. </li>
+            <li> B: throw once. If less than 5 then the score is 9, if more then 5 then score is 2. if exactly 5, then then throw once more. if less then 8 then the score is 9, if more than 8 the score is 2, if exactly 8, then the score is 4. </li>
+            <li> C: throw once. if more than 1 then the score is 5, otherwise throw again. if 1 then again then the score is 3, if 2 then the score is 7, if more then the score is 5. </li>
+        </ul>
+        The probability of each of them winning agains the next is a little more than 61.8%, namely 23183/12^4.
+    </p>
     
     <div id="diceSetsGallery">
         <!-- Dice sets will be generated here -->
