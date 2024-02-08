@@ -223,6 +223,8 @@ function setupEventListeners() {
     document.getElementById('startInput').addEventListener('keydown', handleInputKeydown);
 }
 
+
+
 renderMathInElement(document.body, {
     delimiters: [
         {left: '$$', right: '$$', display: true},

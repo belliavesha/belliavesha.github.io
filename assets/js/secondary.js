@@ -70,3 +70,4 @@ window.onload = window.onhashchange = function() {
             break;
     }
 };
+
