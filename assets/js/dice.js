@@ -34,7 +34,21 @@ function generateTournamentTable(diceCount, values) {
         for (var j = 0; j < diceCount; j++) {
             var cell = row.insertCell();
             var value = values[i][j];
-            cell.className = value > 0 ? 'green' : value < 0 ? 'red' : 'black';
+            // cell.className = value > 0 ? 'green' : value < 0 ? 'red' : 'black';
+            // below I want green if the value equals the max value of the table, red is equals the min value of the table, black if zero and gray otherwise
+            if (value == Math.max.apply(null, values.map(function(row) {
+                return Math.max.apply(Math, row);
+            }))) {
+                cell.className = 'green';
+            } else if (value == Math.min.apply(null, values.map(function(row) {
+                return Math.min.apply(Math, row);
+            }))) {
+                cell.className = 'red';
+            } else if (value == 0) {
+                cell.className = 'black';
+            } else {
+                cell.className = 'gray';
+            }
         }
     }
 
@@ -246,13 +260,13 @@ var diceSets = [
         [ 0,  1,  2, 24, 26, 32, 40, 41, 42, 44, 45],
         [ 3,  4,  5, 12, 14, 37, 38, 43, 46, 47, 48],
     ],
-    [
-        [ 8, 10, 12, 13, 15, 16, 17, 19, 41, 43, 45, 49, 82, 83, 84, 85, 88, 90, 93],
-        [21, 22, 23, 24, 25, 27, 28, 29, 30, 32, 35, 47, 65, 66, 67, 74, 91, 92, 94],
-        [20, 26, 31, 33, 34, 36, 46, 48, 50, 51, 52, 53, 54, 55, 56, 58, 59, 63, 69],
-        [ 0,  1,  2,  5, 37, 38, 39, 40, 42, 44, 57, 68, 70, 71, 73, 75, 76, 77, 78],
-        [ 3,  4,  6,  7,  9, 11, 14, 18, 60, 61, 62, 64, 72, 79, 80, 81, 86, 87, 89],
-    ],
+    // [
+    //     [ 8, 10, 12, 13, 15, 16, 17, 19, 41, 43, 45, 49, 82, 83, 84, 85, 88, 90, 93],
+    //     [21, 22, 23, 24, 25, 27, 28, 29, 30, 32, 35, 47, 65, 66, 67, 74, 91, 92, 94],
+    //     [20, 26, 31, 33, 34, 36, 46, 48, 50, 51, 52, 53, 54, 55, 56, 58, 59, 63, 69],
+    //     [ 0,  1,  2,  5, 37, 38, 39, 40, 42, 44, 57, 68, 70, 71, 73, 75, 76, 77, 78],
+    //     [ 3,  4,  6,  7,  9, 11, 14, 18, 60, 61, 62, 64, 72, 79, 80, 81, 86, 87, 89],
+    // ],
     [
         [ 0, 11, 19],
         [ 1, 13, 16],
@@ -270,6 +284,13 @@ var diceSets = [
         [ 4, 11, 14, 27, 29],
         [ 5, 10, 16, 21, 33],
         [ 6,  8, 15, 22, 34]
+    ],
+    [
+        [ 3,  4,  6, 22, 23],
+        [ 5,  8,  9, 12, 24],
+        [ 7, 10, 13, 14, 16],
+        [ 0, 11, 15, 17, 19],
+        [ 1,  2, 18, 20, 21]
     ]
 ];
 
