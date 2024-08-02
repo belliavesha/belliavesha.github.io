@@ -19,7 +19,7 @@ function showErrorMessage(){
     errorDiv.style.backgroundSize = 'cover';
 
     // Create a paragraph element for the error message text
-    var errorMessage = document.createElement('p');
+    var errorMessage = document.createElement('h4');
     errorMessage.textContent = "An\u00A0error occurred. Maybe\u00A0you\u00A0did something\u00A0wrong? Maybe\u00A0it\u00A0is\u00A0God. Who\u00A0knows? Not\u00A0you.";
     errorMessage.style.textAlign = 'center';
     errorMessage.style.marginTop = '0.7em';
@@ -32,7 +32,7 @@ function showErrorMessage(){
 
     // Create a button element for "Try Again"
     var tryAgainButton = document.createElement('button');
-    tryAgainButton.textContent = 'Try Again';
+    tryAgainButton.textContent = 'Try again';
     tryAgainButton.style.marginTop = '10px';
     tryAgainButton.style.display = 'block';
     tryAgainButton.style.margin = '0 auto';
@@ -40,7 +40,7 @@ function showErrorMessage(){
     tryAgainButton.style.bottom = '1em';
     tryAgainButton.style.left = '0';
     tryAgainButton.style.right = '0';
-    tryAgainButton.style.width = '50%';
+    tryAgainButton.style.width = '20%';
     tryAgainButton.style.padding = '10px';
     tryAgainButton.style.fontSize = '1.5em';
     tryAgainButton.style.borderRadius = '5px';
