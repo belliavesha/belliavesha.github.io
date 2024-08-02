@@ -22,8 +22,8 @@ function showErrorMessage(){
     var errorMessage = document.createElement('p');
     errorMessage.textContent = "An\u00A0error occurred. Maybe\u00A0you\u00A0did something\u00A0wrong? Maybe\u00A0it\u00A0is\u00A0God. Who\u00A0knows? Not\u00A0you.";
     errorMessage.style.textAlign = 'center';
-    errorMessage.style.marginTop = '15px';
-    errorMessage.style.fontSize = '25px';
+    errorMessage.style.marginTop = '10px';
+    errorMessage.style.fontSize = '18px';
     errorMessage.style.textShadow = '3px 3px 6px #1e2439';
     errorMessage.style.color = '#d5e083'; // Add this line to set the text color to red
 
