@@ -22,8 +22,8 @@ function showErrorMessage(){
     var errorMessage = document.createElement('p');
     errorMessage.textContent = "An\u00A0error occurred. Maybe\u00A0you\u00A0did something\u00A0wrong? Maybe\u00A0it\u00A0is\u00A0God. Who\u00A0knows? Not\u00A0you.";
     errorMessage.style.textAlign = 'center';
-    errorMessage.style.marginTop = '10px';
-    errorMessage.style.fontSize = '18px';
+    errorMessage.style.marginTop = '0.7em';
+    errorMessage.style.fontSize = '1em';
     errorMessage.style.textShadow = '3px 3px 6px #1e2439';
     errorMessage.style.color = '#d5e083'; // Add this line to set the text color to red
 
@@ -37,12 +37,12 @@ function showErrorMessage(){
     tryAgainButton.style.display = 'block';
     tryAgainButton.style.margin = '0 auto';
     tryAgainButton.style.position = 'absolute';
-    tryAgainButton.style.bottom = '10px';
+    tryAgainButton.style.bottom = '1em';
     tryAgainButton.style.left = '0';
     tryAgainButton.style.right = '0';
     tryAgainButton.style.width = '50%';
     tryAgainButton.style.padding = '10px';
-    tryAgainButton.style.fontSize = '16px';
+    tryAgainButton.style.fontSize = '1.5em';
     tryAgainButton.style.borderRadius = '5px';
     tryAgainButton.style.backgroundColor = '#1e2439';
     tryAgainButton.style.color = '#95d5b7';
