@@ -147,7 +147,7 @@ var styles = `
         position: absolute;
         top: -20%;
         left: -20%;
-        width: 120%;
+        width: 140%;
         height: 120%;
         z-index: -1; 
         object-fit: cover; 

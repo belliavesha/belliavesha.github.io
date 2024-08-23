@@ -71,3 +71,6 @@ window.onload = window.onhashchange = function() {
     }
 };
 
+initializeTiledBackground();
+
+

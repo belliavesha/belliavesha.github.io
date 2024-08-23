@@ -18,6 +18,17 @@ body {
     font-family: 'Lora', serif; 
 }
 
+#tiledbg {
+    position: fixed;
+    filter: contrast(90%) brightness(110%) opacity(28%);  
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-repeat: repeat;
+}
+
 #menu {
     background-color: var(--main-bg-color);
     font-family: 'Bitter', sans-serif;

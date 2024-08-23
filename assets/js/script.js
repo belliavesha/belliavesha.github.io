@@ -90,7 +90,11 @@ function loadContent(htmlFile, jsFile) {
             document.getElementById('content').innerHTML = data;
             if (jsFile) loadScript(jsFile);
         });
-    
+    // Check if tiledbg is on the page
+    if (document.getElementById('tiledbg')) {
+        // Call the function to initialize the tiled background
+        initializeTiledBackground();
+    }
 }
 
 function loadScript(jsFile) {
@@ -165,4 +169,60 @@ window.onload = window.onhashchange = function() {
             break;
     }
 };
+
+
+
+
+
+
+function initializeTiledBackground() {
+    const tiles = [
+        'assets/images/tile1.png', 
+        'assets/images/tile2.png', 
+        'assets/images/tile3.png', 
+        'assets/images/tile4.png'];
+    // const tileSize = 128; // Assuming each tile is 100x100 pixels
+    const tileSizeX = 127;
+    const tileSizeY = 123;
+    const background = document.getElementById('tiledbg');
+    
+    function createRandomTile() {
+        return tiles[Math.floor(Math.random() * tiles.length)];
+    }
+    
+    function createTiledBackground() {
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const tilesX = Math.ceil(windowWidth / tileSizeX);
+        const tilesY = Math.ceil(windowHeight / tileSizeY);
+        
+        let canvas = document.createElement('canvas');
+        canvas.width = tilesX * tileSizeX;
+        canvas.height = tilesY * tileSizeY;
+        let ctx = canvas.getContext('2d');
+        
+        let loadedImages = 0;
+        let imagesToLoad = tilesX * tilesY;
+        
+        for (let y = 0; y < tilesY; y++) {
+            for (let x = 0; x < tilesX; x++) {
+                let img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(this, x * tileSizeX, y * tileSizeY, tileSizeX, tileSizeY);
+                    loadedImages++;
+                    if (loadedImages === imagesToLoad) {
+                        background.style.backgroundImage = `url(${canvas.toDataURL()})`;
+                    }
+                };
+                img.src = createRandomTile();
+            }
+        }
+    }
+    
+    createTiledBackground();
+    window.addEventListener('resize', createTiledBackground);
+};
+
+initializeTiledBackground();
+
 

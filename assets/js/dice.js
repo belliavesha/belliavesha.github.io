@@ -393,3 +393,35 @@ renderMathInElement(document.body, {
     ],
     throwOnError : false
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tiles = ['tile1.jpg', 'tile2.jpg', 'tile3.jpg', 'tile4.jpg'];
+    const tileSize = 100; // Assuming each tile is 100x100 pixels
+    const background = document.getElementById('background');
+    
+    function createRandomTile() {
+        return tiles[Math.floor(Math.random() * tiles.length)];
+    }
+    
+    function createTiledBackground() {
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const tilesX = Math.ceil(windowWidth / tileSize);
+        const tilesY = Math.ceil(windowHeight / tileSize);
+        
+        let backgroundImage = '';
+        for (let y = 0; y < tilesY; y++) {
+            for (let x = 0; x < tilesX; x++) {
+                backgroundImage += `url(${createRandomTile()}) ${x * tileSize}px ${y * tileSize}px`;
+                if (x < tilesX - 1 || y < tilesY - 1) {
+                    backgroundImage += ', ';
+                }
+            }
+        }
+        
+        background.style.backgroundImage = backgroundImage;
+    }
+    
+    createTiledBackground();
+    window.addEventListener('resize', createTiledBackground);
+});

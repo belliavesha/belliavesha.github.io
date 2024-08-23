@@ -5,7 +5,7 @@
 
     Then for each term we place a point on a plane:
     the $x$ coordinate is the fractional part of base-$\sqrt{10}$ logarithm of term's number $x_{n} = \{ \log_{\sqrt{10}}(n) \} $ (where $\{x\} = x - \lfloor x \rfloor$);
-    for the $y$ coordinate we set the normalized value of the corresponding term $y_n = \frac{a(n)}{3-\sqrt{5}}$.
+    for the $y$ coordinate we set the normalized value of the corresponding term $y_n = \frac{2a(n)/n}{3-\sqrt{5}} - 1$.
 
     Then for $m = 0,1,2,3$ we consider subsequences where terms's number $n$ equals $m$ modulo 4:  $\{ (x_n, y_n)\}_{n\stackrel{4}{\equiv}m}$. 
     Each subseqence we bin with $N$ bins and for each bin we plot the average with standard deviation. 
