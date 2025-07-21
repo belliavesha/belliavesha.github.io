@@ -26,14 +26,17 @@
 .contact-info {
     list-style-type: none;
     display: flex;
-    justify-content: flex-start; 
-    /* border-bottom: 1px solid grey; */
+    flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
+.bio code {
+    font-size: 1.31em; /* adjust as needed */
+}
 
 .contact-info li {
-    border-right: 1px solid grey;
-    padding: 1em;
+    border-left: 1px solid grey;
+    padding: 0.7em;
 }
 
 .contact-info li:last-child {

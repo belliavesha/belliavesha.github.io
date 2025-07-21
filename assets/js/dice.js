@@ -274,6 +274,7 @@ var diceSets = [
         [ 6,  9, 15],
     ],
     [
+<<<<<<< HEAD
         [1,     22, 28],  
         [2,     20, 29],  
         [3,     18, 30],  
@@ -285,6 +286,17 @@ var diceSets = [
         [9,     17, 25],  
         [10,    15, 26],  
         [11,    13, 27],  
+=======
+        [ 0, 17, 22],
+        [ 1, 15, 23],
+        [ 2, 13, 24],
+        [ 3, 11, 25],
+        [ 4,  9, 26],
+        [ 5, 16, 18],
+        [ 6, 14, 19],
+        [ 7, 12, 20],
+        [ 8, 10, 21],
+>>>>>>> aff94e2d0c439a7c9dc8c8a982c48656f4d9df2d
     ],
     [
         [ 0, 13, 17, 23, 32],
@@ -427,4 +439,36 @@ renderMathInElement(document.body, {
         {left: '\\[', right: '\\]', display: true}
     ],
     throwOnError : false
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tiles = ['tile1.jpg', 'tile2.jpg', 'tile3.jpg', 'tile4.jpg'];
+    const tileSize = 100; // Assuming each tile is 100x100 pixels
+    const background = document.getElementById('background');
+    
+    function createRandomTile() {
+        return tiles[Math.floor(Math.random() * tiles.length)];
+    }
+    
+    function createTiledBackground() {
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const tilesX = Math.ceil(windowWidth / tileSize);
+        const tilesY = Math.ceil(windowHeight / tileSize);
+        
+        let backgroundImage = '';
+        for (let y = 0; y < tilesY; y++) {
+            for (let x = 0; x < tilesX; x++) {
+                backgroundImage += `url(${createRandomTile()}) ${x * tileSize}px ${y * tileSize}px`;
+                if (x < tilesX - 1 || y < tilesY - 1) {
+                    backgroundImage += ', ';
+                }
+            }
+        }
+        
+        background.style.backgroundImage = backgroundImage;
+    }
+    
+    createTiledBackground();
+    window.addEventListener('resize', createTiledBackground);
 });
