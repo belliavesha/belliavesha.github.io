@@ -82,7 +82,6 @@ function showErrorMessage(){
 
 
 function loadContent(htmlFile, jsFile) {
-            
 
     fetch(htmlFile)
         .then(response => response.text())
@@ -96,6 +95,10 @@ function loadContent(htmlFile, jsFile) {
         initializeTiledBackground();
     }
 }
+
+
+
+
 
 function loadScript(jsFile) {
     let oldScript = document.querySelector(`script[src="${jsFile}"]`);
