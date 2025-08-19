@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Okiya-like — Multiplayer</title>
+
+  <!-- === Styles (put all your CSS here, nothing inline in HTML) === -->
+  <!-- Base layout, colors, typography -->
+  <link rel="stylesheet" href="assets/css/okiya.css">
+  <!-- Components: board tiles, sidebar, buttons, badges, etc. -->
+  <!-- <link rel="stylesheet" href="/css/components.css"> -->
+  <!-- Optional: responsive tweaks / overrides -->
+  <!-- <link rel="stylesheet" href="/css/responsive.css"> -->
+</head>
+<body>
+    <div class="app">
+        <header>
+          <div>
+            <div class="title">Okiya Garden. Play goardgame online.</div>
+            <div class="sub"> Customizable garden size and winning conditions. 
+              Each move the player must place their token onto a garden tile that shares either a plant or motif with the last removed tile.
+            </nav></div>
+          </div>
+          <div class="row">
+
+            <div class="controls">
+            <div class="row">
+                <label for="plantsCount">Plants (rows)</label>
+                <select id="plantsCount"></select>
+            <!-- </div>
+            <div class="row"> -->
+                <label for="motifsCount">Motifs (cols)</label>
+                <select id="motifsCount"></select>
+            <!-- </div>
+            <div class="row"> -->
+                <label for="playerCountSel">Opponents</label>
+                <select id="playerCountSel"></select>
+            </div>
+
+                <div class="row">
+                  <label for="winLenSel">Winning condition</label>
+                  <select id="winLenSel"></select>
+                  <button id="diagBtn" class="btn active">Diagonals</button>
+                  <button id="sqBtn" class="btn active">2×2 Square</button>
+                </div>
+  
+              </div>
+
+            
+            <div class="row">
+                <label for="seedInput">Game seed</label>
+                <input type="text" id="seedInput" placeholder="Seed (optional)" style="width:120px"/>
+            </div>
+            <button id="newGameBtn" class="btn">Start New Game</button>
+            <button id="undoBtn" class="btn">Undo</button>
+          </div>
+        </header>
+    
+        <div class="board-wrap">
+          <div class="board-frame">
+            <div id="labels-top"    class="labels labels-top"></div>
+            <div id="labels-left"   class="labels labels-left"></div>
+            <div id="board"         class="board panel"></div>
+            <div id="labels-right"  class="labels labels-right"></div>
+            <div id="labels-bottom" class="labels labels-bottom"></div>
+          </div>
+          <aside class="sidebar panel">
+              <div class="row"><span class="pill kv" id="playerBadge"><span class="k">You are:</span><span class="v" style="display:inline-flex;align-items:center;gap:8px;"><span id="playerSwatch" style="width:14px;height:14px;border-radius:999px;background:var(--p1);"></span><span id="playerText">Red</span></span></span></div>
+            <div class="row"><span class="pill kv" id="turnBadge"><span class="k">Now moves:</span><span class="v" style="display:inline-flex;align-items:center;gap:8px;"><span id="turnSwatch" style="width:14px;height:14px;border-radius:999px;background:var(--p1);"></span><span id="turnText">Red</span></span></span></div>
+            <div class="row"><span class="pill kv"><span class="k">Last tile:</span><span class="v" id="lastTile">—</span></span></div>
+            <div class="status" id="statusBox">—</div>
+    
+    
+            <div class="badge" style="opacity:.8;margin-top:8px;">Legend</div>
+            <div class="list" id="legendBox" style="font-size:13px;color:#9aa3b2;line-height:1.2"></div>
+            <div class="badge" style="opacity:.8;margin-top:8px;">Game Log</div>
+            <div id="logBox" class="status tiny" style="height:160px;overflow:auto;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">—</div>
+            <div class="row">
+                Room: <span id="roomId" class="link"></span>
+                <button id="copyLink" class="btn">Copy share link</button>
+                <button id="newRoomBtn" class="btn">New Room</button>
+              </div>
+          </aside>
+        </div>
+      </div>
+      <div id="tooltip"></div>
+    
+      <template id="tileTpl">
+        <div class="tile" role="button" aria-label="tile">
+          <div class="symbols">
+            <div class="sym-emoji"></div>
+            <div class="sym-text"></div>
+          </div>
+        </div>
+      </template>
+
+      <script type="module" src="assets/js/okiya.js"></script>
+
+
+</body>
+</html>
+
+

@@ -43,6 +43,13 @@
     .seg button.active{background:#2a3353}
     .controls{display:grid;gap:8px}
     .controls .row{gap:8px}
+    .link { 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; 
+            padding: 6px 8px; 
+            background: #0f172a; 
+            border: 1px solid #334155; 
+            border-radius: 8px; 
+        }
     select{background:#1a1e2f;color:#e9edff;border:1px solid #2a3257;border-radius:10px;padding:6px 10px}
     label{font-size:12px;color:#9aa3b2}
     input[type=text]{background:#1a1e2f;color:#e9edff;border:1px solid #2a3257;border-radius:10px;padding:6px 10px}
@@ -99,6 +106,10 @@
         <div class="list" id="legendBox" style="font-size:13px;color:#9aa3b2;line-height:1.2"></div>
         <div class="badge" style="opacity:.8;margin-top:8px;">Game Log</div>
         <div id="logBox" class="status tiny" style="height:160px;overflow:auto;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">—</div>
+        <div class="badge">
+          Room: <span id="roomId" class="link"></span>
+          <button id="copyLink" class="btn">Copy share link</button>
+        </div>
       </aside>
     </div>
   </div>
@@ -114,6 +125,11 @@
   </template>
 
   <script>
+
+    // ===== Initialization =====
+
+
+
     // ===== Symbol pools =====
     const ALL_PLANTS=[
       {key:'maple', emoji:'🍁', label:'Maple'},
