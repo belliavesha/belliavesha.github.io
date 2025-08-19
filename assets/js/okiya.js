@@ -607,7 +607,8 @@ async function joinRoom(roomId) {
     if (!uid) { await waitForAuthReady(); }
   
     // Resolve room id & update UI
-    room = roomId || roomFromHash() || `room-${Math.random().toString(36).slice(2,8)}`;
+    room = roomId || roomFromHash();
+    if (!room) return createNewRoom(); // no room in hash, create a new one
     if (!location.hash) location.hash = room;
     if (roomEl) roomEl.textContent = room;
     console.log(`Joining room: ${room} (uid: ${uid})`);
@@ -858,7 +859,7 @@ function updateHostControls() {
 async function boot() {
     initRealtime();
   
-    await createNewRoom();
+    await joinRoom();
   
   }
 
