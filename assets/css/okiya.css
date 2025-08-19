@@ -279,6 +279,60 @@ header {
       #8b66f8 100%      /* darker   */
     );
   }
+
+/* Inline-flex for KV value blobs */
+.kv .v {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  /* Color dots for player/turn */
+  .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--p1); /* default; JS can override inline */
+  }
+  
+  /* Subtle section badges + spacing helpers */
+  .badge-subtle { opacity: 0.8; }
+  .mt-8 { margin-top: 8px; }
+  
+  /* Legend text tone */
+  .legend {
+    font-size: 13px;
+    color: #9aa3b2;
+    line-height: 1.2;
+  }
+  
+  /* Log box behavior + mono font */
+  #logBox {
+    height: 180px;
+    overflow: auto;
+    white-space: pre-wrap;
+  }
+  
+  .mono {
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+  }
+  
+
+.legend-dot {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    border-radius: 50%;
+    margin-right: 0.35em;
+    vertical-align: -0.1em;
+    border: 1px solid rgba(0,0,0,0.25);
+}
+
+.legend-chip {
+    white-space: nowrap;
+} 
   
 
 .sidebar {

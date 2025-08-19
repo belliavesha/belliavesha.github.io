@@ -156,10 +156,29 @@ function genDeck() {
 
 
 function rebuildLegend() {
-  const plants = settings.plants.map(x => `${x.emoji} ${x.label}`).join(' · ');
-  const motifs = settings.motifs.map(x => `${x.emoji} ${x.label}`).join(' · ');
-  legendBox.innerHTML = `<strong>Plants:</strong> ${plants}<br><strong>Motifs:</strong> ${motifs}`;
+  // Plants & motifs as before
+  const plants = (settings.plants || []).map(x => `${x.emoji} ${x.label}`).join(' · ');
+  const motifs  = (settings.motifs  || []).map(x => `${x.emoji} ${x.label}`).join(' · ');
+
+  // Players: show first N seats per settings.playersNum with colored dots
+  const nPlayers = settings.playersNum || 6;
+  const players  = SEAT_IDS.slice(0, nPlayers).map(
+    seatId => `<span class="legend-chip"><span class="legend-dot" style="background:${seatCssVar(seatId)}"></span>${seatLabel(seatId)}</span>`
+  ).join(' · ');
+
+  legendBox.innerHTML =
+    `<strong>Plants:</strong> ${plants}<br>` +
+    `<strong>Motifs:</strong> ${motifs}<br>` +
+    `<strong>Players:</strong> ${players}`;
 }
+
+// function rebuildLegend() {
+//   const plants = settings.plants.map(x => `${x.emoji} ${x.label}`).join(' · ');
+//   const motifs = settings.motifs.map(x => `${x.emoji} ${x.label}`).join(' · ');
+
+
+//   legendBox.innerHTML = `<strong>Plants:</strong> ${plants}<br><strong>Motifs:</strong> ${motifs}`;
+// }
 
 
 function buildLabels() {

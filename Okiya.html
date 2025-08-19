@@ -69,24 +69,52 @@
             <div id="board"         class="board panel"></div>
             <div id="labels-right"  class="labels labels-right"></div>
             <div id="labels-bottom" class="labels labels-bottom"></div>
-          </div>
-          <aside class="sidebar panel">
-              <div class="row"><span class="pill kv" id="playerBadge"><span class="k">You are:</span><span class="v" style="display:inline-flex;align-items:center;gap:8px;"><span id="playerSwatch" style="width:14px;height:14px;border-radius:999px;background:var(--p1);"></span><span id="playerText">Red</span></span></span></div>
-            <div class="row"><span class="pill kv" id="turnBadge"><span class="k">Now moves:</span><span class="v" style="display:inline-flex;align-items:center;gap:8px;"><span id="turnSwatch" style="width:14px;height:14px;border-radius:999px;background:var(--p1);"></span><span id="turnText">Red</span></span></span></div>
-            <div class="row"><span class="pill kv"><span class="k">Last tile:</span><span class="v" id="lastTile">—</span></span></div>
-            <div class="status" id="statusBox">—</div>
-    
-    
-            <div class="badge" style="opacity:.8;margin-top:8px;">Legend</div>
-            <div class="list" id="legendBox" style="font-size:13px;color:#9aa3b2;line-height:1.2"></div>
-            <div class="badge" style="opacity:.8;margin-top:8px;">Game Log</div>
-            <div id="logBox" class="status tiny" style="height:160px;overflow:auto;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">—</div>
+        </div>
+        <aside class="sidebar panel">
+            <div class="badge badge-subtle mt-8">Status</div>
+            
             <div class="row">
-                Room: <span id="roomId" class="link"></span>
-                <button id="copyLink" class="btn">Copy link</button>
-                <button id="newRoomBtn" class="btn">New Room</button>
-              </div>
+                <span class="pill kv" id="playerBadge">
+                    <span class="k">You are:</span>
+                    <span class="v">
+                  <span id="playerSwatch" class="swatch"></span>
+                  <span id="playerText">Red</span>
+                </span>
+              </span>
+            </div>
+            
+            <div class="row">
+                <span class="pill kv" id="turnBadge">
+                    <span class="k">Now moves:</span>
+                    <span class="v">
+                        <span id="turnSwatch" class="swatch"></span>
+                        <span id="turnText">Red</span>
+                    </span>
+                </span>
+            </div>
+            
+            <div class="row">
+                <span class="pill kv">
+                    <span class="k">Last tile:</span>
+                    <span class="v" id="lastTile">—</span>
+                </span>
+            </div>
+            <div class="status" id="statusBox">—</div>
+            
+          
+            <div class="badge badge-subtle mt-8">Game Info</div>
+            <div class="list legend" id="legendBox"></div>
+          
+            <div class="badge badge-subtle mt-8">Move Log</div>
+            <div id="logBox" class="status tiny mono">—</div>
+          
+            <div class="row">
+              Room: <span id="roomId" class="link"></span>
+              <button id="copyLink" class="btn">Copy link</button>
+              <button id="newRoomBtn" class="btn">New Room</button>
+            </div>
           </aside>
+          
         </div>
       </div>
       <div id="tooltip"></div>
