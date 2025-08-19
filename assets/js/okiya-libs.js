@@ -23,7 +23,7 @@ export const ALL_MOTIFS = [
   {key:'moon', emoji:'🌙', label:'Moon'},
   {key:'fan',  emoji:'🪭', label:'Fan'},
   {key:'fish', emoji:'🐟', label:'Fish'},
-  {key:'mount', emoji:'⛰️', label:'Mount'},
+  {key:'fuji', emoji:'⛰️', label:'Fuji'},
   {key:'wave', emoji:'🌊', label:'Wave'},
   {key:'star', emoji:'⭐', label:'Star'},
 ];

@@ -79,7 +79,7 @@ function serializeState(s) {
         history:    s.history ?? [], 
         winner:     s.winner ?? null,
         moveLog:    Array.isArray(s.moveLog) ? s.moveLog.map(m => ({
-                      player: m?.player ?? null, r: m?.r ?? null, c: m?.c ?? null, not: m?.not ?? ''
+                      player: m?.player ?? null, r: m?.r ?? null, c: m?.c ?? null
                     })) : [],
         grid: (s.grid ?? []).map(row => row.map(cell => ({
           r: cell?.r ?? 0,
@@ -160,19 +160,20 @@ function genDeck() {
 
 function rebuildLegend() {
   // Plants & motifs as before
-  const plants = (settings.plants || []).map(x => `${x.emoji} ${x.label}`).join(' · ');
-  const motifs  = (settings.motifs  || []).map(x => `${x.emoji} ${x.label}`).join(' · ');
+  const plants = (settings.plants || []).map(x => `${x.emoji}&nbsp;${x.label}`).join(' · ');
+  const motifs  = (settings.motifs  || []).map(x => `${x.emoji}&nbsp;${x.label}`).join(' · ');
 
   // Players: show first N seats per settings.playersNum with colored dots
   const nPlayers = settings.playersNum || 6;
   const players  = SEAT_IDS.slice(0, nPlayers).map(
-    seatId => `<span class="legend-chip"><span class="legend-dot" style="background:${seatCssVar(seatId)}"></span>${seatLabel(seatId)}</span>`
+    seatId => `<span class="legend-chip"><span class="legend-dot" style="background:${seatCssVar(seatId)}">&nbsp;</span>${seatLabel(seatId)}</span>`
   ).join(' · ');
 
   legendBox.innerHTML =
+  `<strong>Players:</strong> ${players}<br>` +
     `<strong>Plants:</strong> ${plants}<br>` +
     `<strong>Motifs:</strong> ${motifs}<br>` +
-    `<strong>Players:</strong> ${players}`;
+    '';
 }
 
 // function rebuildLegend() {
@@ -335,14 +336,15 @@ function canClick(cell) {
 // ========== Rendering ==========
 
 function renderLog() {
-  if (!state.moveLog.length) { logBox && (logBox.textContent = '—'); return; }
-  const lines = [];
+  if (!state.moveLog.length) { logBox && (logBox.textContent = '1. '); return; }
+  const lines = ['1. '];
   for (let i = 0; i < state.moveLog.length; i++) {
     const mv = state.moveLog[i];
-    const num = Math.floor(i / settings.playersNum) + 1;
-    const prefix = (i % settings.playersNum === 0) ? `\n${num}.` : `; `;
+    const num = (i + 1) / settings.playersNum + 1;
+    var suffix = ( (i + 1) % settings.playersNum === 0) ? `;\n${num}. ` : `, `;
+    if (state.winner && (i + 1) === state.moveLog.length ) suffix = `#`;
     const lbl = seatLabel(mv.player);
-    lines.push(`${prefix} ${lbl[0]} ${mv.not}`);
+    lines.push(`${lbl[0]} ${toNotation(mv.r, mv.c)}${suffix}`);
   }
   if (logBox) {
     logBox.textContent = lines.join('');
@@ -356,22 +358,17 @@ function render() {
 }     
 
 
-function updateRuleButtonsFromSettings() {
-    // Toggle rule buttons to mirror current settings
+function updateRuleButtons() {
     if (diagBtn) diagBtn.classList.toggle('active', !!settings.diagOn);
     if (sqBtn)   sqBtn.classList.toggle('active',  !!settings.squareOn);
 }
   
 function renderSettings() {
-    console.log(`Render settings:`, settings);
-    // Rebuild any UI derived from settings
+    // console.log(`Render settings:`, settings);
     setDimensions(settings.rows, settings.cols);
     buildGameSelOptions();
     updatePlayerBadge(); 
-    updateRuleButtonsFromSettings();
-    // rebuildLegend();
-    // buildLabels();
-    
+    updateRuleButtons();
 }
   
 function renderState() {
@@ -386,9 +383,9 @@ function renderState() {
     if (state.lastRemoved) {
       const p = plantInfo(settings.plants, state.lastRemoved.plant);
       const m = motifInfo(settings.motifs, state.lastRemoved.motif);
-      lastTileEl.innerHTML = `<span>${p.emoji}</span> ${p.label} / <span>${m.emoji}</span> ${m.label}`;
+      lastTileEl.innerHTML = `<span>${p.emoji}</span> ${p.label} | <span>${m.emoji}</span> ${m.label}`;
     } else {
-      lastTileEl.textContent = '— (first move from border)';
+      lastTileEl.textContent = 'None (place on border)';
     }
   
     if (state.winner) {
@@ -441,7 +438,6 @@ let _hinted = [];    // cache of {r,c} we’ve marked
 let _hoverKey = '';  // "r,c" of the last hovered tile (to avoid redundant work)
 let _hintsEnabled = false; // toggle for hints (can be set by UI)
 
-/** Remove .hint from any previously hinted tiles */
 function clearHints() {
   if (!boardEl || !_hinted.length) return;
   for (const { r, c } of _hinted) {
@@ -451,7 +447,6 @@ function clearHints() {
   _hinted = [];
 }
 
-/** Apply .hint to the given list of moves, caching for later cleanup */
 function applyHints(moves) {
   clearHints();
   if (!boardEl) return;
@@ -462,21 +457,14 @@ function applyHints(moves) {
   _hinted = moves;
 }
 
-/**
- * Compute and display hints "from" the hovered tile:
- * all EMPTY cells sharing plant or motif with it (per legalMoves),
- * excluding the hovered tile itself.
- */
 function showHintsFromTile(r, c) {
   if (!state || !state.grid || !state.grid[r] || !state.grid[r][c]) return;
 
   const cell = state.grid[r][c];
-  if (cell.takenBy) return; // no hints on occupied tiles
-  // Build a faux "lastRemoved" to reuse your legalMoves semantics
+  if (cell.takenBy) return; 
   const lastLike = { plant: cell.plant, motif: cell.motif };
 
   let moves = legalMoves(lastLike, state.grid);
-  // Exclude the origin tile itself if it snuck in and is empty
   moves = moves.filter(m => !(m.r === r && m.c === c));
 
   applyHints(moves);
@@ -508,17 +496,12 @@ function _onTileMouseOut(e) {
   clearHints();
 }
 
-/** Call this ONCE after boardEl is ready. Survives re-renders since it's delegated. */
 function setupHoverHintsOnce() {
   if (!boardEl || setupHoverHintsOnce._wired) return;
   boardEl.addEventListener('mouseover', _onTileMouseOver);
   boardEl.addEventListener('mouseout',  _onTileMouseOut);
   setupHoverHintsOnce._wired = true;
 }
-
-
-
-  
 
 
 // ========== Local moves (offline) ==========
@@ -579,11 +562,8 @@ function newGame() {
 
   renderState();
 
-  if (isOnline() && mySeat() === 'p1') {
-    // Only the host sets the canonical fresh state
-    console.log(`Pushing full state to room: ${room}`);
-    pushFullStateFromLocal();
-  }
+  if (isOnline() && mySeat() === 'p1') pushFullStateFromLocal();
+  
 }
 
 
@@ -625,13 +605,12 @@ motifsCount?.addEventListener('change', () => {
 
 hintsBtn?.addEventListener('click', () => {
   _hintsEnabled = !_hintsEnabled;
-  applyHints([]); // clear any existing hints
+  applyHints([]); 
   renderState();
   hintsBtn.classList.toggle('active', _hintsEnabled);
 });
 
 
-// — Config (use yours; these are the ones you tested earlier)
 const firebaseConfig = {
   apiKey: "AIzaSyDJh-4cEA7Xk_XPMpZaDBYzq7o5CRO2I-A",
   authDomain: "tic-tac-toe-4ce01.firebaseapp.com",
@@ -682,7 +661,6 @@ async function createNewRoom() {
     const id = `room-${Math.random().toString(36).slice(2,8)}`;
     location.hash = id;
     renderSettings();
-    //   newGame();
     return joinRoom(id);
 }
 
@@ -691,7 +669,6 @@ async function pushFullStateFromLocal() {
     const rootRef = ref(db, `okiya/${room}`);
     await runTransaction(rootRef, (root) => {
       root = root || {};
-    //   if (root.state) return root; // someone already initialized; no-op
       root.settings = serializeSettings(settings);
       root.state    = serializeState(state);
       return root;
@@ -705,7 +682,7 @@ async function joinRoom(roomId) {
   
     // Resolve room id & update UI
     room = roomId || roomFromHash();
-    if (!room) return createNewRoom(); // no room in hash, create a new one
+    if (!room) return createNewRoom(); 
     if (!location.hash) location.hash = room;
     if (roomEl) roomEl.textContent = room;
     console.log(`Joining room: ${room} (uid: ${uid})`);
@@ -732,10 +709,8 @@ async function joinRoom(roomId) {
         if (!root.players[s] || root.players[s] === uid) { root.players[s] = uid; break; }
       }
   
-      // Keep explicit nulls to signal "not yet initialized"
       if (root.state     === undefined) root.state     = null;
-      if (root.settings  === undefined) root.settings  = null;
-  
+      if (root.settings  === undefined) root.settings  = null; 
       return root;
     });
   
@@ -758,9 +733,8 @@ async function joinRoom(roomId) {
     // Settings
     onValue(settingsRef, (snap) => {
       const s = snap.val();
-      if (!s) return; // host will publish on new game start
+      if (!s) return;
       deserializeSettingsInto(settings, s);
-      // Avoid rendering the board until we also have state (grid)
       renderSettings();
       if (roomEl) roomEl.textContent = room;
     });
@@ -768,13 +742,8 @@ async function joinRoom(roomId) {
     // State
     onValue(stateRef, async (snap) => {
       const s = snap.val();
-  
       if (!s) {
         statusBox.textContent = 'Waiting for host to start a game…';
-        // if (mySeat() === 'p1') {
-        //   newGame();
-        // } else {
-        // }
         return;
       }
       console.log(`State update for room ${room}:`, s);
@@ -808,10 +777,8 @@ async function publishMove(r, c) {
       const sets = root.settings;
       const me   = mySeatFromRoot(root, uid);
   
-      // Must have state, settings, and a seat
       if (!st || !sets || !me) return root;
   
-      // Enforce turn order & basic legality
       if (st.winner) return root;
       if (st.turn !== me) return root;
       if (!st.grid?.[r]?.[c]) return root;
@@ -830,7 +797,7 @@ async function publishMove(r, c) {
       cell.takenBy = me;
   
       st.moveLog = st.moveLog || [];
-      st.moveLog.push({ player: me, r, c, not: toNotation(r, c) });
+      st.moveLog.push({ player: me, r, c });
   
       // Win / next turn
       if (checkWinForDB(me, st, sets)) {

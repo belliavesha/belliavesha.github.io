@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Okiya-like — Multiplayer</title>
+  <title>Okiya</title>
 
   <!-- === Styles (put all your CSS here, nothing inline in HTML) === -->
   <!-- Base layout, colors, typography -->
@@ -19,9 +19,10 @@
           <div>
             <div class="title">Okiya Garden</div>
             <div class="sub"> 
-                <br>
+                <!-- <br> -->
                 Create your own garden with custom shape and victory conditions and play online. 
-                Outwit your opponents to claim the win!<br>
+                Outwit your opponents to win!
+                <br>
                 Only rule: on each turn, you must place your token on a tile that matches the last one by plant or motif.
                 The first token must be placed on a border tile.
             </nav></div>
@@ -69,8 +70,8 @@
             <div id="board"         class="board panel"></div>
             <div id="labels-right"  class="labels labels-right"></div>
             <div id="labels-bottom" class="labels labels-bottom"></div>
-        </div>
-        <aside class="sidebar panel">
+          </div>
+          <aside class="sidebar panel">
             <div class="badge badge-subtle mt-8">Status</div>
             
             <div class="row">
@@ -90,7 +91,8 @@
                         <span id="turnSwatch" class="swatch"></span>
                         <span id="turnText">Red</span>
                     </span>
-                </span>
+                  </span>
+                  <button id="hintsBtn" class="btn">Hints</button>
             </div>
             
             <div class="row">
@@ -98,7 +100,6 @@
                     <span class="k">Last tile:</span>
                     <span class="v" id="lastTile">—</span>
                 </span>
-                <button id="hintsBtn" class="btn">Hints</button>
             </div>
             <div class="status" id="statusBox">—</div>
             
