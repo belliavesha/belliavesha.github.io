@@ -17,24 +17,26 @@
     <div class="app">
         <header>
           <div>
-            <div class="title">Okiya Garden. Play goardgame online.</div>
-            <div class="sub"> Customizable garden size and winning conditions. 
-              Each move the player must place their token onto a garden tile that shares either a plant or motif with the last removed tile.
+            <div class="title">Okiya Garden</div>
+            <div class="sub"> 
+                Create your own garden with custom shape and victory conditions and play online. 
+                Outwit your opponents to claim the win!<br>
+                Only rule: on each turn, you must place your token on a tile that matches the last one by plant or motif.
             </nav></div>
           </div>
           <div class="row">
 
             <div class="controls">
             <div class="row">
-                <label for="plantsCount">Plants (rows)</label>
+                <label for="plantsCount">Rows</label>
                 <select id="plantsCount"></select>
             <!-- </div>
             <div class="row"> -->
-                <label for="motifsCount">Motifs (cols)</label>
+                <label for="motifsCount">Columns</label>
                 <select id="motifsCount"></select>
             <!-- </div>
             <div class="row"> -->
-                <label for="playerCountSel">Opponents</label>
+                <label for="playerCountSel">Players</label>
                 <select id="playerCountSel"></select>
             </div>
 
@@ -48,12 +50,15 @@
               </div>
 
             
-            <div class="row">
+            <div class="controls">
+              <div class="row">
                 <label for="seedInput">Game seed</label>
                 <input type="text" id="seedInput" placeholder="Seed (optional)" style="width:120px"/>
+                <button id="newGameBtn" class="btn">Start New Game</button>
+                <button id="undoBtn" class="btn">Undo</button>
+              </div>
             </div>
-            <button id="newGameBtn" class="btn">Start New Game</button>
-            <button id="undoBtn" class="btn">Undo</button>
+            
           </div>
         </header>
     

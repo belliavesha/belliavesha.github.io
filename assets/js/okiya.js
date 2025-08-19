@@ -193,7 +193,7 @@ function buildGameSelOptions(){
   for (let k = 1; k <= 6; k++) {
     const opt = document.createElement('option');
     opt.value = String(k);
-    opt.textContent = `${k} player${k === 1 ? '' : 's'}`;
+    opt.textContent = `${k} color${k === 1 ? '' : 's'}`;
     if (k === settings.playersNum) opt.selected = true;
     playerCountSel.appendChild(opt);
   }
@@ -502,7 +502,6 @@ copyBtn?.addEventListener('click', copyShareLink);
 
 playerCountSel?.addEventListener('change', () => {
   settings.playersNum = parseInt(playerCountSel.value, 10);
-  console.log(`Players: ${settings.playersNum}`);
 });
 
 plantsCount?.addEventListener('change', () => {
