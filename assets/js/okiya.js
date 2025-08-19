@@ -626,7 +626,7 @@ motifsCount?.addEventListener('change', () => {
 hintsBtn?.addEventListener('click', () => {
   _hintsEnabled = !_hintsEnabled;
   applyHints([]); // clear any existing hints
-  renderState
+  renderState();
   hintsBtn.classList.toggle('active', _hintsEnabled);
 });
 
