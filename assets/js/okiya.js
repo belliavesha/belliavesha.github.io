@@ -54,6 +54,9 @@ const motifsCount = document.getElementById('motifsCount');
 const playerCountSel = document.getElementById('playerCountSel'); // optional
 
 
+const hintsBtn       = document.getElementById('hintsBtn');
+
+
 // ========== Game state ==========
 
 const state = {
@@ -306,20 +309,19 @@ function updatePlayerBadge() {
 function legalMoves(lastRemoved, grid) {
     const R = grid.length;
     const C = grid[0].length;
-//   const R = state.rows, C = state.cols;
 
-  const moves = [];
-  const has = !!lastRemoved;
-  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
-    const cell = grid[r][c];
-    if (cell.takenBy) continue;
-    if (!has) {
-      if (r===0 || c===0 || r===R-1 || c===C-1) moves.push({ r, c });
-    } else if (cell.plant === lastRemoved.plant || cell.motif === lastRemoved.motif) {
-      moves.push({ r, c });
+    const moves = [];
+    const has = !!lastRemoved;
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      const cell = grid[r][c];
+      if (cell.takenBy) continue;
+      if (!has) {
+        if (r===0 || c===0 || r===R-1 || c===C-1) moves.push({ r, c });
+      } else if (cell.plant === lastRemoved.plant || cell.motif === lastRemoved.motif) {
+        moves.push({ r, c });
+      }
     }
-  }
-  return moves;
+    return moves;
 }
 
 
@@ -413,10 +415,11 @@ function renderState() {
         node.querySelector('.sym-emoji').textContent = `${p.emoji} ${m.emoji}`;
         node.querySelector('.sym-text').textContent  = `${p.label} | ${m.label}`;
   
-        const clickable = canClick(cell);
-        node.classList.toggle('disabled', !clickable);
-        node.classList.toggle('highlight', clickable);
-  
+        if (_hintsEnabled) {
+          const clickable = canClick(cell);
+          node.classList.toggle('disabled', !clickable);
+          node.classList.toggle('highlight', clickable);
+        }
         if (cell.takenBy) {
           const tok = document.createElement('div');
           tok.className = `token ${cell.takenBy}`;
@@ -429,6 +432,92 @@ function renderState() {
       }
     }
   }
+
+
+
+// ----- Hover hint machinery -----
+
+let _hinted = [];    // cache of {r,c} we’ve marked
+let _hoverKey = '';  // "r,c" of the last hovered tile (to avoid redundant work)
+let _hintsEnabled = false; // toggle for hints (can be set by UI)
+
+/** Remove .hint from any previously hinted tiles */
+function clearHints() {
+  if (!boardEl || !_hinted.length) return;
+  for (const { r, c } of _hinted) {
+    const el = boardEl.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
+    if (el) el.classList.remove('hint');
+  }
+  _hinted = [];
+}
+
+/** Apply .hint to the given list of moves, caching for later cleanup */
+function applyHints(moves) {
+  clearHints();
+  if (!boardEl) return;
+  for (const { r, c } of moves) {
+    const el = boardEl.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
+    if (el) el.classList.add('hint');
+  }
+  _hinted = moves;
+}
+
+/**
+ * Compute and display hints "from" the hovered tile:
+ * all EMPTY cells sharing plant or motif with it (per legalMoves),
+ * excluding the hovered tile itself.
+ */
+function showHintsFromTile(r, c) {
+  if (!state || !state.grid || !state.grid[r] || !state.grid[r][c]) return;
+
+  const cell = state.grid[r][c];
+  if (cell.takenBy) return; // no hints on occupied tiles
+  // Build a faux "lastRemoved" to reuse your legalMoves semantics
+  const lastLike = { plant: cell.plant, motif: cell.motif };
+
+  let moves = legalMoves(lastLike, state.grid);
+  // Exclude the origin tile itself if it snuck in and is empty
+  moves = moves.filter(m => !(m.r === r && m.c === c));
+
+  applyHints(moves);
+}
+
+/** Event handlers (delegated) */
+function _onTileMouseOver(e) {
+
+  if (!_hintsEnabled)  return;
+  const tile = e.target.closest('.tile');
+  if (!tile || !boardEl.contains(tile)) return;
+  // if (tile.takenBy) return; // no hints on occupied tiles
+
+  const key = `${tile.dataset.r},${tile.dataset.c}`;
+  if (key === _hoverKey) return;
+  _hoverKey = key;
+
+  const r = Number(tile.dataset.r), c = Number(tile.dataset.c);
+  showHintsFromTile(r, c);
+}
+
+function _onTileMouseOut(e) {
+  const tile = e.target.closest('.tile');
+  if (!tile) return;
+
+  if (tile.contains(e.relatedTarget)) return;
+
+  _hoverKey = '';
+  clearHints();
+}
+
+/** Call this ONCE after boardEl is ready. Survives re-renders since it's delegated. */
+function setupHoverHintsOnce() {
+  if (!boardEl || setupHoverHintsOnce._wired) return;
+  boardEl.addEventListener('mouseover', _onTileMouseOver);
+  boardEl.addEventListener('mouseout',  _onTileMouseOut);
+  setupHoverHintsOnce._wired = true;
+}
+
+
+
   
 
 
@@ -531,6 +620,14 @@ plantsCount?.addEventListener('change', () => {
 motifsCount?.addEventListener('change', () => {
   settings.cols =  parseInt(motifsCount.value, 10) || 4;
   setDimensions(settings.rows, settings.cols);
+});
+
+
+hintsBtn?.addEventListener('click', () => {
+  _hintsEnabled = !_hintsEnabled;
+  applyHints([]); // clear any existing hints
+  renderState(); // re-render to apply hints
+  hintsBtn.classList.toggle('active', _hintsEnabled);
 });
 
 
@@ -857,10 +954,13 @@ function updateHostControls() {
 
 // ========== Boot ==========
 async function boot() {
-    initRealtime();
+
+  initRealtime();
   
-    await joinRoom();
+  setupHoverHintsOnce();
   
-  }
+  await joinRoom();
+  
+}
 
 boot();

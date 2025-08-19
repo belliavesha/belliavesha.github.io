@@ -3,11 +3,12 @@
     --panel: #171923;
     --text: #e6e8ef;
     --muted: #9aa3b2;
-    --accent: #7c9cf6;
+    --accent: #037c4a;
     --good: #5dd39e;
     --bad: #f18f97;
-    --hl: rgba(124, 156, 246, 0.25);
-    --hint: #ffd166; 
+    --hl: rgba(87, 76, 53, 0.9185);
+    /* --hl: rgba(151, 75, 161, 0.18); */
+    --hint: rgb(37, 125, 150, 0.2); 
     /*  --g: 10px;                  */
     --tile-min: 80px;         
     --tile-max: 200px;         
@@ -59,7 +60,7 @@ header {
 
 .title {
     font-weight: 800;
-    letter-spacing: .3px;
+    letter-spacing: .4px;
     font-size: clamp(18px, 2.2vw, 24px);
 }
 
@@ -155,7 +156,7 @@ header {
 
 .tile {
     position: relative;
-    background: radial-gradient(120% 120% at 30% 20%, #2a3148, #1a2035 60%, #14192b 100%);
+    background: radial-gradient(120% 120% at 30% 20%, #242230, #1a1f33 60%, #09192e 100%);
     border: 1px solid #2c3350;
     border-radius: 12px;
     cursor: pointer;
@@ -163,7 +164,7 @@ header {
     display: grid;
     place-items: center;
     overflow: hidden;
-    margin:3px;
+    margin:4px;
 
     width: 95%;
     height: 95%;
@@ -178,23 +179,24 @@ header {
 
 
 .tile:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, .35);
+    /* transform: translateY(1px); */
+    box-shadow: inset 0 0 0 200vmax var(--hl);
+    /* border-color: var(--accent); */
 }
 
 .tile.disabled {
-    opacity: .45;
+    opacity: .8945;
     cursor: not-allowed;
 }
 
 .tile.highlight {
     outline: 2px dashed var(--accent);
-    box-shadow: inset 0 0 0 200vmax var(--hl);
+    /* box-shadow: inset 0 0 0 200vmax var(--hl); */
 }
 
 .tile.hint {
-    outline: 2px solid var(--hint);
-    box-shadow: inset 0 0 0 200vmax rgba(255, 209, 102, .18);
+    /* outline: 2px dashed var(--hint); */
+    box-shadow: inset 0 0 0 200vmax var(--hint);
 }
 
 .symbols {
@@ -212,7 +214,7 @@ header {
 
 .sym-text {
     font-size: 12px;
-    color: var(--muted);
+    color: var(--text);
     letter-spacing: .3px;
     margin-top: 2px;
 }
@@ -224,7 +226,7 @@ header {
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 6px 18px rgba(0, 0, 0, .6);
     display: grid;
     place-items: center;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: .5px;
     text-shadow: 0 1px 0 rgba(0, 0, 0, .6);
     color: #0a0c12;
@@ -395,7 +397,8 @@ header {
 }
 
 .btn:hover {
-    transform: translateY(-1px);
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .35);
 }
 
 .btn.active {
