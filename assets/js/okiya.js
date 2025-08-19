@@ -626,7 +626,7 @@ motifsCount?.addEventListener('change', () => {
 hintsBtn?.addEventListener('click', () => {
   _hintsEnabled = !_hintsEnabled;
   applyHints([]); // clear any existing hints
-  renderState(); // re-render to apply hints
+  renderState
   hintsBtn.classList.toggle('active', _hintsEnabled);
 });
 
@@ -943,7 +943,7 @@ function updateHostControls() {
   const host = isHost();
 
   // knobs you want host-only:
-  [winLenSel, diagBtn, sqBtn, seedInput, newGameBtn, motifsCount, plantsCount, playerCountSel, newRoomBtn, undoBtn
+  [winLenSel, diagBtn, sqBtn, seedInput, newGameBtn, motifsCount, plantsCount, playerCountSel, undoBtn 
   ].forEach(el => {
     if (!el) return;
     el.toggleAttribute('disabled', !host);
