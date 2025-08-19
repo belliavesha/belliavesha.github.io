@@ -94,7 +94,7 @@ export function isBorderCell(R, C, r, c) {
 
 
 export function toNotation(r, c) {
-  return `${String.fromCharCode(65 + c)}${r + 1}`;
+  return `${String.fromCharCode(97 + c)}${r + 1}`;
 }
 
 export function cloneGrid(g) {

@@ -163,7 +163,7 @@ function rebuildLegend() {
 
 
 function buildLabels() {
-  const letters = Array.from({ length: settings.cols }, (_, i) => String.fromCharCode(65 + i)); // A..Z
+  const letters = Array.from({ length: settings.cols }, (_, i) => String.fromCharCode(97 + i)); // a..z
   const numbers = Array.from({ length: settings.rows }, (_, i) => String(i + 1));               // 1..R
 
   // Top / Bottom (columns A..)
@@ -840,7 +840,7 @@ function updateHostControls() {
 async function boot() {
     initRealtime();
   
-    await joinRoom();
+    await createNewRoom();
   
   }
 
