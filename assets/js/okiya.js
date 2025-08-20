@@ -393,7 +393,7 @@ function renderState() {
       statusBox.innerHTML = `<span class="winner">${who}</span> wins!`;
     } else {
       const count = legalMoves(state.lastRemoved, state.grid).length;
-      statusBox.textContent = `${count} legal move${count === 1 ? '' : 's'} available.`;
+      statusBox.textContent = `${count} move${count === 1 ? '' : 's'} available.`;
     }
   
     // Board render from current state + settings dimensions
@@ -412,7 +412,7 @@ function renderState() {
         node.querySelector('.sym-emoji').textContent = `${p.emoji} ${m.emoji}`;
         node.querySelector('.sym-text').textContent  = `${p.label} | ${m.label}`;
   
-        if (_hintsEnabled) {
+        if (options.hintsEnabled) {
           const clickable = canClick(cell);
           node.classList.toggle('disabled', !clickable);
           node.classList.toggle('highlight', clickable);
@@ -433,18 +433,20 @@ function renderState() {
 
 
 // ----- Hover hint machinery -----
+const options = {
+  hinted: [], // cache of {r,c} marked
+  hoverKey: '', // "r,c" of the last hovered tile
+  hintsEnabled: false // toggle for hints
+};
 
-let _hinted = [];    // cache of {r,c} we’ve marked
-let _hoverKey = '';  // "r,c" of the last hovered tile (to avoid redundant work)
-let _hintsEnabled = false; // toggle for hints (can be set by UI)
 
 function clearHints() {
-  if (!boardEl || !_hinted.length) return;
-  for (const { r, c } of _hinted) {
+  if (!boardEl || !options.hinted.length) return;
+  for (const { r, c } of options.hinted) {
     const el = boardEl.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
     if (el) el.classList.remove('hint');
   }
-  _hinted = [];
+  options.hinted = [];
 }
 
 function applyHints(moves) {
@@ -454,7 +456,7 @@ function applyHints(moves) {
     const el = boardEl.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
     if (el) el.classList.add('hint');
   }
-  _hinted = moves;
+  options.hinted = moves;
 }
 
 function showHintsFromTile(r, c) {
@@ -473,14 +475,14 @@ function showHintsFromTile(r, c) {
 /** Event handlers (delegated) */
 function _onTileMouseOver(e) {
 
-  if (!_hintsEnabled)  return;
+  if (!options.hintsEnabled)  return;
   const tile = e.target.closest('.tile');
   if (!tile || !boardEl.contains(tile)) return;
   // if (tile.takenBy) return; // no hints on occupied tiles
 
   const key = `${tile.dataset.r},${tile.dataset.c}`;
-  if (key === _hoverKey) return;
-  _hoverKey = key;
+  if (key === options.hoverKey) return;
+  options.hoverKey = key;
 
   const r = Number(tile.dataset.r), c = Number(tile.dataset.c);
   showHintsFromTile(r, c);
@@ -492,7 +494,7 @@ function _onTileMouseOut(e) {
 
   if (tile.contains(e.relatedTarget)) return;
 
-  _hoverKey = '';
+  options.hoverKey = '';
   clearHints();
 }
 
@@ -537,7 +539,6 @@ function undo() {
 
 // ========== New game ==========
 function newGame() {
-    console.log(`New game:`, state, settings);
   const R = settings.rows, C = settings.cols;
   setDimensions(R, C);
   
@@ -604,10 +605,10 @@ motifsCount?.addEventListener('change', () => {
 
 
 hintsBtn?.addEventListener('click', () => {
-  _hintsEnabled = !_hintsEnabled;
+  options.hintsEnabled = !options.hintsEnabled;
   applyHints([]); 
   renderState();
-  hintsBtn.classList.toggle('active', _hintsEnabled);
+  hintsBtn.classList.toggle('active', options.hintsEnabled);
 });
 
 
@@ -657,7 +658,6 @@ function roomFromHash() {
 
 
 async function createNewRoom() {
-    console.log(`Creating new room`, settings, state);
     const id = `room-${Math.random().toString(36).slice(2,8)}`;
     location.hash = id;
     renderSettings();
@@ -685,7 +685,7 @@ async function joinRoom(roomId) {
     if (!room) return createNewRoom(); 
     if (!location.hash) location.hash = room;
     if (roomEl) roomEl.textContent = room;
-    console.log(`Joining room: ${room} (uid: ${uid})`);
+    // console.log(`Joining room: ${room} (uid: ${uid})`);
   
     const rootRef      = ref(db, `okiya/${room}`);
     const playersRef   = ref(db, `okiya/${room}/players`);
@@ -718,7 +718,7 @@ async function joinRoom(roomId) {
     const presRef = ref(db, `okiya_presence/${room}/${uid}`);
     update(presRef, { id: uid, at: serverTimestamp() });
     onDisconnect(presRef).remove();
-  
+
     updatePlayerBadge();
   
     // --- Live subscriptions ---
@@ -817,8 +817,6 @@ function mySeatFromRoot(root, who) {
     return null;
 }
 
-    // — DB-side win checks (pure on POJO) —
-    // Uses immutable `sets` (settings) for board geometry and rules.
 function checkWinForDB(player, st, sets) {
     const k = sets.winLen;
     const R = sets.rows, C = sets.cols;
@@ -832,13 +830,11 @@ function checkWinForDB(player, st, sets) {
       return false; 
     };
   
-    // Rows
     for (let r = 0; r < R; r++) { 
       const line = []; 
       for (let c = 0; c < C; c++) line.push(st.grid[r][c].takenBy); 
       if (needK(line)) return true; 
     }
-    // Columns
     for (let c = 0; c < C; c++) { 
       const line = []; 
       for (let r = 0; r < R; r++) line.push(st.grid[r][c].takenBy); 
@@ -853,7 +849,6 @@ function checkWinForDB(player, st, sets) {
         for (let r = 0, c = c0; r < R && c < C; r++, c++) line.push(st.grid[r][c].takenBy); 
         if (needK(line)) return true; 
       }
-      // ↘ diagonals starting from left column (skip [0,0] to avoid duplicate)
       for (let r0 = 1; r0 < R; r0++) { 
         const line = []; 
         for (let r = r0, c = 0; r < R && c < C; r++, c++) line.push(st.grid[r][c].takenBy); 
@@ -865,7 +860,6 @@ function checkWinForDB(player, st, sets) {
         for (let r = 0, c = c0; r < R && c >= 0; r++, c--) line.push(st.grid[r][c].takenBy); 
         if (needK(line)) return true; 
       }
-      // ↙ diagonals starting from right column (skip [0,C-1] to avoid duplicate)
       for (let r0 = 1; r0 < R; r0++) { 
         const line = []; 
         for (let r = r0, c = C - 1; r < R && c >= 0; r++, c--) line.push(st.grid[r][c].takenBy); 
@@ -875,12 +869,12 @@ function checkWinForDB(player, st, sets) {
   
     // 2x2 squares
     if (sets.squareOn) {
-      for (let r = 0; r < R - 1; r++) {
-        for (let c = 0; c < C - 1; c++) {
+      for (let r = 1; r < R ; r++) {
+        for (let c = 1; c < C ; c++) {
           if (st.grid[r][c].takenBy     === player &&
-              st.grid[r+1][c].takenBy   === player &&
-              st.grid[r][c+1].takenBy   === player &&
-              st.grid[r+1][c+1].takenBy === player) return true;
+              st.grid[r-1][c].takenBy   === player &&
+              st.grid[r][c-1].takenBy   === player &&
+              st.grid[r-1][c-1].takenBy === player) return true;
         }
       }
     }

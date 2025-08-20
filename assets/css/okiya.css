@@ -103,7 +103,8 @@ header {
     justify-content: right;
     max-width: 100%;    
     max-height: 100% ;
-    background: transparent;
+    background: #0a0c12;
+    /* background: #037c4a; */
     border: 0;
     /* padding: 10px; */
     /* min-width: 40vw;     */
@@ -175,14 +176,15 @@ header {
     display: grid;
     place-items: center;
     overflow: hidden;
-    margin:4px;
+    margin: 2px;
+    padding: 1px;
 
-    width: 95%;
-    height: 95%;
-    min-width: 5vw;
-    min-height: 5vh;
-    max-width: 250px;   
-    max-height: 250px; 
+    width: 90%;
+    height: 90%;
+    min-width: var(--tile-min);
+    min-height: var(--tile-min);
+    max-width: var(--tile-max);
+    max-height: var(--tile-max);
     aspect-ratio: 1;
 }
 
@@ -218,16 +220,19 @@ header {
 }
 
 .sym-emoji {
-    font-size: clamp(20px, 2.6vw, 30px);
+    /* font-size:  clamp(20px, 2.4vw, 30px); */
+    font-size: 34px;
+    letter-spacing: -12px;
     line-height: 1;
+    color:  rgba(255, 255, 255, .936);
     filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .06));
 }
 
 .sym-text {
-    font-size: 12px;
+    font-size: 10px;
     color: var(--text);
-    letter-spacing: .3px;
-    margin-top: 2px;
+    /* letter-spacing: .1px; */
+    margin-top: 10px;
 }
 
 .token {
