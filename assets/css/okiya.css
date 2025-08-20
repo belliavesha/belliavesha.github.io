@@ -131,9 +131,9 @@ header {
 
 
 
-.labels { font: 12px/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #9aa3b2; margin: 4px;}
-.labels-top    { grid-column: 2; grid-row: 1; display: grid; justify-items: center; gap: 4px; }
-.labels-bottom { grid-column: 2; grid-row: 3; display: grid; justify-items: center; gap: 4px; }
+.labels { font: 12px/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #9aa3b2; }
+.labels-top    { grid-column: 2; grid-row: 1; display: grid; justify-items: center; gap: 4px; margin-bottom: 3px;}
+.labels-bottom { grid-column: 2; grid-row: 3; display: grid; justify-items: center; gap: 4px; margin-top: 3px; }
 .labels-left,
 .labels-right {
   grid-row: 2;
@@ -145,8 +145,8 @@ header {
   grid-auto-rows: 1fr;
 }
 
-.labels-left  { grid-column: 1; justify-items: end; }
-.labels-right { grid-column: 3; justify-items: start; }
+.labels-left  { grid-column: 1; justify-items: end; margin-right: 3px; }
+.labels-right { grid-column: 3; justify-items: start; margin-left: 3px;}
   
 
 
@@ -159,7 +159,7 @@ header {
   justify-content: flex-end;/* left rail text hugs the board */
   width: 2ch;
   height: 100%;
-  opacity: .9;
+  opacity: .99;
 }
 .labels-right > span { justify-content: flex-start; } /* mirror for right rail */  
 
