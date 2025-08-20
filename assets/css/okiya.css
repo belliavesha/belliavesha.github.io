@@ -221,10 +221,12 @@ header {
 
 .sym-emoji {
     /* font-size:  clamp(20px, 2.4vw, 30px); */
-    font-size: 34px;
-    letter-spacing: -12px;
+    /* font-family: 'Noto Color Emoji'; */
+    font-size: 36px;
+    letter-spacing: -14px;
     line-height: 1;
-    color:  rgba(255, 255, 255, .936);
+    padding: 1px;
+    margin: 1px;color:  rgba(255, 255, 255, .9036);
     filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .06));
 }
 
@@ -327,6 +329,7 @@ header {
   
   /* Legend text tone */
   .legend {
+    /* font-family:  'Georgia', 'Garamond', serif; */
     font-size: 13px;
     color: #9aa3b2;
     line-height: 1.2;
