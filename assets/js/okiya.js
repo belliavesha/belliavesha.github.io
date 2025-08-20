@@ -171,18 +171,11 @@ function rebuildLegend() {
 
   legendBox.innerHTML =
   `<strong>Players:</strong> ${players}<br>` +
-    `<strong>Plants:</strong> ${plants}<br>` +
-    `<strong>Motifs:</strong> ${motifs}<br>` +
+  `<strong>Motifs:</strong> ${motifs}<br>` +
+  `<strong>Plants:</strong> ${plants}<br>` +
     '';
 }
 
-// function rebuildLegend() {
-//   const plants = settings.plants.map(x => `${x.emoji} ${x.label}`).join(' · ');
-//   const motifs = settings.motifs.map(x => `${x.emoji} ${x.label}`).join(' · ');
-
-
-//   legendBox.innerHTML = `<strong>Plants:</strong> ${plants}<br><strong>Motifs:</strong> ${motifs}`;
-// }
 
 
 function buildLabels() {
@@ -383,7 +376,7 @@ function renderState() {
     if (state.lastRemoved) {
       const p = plantInfo(settings.plants, state.lastRemoved.plant);
       const m = motifInfo(settings.motifs, state.lastRemoved.motif);
-      lastTileEl.innerHTML = `<span>${p.emoji}</span> ${p.label} | <span>${m.emoji}</span> ${m.label}`;
+      lastTileEl.innerHTML = `<span>${m.emoji}</span>${m.label}  ·<span>${p.emoji}</span>${p.label}`;
     } else {
       lastTileEl.textContent = 'None (place on border)';
     }
@@ -409,8 +402,8 @@ function renderState() {
         const p = plantInfo(settings.plants, cell.plant);
         const m = motifInfo(settings.motifs, cell.motif);
   
-        node.querySelector('.sym-emoji').textContent = `${p.emoji} ${m.emoji}`;
-        node.querySelector('.sym-text').textContent  = `${p.label} | ${m.label}`;
+        node.querySelector('.sym-emoji').textContent = `${m.emoji} ${p.emoji}`;
+        node.querySelector('.sym-text').textContent  = `${m.label} ${p.label}`;
   
         if (options.hintsEnabled) {
           const clickable = canClick(cell);
@@ -743,7 +736,7 @@ async function joinRoom(roomId) {
     onValue(stateRef, async (snap) => {
       const s = snap.val();
       if (!s) {
-        statusBox.textContent = 'Waiting for host to start a game…';
+        statusBox.textContent = 'Waiting for host to start a game';
         return;
       }
       console.log(`State update for room ${room}:`, s);
