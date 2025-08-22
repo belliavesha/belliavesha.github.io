@@ -107,6 +107,7 @@ export function isBorderCell(R, C, r, c) {
 
 
 export function toNotation(r, c) {
+  if (r < 0 || c < 0) return `ff`;
   return `${String.fromCharCode(97 + c)}${r + 1}`;
 }
 

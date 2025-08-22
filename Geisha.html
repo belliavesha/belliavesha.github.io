@@ -93,7 +93,7 @@
           </div>
           <div class="row">
             <label for="depthSel">Depth</label>
-            <select id="depthSel"><option value="3">3</option><option value="5" selected>5</option></select>
+            <select id="depthSel"><option value="3">3</option><option value="5" selected>5</option><option value="9">9</option><option value="17">17</option></select>
           </div>
           <div class="row">
             <button id="toggleHintsBtn" class="btn">Hints</button>
@@ -188,7 +188,7 @@
       winLen:3,
       diagOn:true,
       squareOn:true,
-      maxDepth:5,
+      maxDepth:9,
       seed:"",
       rng:Math.random,
     };
@@ -405,22 +405,32 @@
 
     function orderMoves(moves){ const n=state.n; const cx=(n-1)/2, cy=(n-1)/2; return moves.slice().sort((a,b)=>{ const sa=-(Math.abs(a.r-cx)+Math.abs(a.c-cy)); const sb=-(Math.abs(b.r-cx)+Math.abs(b.c-cy)); return sb-sa; }); }
 
-    function negamax(player,lastRemoved,grid,alpha,beta,depth,maxDepth){
+    function negamax(player,lastRemoved,grid,alpha,beta,depth, maxDepth){
       state.nodes++;
       const opp=player==='p1'?'p2':'p1';
-      if(checkWinFor(opp,grid)) return {score:-INF+depth,exact:true};
+
+      // If opponent just created a win, this node is losing (note the +depth tie-breaker on the negative side)
+      if(checkWinFor(opp,grid)) return {score:-INF+depth, exact:true};
       if(depth>=maxDepth) return {score:0,exact:false};
+
+      // No legal moves = current player blocked => loss
       let moves=legalMoves(lastRemoved,grid);
-      if(moves.length===0) return {score:-INF+depth,exact:true};
-      const key=posKey(player,lastRemoved,grid); const hit=state.tt.get(key); if(hit) return hit;
+      if(moves.length===0) return {score:-INF+depth, exact:true};
+
+      // Transposition look-up (only store exact nodes; see below)
+      const key=posKey(player,lastRemoved,grid);
+      const hit=state.tt.get(key); if(hit) return hit;
+
       moves=orderMoves(moves);
-      let best=-INF, exact=true;
+      let best=-INF; let exact=true;
       for(const mv of moves){
         const lr=applyMove(grid,mv,player);
         let val;
         if(checkWinFor(player,grid)){
+          // Immediate victory
           val=INF-depth;
         }else{
+          // Negamax flip with α–β window
           const r=negamax(opp,lr,grid,-beta,-alpha,depth+1,maxDepth);
           val=-r.score; if(!r.exact) exact=false;
         }
@@ -429,47 +439,36 @@
         if(val>alpha) alpha=val;
         if(alpha>=beta){ exact=false; break; }
       }
-      const res={score:best,exact};
+      const res={score:best, exact};
       if(exact) state.tt.set(key,res);
       return res;
     }
 
-    function evaluateAllMoves(){
+  function evaluateAllMoves(){
       if(state.winner) return null;
       const grid=cloneGrid(state.grid);
       const player=state.turn;
-      const rootKey=posKey(player,state.lastRemoved,grid);
-      if(state.rootCache.has(rootKey)){ const cached=state.rootCache.get(rootKey); state.nodes=0; return cached; }
       const moves=legalMoves(state.lastRemoved,grid);
-      const results=[]; state.nodes=0;
+      const results=[]; state.nodes=0; state.tt.clear();
       for(const mv of orderMoves(moves)){
         const lr=applyMove(grid,mv,player);
-        let val, exact;
+        let val;
         if(checkWinFor(player,grid)){
-          val=INF-1; exact=true;
-        } else {
-          const opp=player==='p1'?'p2':'p1';
-          let oppHasMate1=false;
-          const oppMoves=legalMoves(lr,grid);
-          for(const rmv of oppMoves){
-            const _prev=applyMove(grid,rmv,opp);
-            if(checkWinFor(opp,grid)){ oppHasMate1=true; undoMove(grid,rmv); break; }
-            undoMove(grid,rmv);
-          }
-          if(oppHasMate1){ val=-INF+2; exact=true; }
-          else { const r=negamax(opp,lr,grid,-INF,INF,1,state.maxDepth); val=-r.score; exact=r.exact; }
+          // Mate in 1 is the theoretical maximum from this ply: +INF-1
+          val=INF-1;
+        }else{
+          const r=negamax(player==='p1'?'p2':'p1',lr,grid,-INF,INF,1);
+          val=-r.score;
         }
         undoMove(grid,mv);
-        results.push({mv,score:val,exact});
+        results.push({mv,score:val});
       }
-      let best=-INF; for(const r of results) if(r.exact && r.score>best) best=r.score;
-      const bestMoves=results.filter(r=>r.exact && r.score===best).map(r=>r.mv);
-      const pack={results,bestScore:best===-INF?0:best,bestMoves,nodes:state.nodes};
-      state.rootCache.set(rootKey,pack);
-      return pack;
+      let best=-INF; for(const r of results) if(r.score>best) best=r.score;
+      const bestMoves=results.filter(r=>r.score===best).map(r=>r.mv);
+      return {results,bestScore:best,bestMoves,nodes:state.nodes};
     }
 
-    function scoreToText(score){ if(score>0){ const d=INF-score; return d===1?`Win in 1`:`Win in ${d}`; } if(score<0){ const d=INF+score; return d===1?`Loss in 1`:`Loss in ${d}`; } return 'Unknown'; }
+
 
     // ===== Rendering =====
     function render(){
@@ -560,7 +559,7 @@
     winLenSel.addEventListener('change',()=>{ state.winLen=parseInt(winLenSel.value,10); state.tt.clear(); state.rootCache.clear(); if(state.hintsOn||state.bestOn){ computeHints(); render(); } });
     diagBtn.addEventListener('click',()=>{ state.diagOn=!state.diagOn; diagBtn.classList.toggle('active',state.diagOn); state.tt.clear(); state.rootCache.clear(); if(state.hintsOn||state.bestOn){ computeHints(); render(); } });
     sqBtn.addEventListener('click',()=>{ state.squareOn=!state.squareOn; sqBtn.classList.toggle('active',state.squareOn); state.tt.clear(); state.rootCache.clear(); if(state.hintsOn||state.bestOn){ computeHints(); render(); } });
-    depthSel.addEventListener('change',()=>{ state.maxDepth=parseInt(depthSel.value,10); state.tt.clear(); state.rootCache.clear(); if(state.hintsOn||state.bestOn){ computeHints(); render(); } });
+    depthSel.addEventListener('change',()=>{ state.maxDepth=parseInt(depthSel.value,10); console.log(depthSel); state.tt.clear(); state.rootCache.clear(); if(state.hintsOn||state.bestOn){ computeHints(); render(); } });
 
     window.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z') undo(); if(e.key.toLowerCase()==='r') { newGame(); buildWinLenOptions(); } if(e.key.toLowerCase()==='h') toggleHints(); if(e.key.toLowerCase()==='b') toggleBest(); });
 

@@ -72,36 +72,50 @@
             <div id="labels-bottom" class="labels labels-bottom"></div>
           </div>
           <aside class="sidebar panel">
-            <div class="badge badge-subtle mt-8">Status</div>
-            
-            <div class="row">
-                <span class="pill kv" id="playerBadge">
-                    <span class="k">You are:</span>
-                    <span class="v">
-                  <span id="playerSwatch" class="swatch"></span>
-                  <span id="playerText">Red</span>
-                </span>
-              </span>
-            </div>
-            
-            <div class="row">
-                <span class="pill kv" id="turnBadge">
-                    <span class="k">Now moves:</span>
-                    <span class="v">
-                        <span id="turnSwatch" class="swatch"></span>
-                        <span id="turnText">Red</span>
+              <!-- <div>
+              
+
+                <div class="badge badge-subtle mt-8">Last tile</div>
+                <div class="tile disabled" id="lastTile">—</div>
+              </div> -->
+              
+                <!-- right -->
+                <div class="badge badge-subtle mt-8">Status</div>
+
+                    
+                  <div class="row">
+                      <span class="pill kv" id="turnBadge">
+                          <!-- <span class="k">Now:</span> -->
+                          <span class="v">
+                              <span id="turnSwatch" class="swatch"></span>
+                              <span id="turnText">Red to start a game</span>
+                          </span>
+                        </span>
+                        <button id="hintsBtn" class="btn">Highlight</button>
+                  </div>
+                  <div class="row">
+                    <span class="pill kv" id="playerBadge">
+                        <span class="k">You're </span>
+                        <span class="v">
+                          <span id="playerSwatch" class="swatch"></span>
+                          <span id="playerText">Red</span>
+                        </span>
                     </span>
-                  </span>
-                  <button id="hintsBtn" class="btn">Hints</button>
-            </div>
-            
-            <div class="row">
-                <span class="pill kv">
+                    <button id="resignBtn" class="btn">Resign</button>
+                  </div>
+                      
+                  <div class="badge badge-subtle mt-8">Last tile</div>
+                  <div class="tile disabled" id="lastTile">No game</div>
+                  
+                  
+                      
+                <!-- <div class="row"> -->
+                  <!-- <span class="pill kv">
                     <span class="k">Last tile:</span>
-                    <span class="v" id="lastTile">—</span>
-                </span>
-            </div>
-            <div class="status" id="statusBox">—</div>
+                    <span class="v" id="lastTileText">—</span> 
+                  </span> -->
+            <!-- </div> -->
+            <!-- <div class="status" id="statusBox">—</div> -->
             
           
             <div class="badge badge-subtle mt-8">Game Info</div>

@@ -21,7 +21,8 @@ import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gsta
 const boardEl     = document.getElementById('board');
 const tileTpl     = document.getElementById('tileTpl');
 const statusBox   = document.getElementById('statusBox');
-const lastTileEl  = document.getElementById('lastTile');
+const lastTileTile  = document.getElementById('lastTile');
+const lastTileText  = document.getElementById('lastTileText');
 const turnText    = document.getElementById('turnText');
 const turnSwatch  = document.getElementById('turnSwatch');
 const playerText    = document.getElementById('playerText');
@@ -55,6 +56,7 @@ const playerCountSel = document.getElementById('playerCountSel'); // optional
 
 
 const hintsBtn       = document.getElementById('hintsBtn');
+const resignBtn     = document.getElementById('resignBtn'); 
 
 
 // ========== Game state ==========
@@ -273,10 +275,15 @@ function resetGameState() {
 
 
 function updateTurnDisplay() {
+  console.log(`Update turn display:`, state.turn, state.winner);
   const seat = state.turn;
-  turnText.textContent = seatLabel(seat);
+  turnText.textContent = `${seatLabel(seat)}'s turn`;
   turnSwatch.style.background = seatCssVar(seat);
-  lastTileEl.textContent = '—';
+  if (state.winner) {
+    const who = seatLabel(state.winner);
+    turnText.textContent = `${who}`;
+    turnText.innerHTML = turnText.innerHTML + ` <span class="winner"> WINS</span>`;
+  } 
 }
 
 function updatePlayerBadge() {
@@ -335,7 +342,7 @@ function renderLog() {
     const mv = state.moveLog[i];
     const num = (i + 1) / settings.playersNum + 1;
     var suffix = ( (i + 1) % settings.playersNum === 0) ? `;\n${num}. ` : `, `;
-    if (state.winner && (i + 1) === state.moveLog.length ) suffix = `#`;
+    if (state.winner && (i + 1) === state.moveLog.length) suffix = `#`;
     const lbl = seatLabel(mv.player);
     lines.push(`${lbl[0]} ${toNotation(mv.r, mv.c)}${suffix}`);
   }
@@ -369,24 +376,22 @@ function renderState() {
     renderLog();
     updateTurnDisplay();
   
-    const seat = state.turn;
-    if (turnText)   turnText.textContent = seatLabel(seat);
-    if (turnSwatch) turnSwatch.style.background = seatCssVar(seat);
-  
     if (state.lastRemoved) {
       const p = plantInfo(settings.plants, state.lastRemoved.plant);
       const m = motifInfo(settings.motifs, state.lastRemoved.motif);
-      lastTileEl.innerHTML = `<span>${m.emoji}</span>${m.label}  ·<span>${p.emoji}</span>${p.label}`;
+      // lastTileText.innerHTML = `<span>${m.emoji}</span>${m.label}  ·<span>${p.emoji}</span>${p.label}`;
+      lastTileTile.innerHTML = `<span class="sym-emoji">${m.emoji} ${p.emoji}</span> <span class="sym-text">${m.label} ${p.label}</span>`;
     } else {
-      lastTileEl.textContent = 'None (place on border)';
+      // lastTileText.textContent = 'None (place on border)';
+      lastTileTile.innerHTML = `<span class="sym-emoji">❌</span> <span class="sym-text">free move</span>`;
     }
   
     if (state.winner) {
       const who = seatLabel(state.winner);
-      statusBox.innerHTML = `<span class="winner">${who}</span> wins!`;
+      // statusBox.innerHTML = `<span class="winner">${who}</span> wins!`;
     } else {
-      const count = legalMoves(state.lastRemoved, state.grid).length;
-      statusBox.textContent = `${count} move${count === 1 ? '' : 's'} available.`;
+      // const count = legalMoves(state.lastRemoved, state.grid).length;
+      // statusBox.textContent = `${count} move${count === 1 ? '' : 's'} available.`;
     }
   
     // Board render from current state + settings dimensions
@@ -501,15 +506,17 @@ function setupHoverHintsOnce() {
 
 // ========== Local moves (offline) ==========
 function placeToken(cell) {
-    if (!state.grid || !state.grid.length) return;
-    if (!canClick(cell)) return;
-  
+  const me = mySeat();
 
-    if (isOnline()) {
-        publishMove(cell.r, cell.c);
-        return; // Realtime will re-render everyone
-    }
-    render();
+  if (!state.grid || !state.grid.length || state.turn !== me) return;
+  if (!canClick(cell)) return;
+
+
+  if (isOnline()) {
+      publishMove(cell.r, cell.c);
+      return; // Realtime will re-render everyone
+  }
+  render();
 }
 
 function undo() {
@@ -561,10 +568,46 @@ function newGame() {
 }
 
 
+async function resignGame() {
+  if (!room) return;
+  if (resignBtn) resignBtn.disabled = true;
+  if (!settings || !settings.playersNum || !state || !state.turn || state.winner) return;
+
+  try {
+    const rootRef = ref(db, `okiya/${room}`);
+    await runTransaction(rootRef, (root) => {
+      root = root || {};
+      const st   = root.state;
+      const sets = root.settings;
+      const me   = mySeatFromRoot(root, uid);
+      if (!sets || !st || st.winner ) return root;
+
+      const nPlayers =  sets.playersNum;
+      const winner = prevSeatLocal(me, nPlayers);
+      st.winner = winner;
+
+      st.moveLog = Array.isArray(st.moveLog) ? st.moveLog.slice() : [];
+      st.moveLog.push({ player: me, r: 1, c: -1 }); // dummy move to log resign
+
+      root.state = st;
+      return root;
+    });
+  } catch (err) {
+    console.error('Resign failed:', err);
+    // if (statusBox) statusBox.textContent = 'Resign failed. Try again.';
+    
+  } finally {
+    if (resignBtn) resignBtn.disabled = false;
+  }
+}
+
+
 
 // ========== Wiring: local UI ==========
 newGameBtn?.addEventListener('click', () => newGame());
 undoBtn?.addEventListener('click', undo);
+
+resignBtn?.addEventListener('click', () => resignGame());
 
 
 winLenSel?.addEventListener('change', () => {
@@ -736,8 +779,10 @@ async function joinRoom(roomId) {
     onValue(stateRef, async (snap) => {
       const s = snap.val();
       if (!s) {
-        statusBox.textContent = 'Waiting for host to start a game';
         return;
+        // statusBox.textContent = 'Waiting for host to start a game';
+        // turnSwatch.style.background = seatCssVar('p1');
+        // turnText.textContent =  `${seatLabel('p1')} to start a game`;
       }
       console.log(`State update for room ${room}:`, s);
       deserializeStateInto(state, s);
@@ -757,7 +802,10 @@ function mySeat() {
 
 async function copyShareLink() {
   const url = `${location.origin}${location.pathname}#${room || roomFromHash() || ''}`;
-  try { await navigator.clipboard.writeText(url); statusBox.textContent = 'Link copied.'; } catch {}
+  try { 
+    await navigator.clipboard.writeText(url); 
+    // statusBox.textContent = 'Link copied.'; 
+  } catch {}
 }
 
 async function publishMove(r, c) {
