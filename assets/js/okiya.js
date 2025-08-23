@@ -59,6 +59,12 @@ const hintsBtn       = document.getElementById('hintsBtn');
 const resignBtn     = document.getElementById('resignBtn'); 
 
 
+const bckBtn       = document.getElementById('bckBtn');
+const fwdBtn       = document.getElementById('fwdBtn');
+const bckAllBtn       = document.getElementById('bckAllBtn');
+const fwdAllBtn       = document.getElementById('fwdAllBtn');
+
+
 // ========== Game state ==========
 
 const state = {
@@ -282,6 +288,7 @@ function updateTurnDisplay() {
   if (state.winner) {
     const who = seatLabel(state.winner);
     turnText.textContent = `${who}`;
+    turnSwatch.style.background = seatCssVar(state.winner);
     turnText.innerHTML = turnText.innerHTML + ` <span class="winner"> WINS</span>`;
   } 
 }
@@ -366,6 +373,7 @@ function updateRuleButtons() {
 function renderSettings() {
     // console.log(`Render settings:`, settings);
     setDimensions(settings.rows, settings.cols);
+    seedInput.value = settings.seed;
     buildGameSelOptions();
     updatePlayerBadge(); 
     updateRuleButtons();
@@ -381,6 +389,13 @@ function renderState() {
       const m = motifInfo(settings.motifs, state.lastRemoved.motif);
       // lastTileText.innerHTML = `<span>${m.emoji}</span>${m.label}  ·<span>${p.emoji}</span>${p.label}`;
       lastTileTile.innerHTML = `<span class="sym-emoji">${m.emoji} ${p.emoji}</span> <span class="sym-text">${m.label} ${p.label}</span>`;
+      const tok = document.createElement('div');
+      const takenBy = prevSeatLocal(state.turn, settings.playersNum); 
+      tok.className = `token ${takenBy}last`;
+      // tok.textContent = seatLabel(move.player).toUpperCase();
+      lastTileTile.appendChild(tok);
+     
+
     } else {
       // lastTileText.textContent = 'None (place on border)';
       lastTileTile.innerHTML = `<span class="sym-emoji">❌</span> <span class="sym-text">free move</span>`;
@@ -398,6 +413,7 @@ function renderState() {
     boardEl.innerHTML = '';
     boardEl.style.gridTemplateColumns = `repeat(${settings.cols}, 1fr)`;
   
+
     for (let r = 0; r < settings.rows; r++) {
       for (let c = 0; c < settings.cols; c++) {
         const cell = state.grid[r][c];
@@ -416,10 +432,25 @@ function renderState() {
           node.classList.toggle('highlight', clickable);
         }
         if (cell.takenBy) {
-          const tok = document.createElement('div');
-          tok.className = `token ${cell.takenBy}`;
-          tok.textContent = seatLabel(cell.takenBy).toUpperCase();
-          node.appendChild(tok);
+          for (let i = 0; i < state.moveLog.length; i++) {
+              const move = state.moveLog[i];
+              if (move.r == r && move.c == c) { // only show tokens for this cell
+                const tok = document.createElement('div');
+                if (i + options.rewind >= state.moveLog.length) {
+                  tok.className = `token ${move.player}last`;
+                  console.log(`Last token for ${move.player} at ${r},${c}`, `token ${move.player}last`);
+                } else {
+                  tok.className = `token ${move.player}`;
+                  tok.textContent = seatLabel(move.player).toUpperCase();
+                }
+                node.appendChild(tok);
+              }
+          }
+          
+          // const tok = document.createElement('div');
+          // tok.className = `token ${cell.takenBy}`;
+          // tok.textContent = seatLabel(cell.takenBy).toUpperCase();
+          // node.appendChild(tok);
         }
   
         node.addEventListener('click', () => placeToken(cell));
@@ -434,7 +465,8 @@ function renderState() {
 const options = {
   hinted: [], // cache of {r,c} marked
   hoverKey: '', // "r,c" of the last hovered tile
-  hintsEnabled: false // toggle for hints
+  hintsEnabled: false, // toggle for hints
+  rewind: 1,
 };
 
 
@@ -604,6 +636,28 @@ async function resignGame() {
 
 
 // ========== Wiring: local UI ==========
+
+bckBtn?.addEventListener('click', () => {
+  options.rewind = Math.min(options.rewind + 1, state.moveLog.length);
+  renderState();
+} );
+
+fwdBtn?.addEventListener('click', () => {
+  options.rewind = Math.max(options.rewind - 1, 0);
+  renderState();
+} );
+
+bckAllBtn?.addEventListener('click', () => {
+  options.rewind = state.moveLog.length;
+  renderState();
+} );
+
+fwdAllBtn?.addEventListener('click', () => {
+  options.rewind = 0;
+  renderState();
+} );
+
+
 newGameBtn?.addEventListener('click', () => newGame());
 undoBtn?.addEventListener('click', undo);
 
