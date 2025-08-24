@@ -93,7 +93,7 @@ header {
 
 
 .board {
-    /* justify-self: left; */
+    justify-self: left;
     display: grid;
     gap: var(--g);            
     padding: 2px;
