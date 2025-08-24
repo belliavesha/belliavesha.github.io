@@ -199,7 +199,7 @@ header {
 }
 
 .tile.disabled {
-    opacity: .945;
+    opacity: .91;
     cursor: not-allowed;
 }
 
