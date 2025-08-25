@@ -64,6 +64,7 @@ const fwdBtn       = document.getElementById('fwdBtn');
 const bckAllBtn       = document.getElementById('bckAllBtn');
 const fwdAllBtn       = document.getElementById('fwdAllBtn');
 
+const renameBtn = document.getElementById('renameBtn');
 
 // ========== Game state ==========
 
@@ -294,6 +295,7 @@ function updateTurnDisplay() {
 }
 
 function updatePlayerBadge() {
+  console.log(`Update player badge: uid=${uid}`, seats, nick);
   const seat = mySeat();
   const badge = document.getElementById('playerBadge');
 
@@ -311,6 +313,7 @@ function updatePlayerBadge() {
   playerText.textContent = label;
   playerSwatch.style.background = cssVar;
   badge?.classList.remove('spectator');
+  playerText.textContent = playerText.textContent + ', ' + nick;
 }
 
 
@@ -716,6 +719,8 @@ const firebaseConfig = {
 let app, db, auth, uid = null;
 let room = null;
 let seats = {};
+let nick = `Player-${Math.random().toString(36).slice(2,8)}`;
+
 
 
 function initRealtime() {
@@ -723,7 +728,7 @@ function initRealtime() {
   db  = getDatabase(app);
   auth = getAuth(app);
   onAuthStateChanged(auth, (user) => {
-    if (user) {uid = user.uid;  updatePlayerBadge();}
+    if (user) {uid = user.uid; }
     else signInAnonymously(auth).catch(console.error);
   });
 }
@@ -750,7 +755,9 @@ function roomFromHash() {
 async function createNewRoom() {
     const id = `room-${Math.random().toString(36).slice(2,8)}`;
     location.hash = id;
+    resetGameState();
     renderSettings();
+    renderState();
     return joinRoom(id);
 }
 
@@ -796,11 +803,16 @@ async function joinRoom(roomId) {
   
       for (let i = 0; i < maxSeats; i++) {
         const s = SEAT_IDS[i];
-        if (!root.players[s] || root.players[s] === uid) { root.players[s] = uid; break; }
+        if (!root.players[s] || root.players[s].uid === uid) { 
+          // nick = ensureNick();
+          root.players[s] = {uid: uid, name: nick}; 
+          console.log(`Claiming seat ${s} for uid ${uid} (${nick || 'anon'})`, root.players);
+          break; 
+        }
       }
   
       if (root.state     === undefined) root.state     = null;
-      if (root.settings  === undefined) root.settings  = null; 
+      if (root.settings  === undefined) root.settings  = null;  
       return root;
     });
   
@@ -816,6 +828,7 @@ async function joinRoom(roomId) {
     // Players / seats
     onValue(playersRef, (snap) => {
       seats = snap.val() || seats;
+      console.log(`Seats update for room ${room}:`, seats);
       updatePlayerBadge();
       if (typeof updateHostControls === 'function') updateHostControls();
     });
@@ -850,7 +863,8 @@ function isOnline() { return !!room && !!uid; }
 
 function mySeat() {
   if (!uid) return null;
-  for (const s of SEAT_IDS) if (seats[s] === uid) return s;
+  console.log(`Finding my seat for uid=${uid}`, seats);
+  for (const s of SEAT_IDS) if (seats[s] && seats[s].uid === uid) return s;
   return null;
 }
 
@@ -908,7 +922,7 @@ async function publishMove(r, c) {
 }
   
 function mySeatFromRoot(root, who) {
-    for (const s of SEAT_IDS) if (root.players && root.players[s] === who) return s;
+    for (const s of SEAT_IDS) if (root.players && root.players[s].uid === who) return s;
     return null;
 }
 
@@ -1008,14 +1022,92 @@ function updateHostControls() {
 }
 
 
+// Ensure we have a nick. Shows overlay once (first boot), else resolves immediately.
+async function ensureNick(newnick = false) {
+  console.log('Ensuring nick...', nick);
+  if (nick && !newnick) {
+    localStorage.setItem('okiya:nick', nick);
+    return nick;
+  }
+  if (room && !newnick) {
+    const playersRef   = ref(db, `okiya/${room}/players`);
+    const snap = await get(playersRef);
+    const ps = snap.exists() ? snap.val() : {};
+    for (const s of SEAT_IDS) if (ps[s] && ps[s].uid === uid && ps[s].name) {
+        nick = ps[s].name;
+    }
+    if (nick) {
+      localStorage.setItem('okiya:nick', nick);
+      return nick;
+    }
+  }
+
+
+  const overlay = document.getElementById('nick-overlay');
+  const input   = document.getElementById('nick-input');
+  const saveBtn = document.getElementById('nick-save-btn');
+
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden', 'false');
+
+  const done = async () => {
+    const v = (input.value || '').trim();
+    if (!v) { input.focus(); return; }
+    nick = v;
+    localStorage.setItem('okiya:nick', nick);
+
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+
+    try { await publishNickToRoom(nick); } catch (e) { console.warn('nick publish failed', e); }
+  };
+
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') done(); }, { once: false });
+  saveBtn.addEventListener('click', () => done(), { once: true });
+
+  return nick;
+}
+
+
+// Mirror nick into the current room’s profile map (call from joinRoom; see below).
+async function publishNickToRoom(name) {
+  if (!uid) { await waitForAuthReady(); }
+  if (!room) return;
+  console.log(`Publishing nick "${name}" for uid ${uid} in room ${room}`);
+  const n = name || localStorage.getItem('okiya:nick') || `Player-${Math.random().toString(36).slice(2,8)}`;
+  const playersRef   = ref(db, `okiya/${room}/players`);
+  await runTransaction(playersRef, (players) => {
+    const seats = players;
+    for (const s of SEAT_IDS) if (players && players[s] && players[s].uid === uid) seats[s].name = n; 
+    return seats;
+  });  
+}
+
+// // ---- Boot hook: ensure nick BEFORE auto-join or any room logic ----------------
+// document.addEventListener('DOMContentLoaded', async () => {
+//   await ensureNick();
+//   // continue your normal boot (e.g., auto-join via hash)
+//   // joinRoom();  // uncomment if you auto-join on load
+// });
+
+renameBtn?.addEventListener('click', async () => {
+  nick = null;
+  nick = await ensureNick(true);
+  updatePlayerBadge();
+});
+
+
+
+
 // ========== Boot ==========
 async function boot() {
-
   initRealtime();
+
   
   setupHoverHintsOnce();
   
   await joinRoom();
+  nick = await ensureNick();
   
 }
 

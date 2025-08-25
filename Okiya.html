@@ -56,7 +56,11 @@
                 <label for="seedInput">Game seed</label>
                 <input type="text" id="seedInput" placeholder="Seed (optional)" style="width:120px"/>
                 <button id="newGameBtn" class="btn">Start New Game</button>
-                <button id="undoBtn" class="btn">Undo</button>
+              </div>
+              <div class="row">
+                Room: <span id="roomId" class="link"></span>
+                <button id="copyLink" class="btn">Copy link</button>
+                <button id="newRoomBtn" class="btn">New Room</button>
               </div>
             </div>
             
@@ -87,15 +91,17 @@
                         </span>
                         <button id="hintsBtn" class="btn">Highlight</button>
                   </div>
-                  <div class="row">
-                    <span class="pill kv" id="playerBadge">
-                        <span class="k">You're </span>
-                        <span class="v">
-                          <span id="playerSwatch" class="swatch"></span>
-                          <span id="playerText">Red</span>
-                        </span>
+                  <span class="pill kv" id="playerBadge">
+                    <span class="k">You're </span>
+                    <span class="v">
+                      <span id="playerSwatch" class="swatch"></span>
+                      <span id="playerText">Red</span>
                     </span>
+                  </span>
+                  <div class="row">
                     <button id="resignBtn" class="btn">Resign</button>
+                    <button id="undoBtn" class="btn">Undo</button>
+                    <button id="renameBtn" class="btn">Change nick</button>
                   </div>
                       
 
@@ -124,11 +130,6 @@
             <div class="badge badge-subtle mt-8">Move Log</div>
             <div id="logBox" class="status tiny mono">—</div>
           
-            <div class="row">
-              Room: <span id="roomId" class="link"></span>
-              <button id="copyLink" class="btn">Copy link</button>
-              <button id="newRoomBtn" class="btn">New Room</button>
-            </div>
           </aside>
           <div class="board-frame">
             <div id="labels-top"    class="labels labels-top"></div>
@@ -140,6 +141,17 @@
         </div>
       </div>
       <div id="tooltip"></div>
+
+      <div id="nick-overlay" class="nick-overlay" aria-hidden="true">
+        <div class="nick-modal" role="dialog" aria-modal="true" aria-labelledby="nick-title">
+          <h2 id="nick-title">Choose your nickname</h2>
+          <input id="nick-input" class="nick-input" type="text" maxlength="24"
+                placeholder="e.g., OrionLord" autocomplete="off" autofocus />
+          <div class="nick-actions">
+            <button id="nick-save-btn" class="btn primary">Let’s play</button>
+          </div>
+        </div>
+      </div>
     
       <template id="tileTpl">
         <div class="tile" role="button" aria-label="tile">
@@ -149,6 +161,9 @@
           </div>
         </div>
       </template>
+
+
+
 
       <script type="module" src="assets/js/okiya.js"></script>
 

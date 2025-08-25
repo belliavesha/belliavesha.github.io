@@ -599,3 +599,33 @@ input[type=text] {
     border-radius: 10px;
     padding: 6px 10px;
 }
+
+
+/* Boot overlay baseline */
+.nick-overlay {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,.6);
+    z-index: 9999;
+  }
+  .nick-overlay.show { display: flex; }
+  
+  .nick-modal {
+    background: #fff; color: #111;
+    padding: 20px 24px; border-radius: 16px;
+    min-width: min(480px, 92vw);
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  
+  .nick-input {
+    width: 100%; padding: 12px 14px; font-size: 16px;
+    border: 1px solid #ccc; border-radius: 10px; outline: none;
+  }
+  .nick-input:focus { border-color: #666; }
+  
+  .nick-actions { margin-top: 12px; display: flex; justify-content: flex-end; gap: 10px; }
+  
+  .btn.primary {
+    padding: 10px 14px; border-radius: 10px; border: 0; cursor: pointer;
+  }
+  
