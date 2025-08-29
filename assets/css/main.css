@@ -5,6 +5,15 @@
     --link-active-color: #8bc6aa;
     --link-color:  #4974a5; 
     --link-visited-color: #7a49a5;
+        --hog-frame-size: 96px;             /* sprite frame w×h */
+        --hog-scale: 0.95;                     /* visual scale multiplier */
+        --hog-speed-min: 110;                /* px/s */
+        --hog-speed-max: 160;                /* px/s */
+        --hog-wander-ms-min: 2500;          /* direction change cadence */
+        --hog-wander-ms-max: 4500;
+        --hog-proximity: 80;               /* how close the cursor must be to scare the hog (px) */
+        --hog-safe-delay-ms: 4300;          /* time cursor must stay away before unrolling */
+   
 }
 
 html {
@@ -17,6 +26,29 @@ body {
     padding: 0;
     font-family: 'Lora', serif; 
 }
+
+#hedgehog {
+    position: fixed; /* floats over your page contents */
+    left: 50vw;
+    top: 50vh;
+    width: var(--hog-frame-size);
+    height: var(--hog-frame-size);
+    transform-origin: center center;
+    /* crisp, retro pixels */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background-repeat: no-repeat;
+    background-position: 0 0;   
+    background-size: cover; /* may be overridden for spritesheet mode */
+    pointer-events: auto;
+    z-index: 5000; /* sit on top of everything */
+    cursor: grab;
+    will-change: transform, left, top, background-position, background-image;
+    /* visual scale without affecting layout math */
+    transform: scale(var(--hog-scale));
+}
+#hedgehog.grabbing { cursor: grabbing; }
+
 
 #tiledbg {
     position: fixed;
@@ -35,6 +67,8 @@ body {
     /* margin-left: 10%; */
     width: 30%;
     min-height: 100vh; /* adjust as needed */
+
+    z-index: 5001; /* sit on top of everything */
     /* position: static; */
     position: relative;
     box-sizing: border-box; 

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Geisha — 4×4 Garden & Solver </title>
+  <style>
+    :root { --bg:#0f1115;--panel:#171923;--text:#e6e8ef;--muted:#9aa3b2;--accent:#7c9cf6;--good:#5dd39e;--bad:#f18f97;--p1:#ff6b6b;--p2:#6bd0ff;--hl:rgba(124,156,246,0.25);--hint:#ffd166; }
+    .kv{display:inline-flex;gap:6px;align-items:center}
+    .kv .k{opacity:.8}
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(1200px 800px at 70% -10%,#1d2130,#0f1115);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;color:var(--text);display:grid;place-items:center}
+    .app{width:min(1200px,96vw);padding:20px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between}
+    .title{font-weight:800;letter-spacing:.3px;font-size:clamp(18px,2.2vw,24px)}
+    .sub{color:var(--muted);font-size:13px}
+    .panel{background:linear-gradient(180deg,#1a1d29,#121521);border:1px solid #24283a;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+    .board-wrap{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:16px}
+    .board{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px}
+    .tile{position:relative;aspect-ratio:1/1;background:radial-gradient(120% 120% at 30% 20%,#2a3148,#1a2035 60%,#14192b 100%);border:1px solid #2c3350;border-radius:12px;cursor:pointer;transition:transform .08s ease,box-shadow .15s ease,border-color .15s ease;display:grid;place-items:center;overflow:hidden}
+    .tile:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(0,0,0,.35)}
+    .tile.disabled{opacity:.45;cursor:not-allowed}
+    .tile.highlight{outline:2px dashed var(--accent);box-shadow:inset 0 0 0 200vmax var(--hl)}
+    .tile.hint{outline:2px solid var(--hint);box-shadow:inset 0 0 0 200vmax rgba(255,209,102,.18)}
+    .symbols{display:grid;grid-template-columns:1fr;place-items:center;text-align:center}
+    .sym-emoji{font-size:clamp(26px,3.2vw,34px);line-height:1;filter:drop-shadow(0 1px 0 rgba(255,255,255,.06))}
+    .sym-text{font-size:12px;color:var(--muted);letter-spacing:.3px;margin-top:2px}
+    .token{position:absolute;inset:6px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 6px 18px rgba(0,0,0,.6);display:grid;place-items:center;font-weight:800;letter-spacing:.5px;text-shadow:0 1px 0 rgba(0,0,0,.6);color:#0a0c12}
+    .token.p1{background:radial-gradient(120% 120% at 30% 20%,#ff8a8a,#ff6b6b 60%,#e85b5b 100%)}
+    .token.p2{background:radial-gradient(120% 120% at 30% 20%,#93e0ff,#6bd0ff 60%,#4fb9ea 100%)}
+    .sidebar{min-width:320px;padding:16px;display:grid;gap:12px;align-content:start}
+    .row{display:flex;gap:10px;align-items:center}
+    .badge{padding:6px 10px;border-radius:999px;background:#20253a;border:1px solid #313a5b;font-size:12px;color:var(--muted)}
+    .pill{padding:8px 12px;border-radius:12px;background:#20253a;border:1px solid #313a5b;display:inline-flex;gap:8px;align-items:center}
+    button{appearance:none;border:0;border-radius:12px;background:linear-gradient(180deg,#334175,#27325b);color:#e9edff;padding:10px 14px;font-weight:600;letter-spacing:.3px;cursor:pointer;border:1px solid #3d4b83;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .06s ease,filter .06s ease, box-shadow .06s ease}
+    button:hover{transform:translateY(-1px)}
+    .btn.active{background:linear-gradient(180deg,#4a59a0,#3b4c85); box-shadow:inset 0 2px 8px rgba(0,0,0,.35), 0 6px 18px rgba(0,0,0,.35); border-color:#4a59a0}
+    button.ghost{background:#1a1e2f;border-color:#2a3257;color:#c9d2ff}
+    .status{padding:10px 12px;border-radius:12px;background:#1a1f31;border:1px solid #2a345a}
+    .winner{color:var(--good);font-weight:800}
+    .loser{color:var(--bad);font-weight:800}
+    .hintTxt{color:var(--hint);font-weight:700}
+    .tiny{font-size:12px;color:var(--muted)}
+    .list{font-size:13px;color:var(--muted);line-height:1.2}
+    #tooltip{position:fixed;pointer-events:none;z-index:9999;background:#0b0e16;color:#eaf0ff;border:1px solid #2a3357;border-radius:10px;padding:6px 8px;font-size:12px;box-shadow:0 10px 26px rgba(0,0,0,.45);opacity:0;transform:translate(-50%,-140%);transition:opacity .06s ease}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <div class="title">Geisha — 4×4 Garden</div>
+        <div class="sub"> Board game simulator. Hover hints and best-move highlight driven by an exact α–β solver.</div>
+      </div>
+      <div class="row">
+        <input type="text" id="seedInput" placeholder="Seed (optional)" style="width:120px"/>
+        <button id="newGameBtn">New Game</button>
+        <button id="undoBtn" class="ghost">Undo</button>
+      </div>
+    </header>
+
+    <div class="board-wrap">
+      <div id="board" class="board panel" aria-label="4 by 4 garden board"></div>
+      <aside class="sidebar panel">
+        <div class="row"><span class="pill kv" id="turnBadge"><span class="k">Current player:</span><span class="v" style="display:inline-flex;align-items:center;gap:8px;"><span id="turnSwatch" style="width:14px;height:14px;border-radius:999px;background:var(--p1);"></span><span id="turnText">Red</span></span></span></div>
+        <div class="row"><span class="pill kv"><span class="k">Last tile:</span><span class="v" id="lastTile">—</span></span></div>
+        <div class="status" id="statusBox">Form a line of 4, a 2×2 square, or block your foe.</div>
+        <div class="row" style="flex-wrap:wrap;gap:8px;">
+          <button id="toggleHintsBtn" class="btn">Hints</button>
+          <button id="bestBtn" class="btn">Best Move</button>
+        </div>
+        <div id="engineBox" class="status tiny" style="margin-top:8px;">—</div>
+        <!-- <div class="badge" style="margin-top:8px;">Legend</div> -->
+        <div class="list"><strong>Plants:</strong> 🍁 Maple · 🌸 Cherry · 🌲 Pine · 🌿 Iris<br><strong>Motifs:</strong> ☀️ Sun · 🐦 Bird · 🌧️ Rain · 📝 Poem</div>
+         <!-- 🍁 Maple · 🌸 Cherry · 🌲 Pine · 🌿 Iris<br>☀️ Sun · 🐦 Bird · 🌧️ Rain · 📝 Poem  -->
+        </div>
+      </aside>
+    </div>
+  </div>
+  <div id="tooltip"></div>
+
+  <template id="tileTpl">
+    <div class="tile" role="button" aria-label="Garden tile">
+      <div class="symbols">
+        <div class="sym-emoji"></div>
+        <div class="sym-text"></div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // === Core symbol sets: 4 plants × 4 motifs = 16 unique tiles
+    const ALL_PLANTS=[
+      {key:'maple', emoji:'🍁', label:'Maple'},
+      {key:'cherry',emoji:'🌸', label:'Cherry'},
+      {key:'pine',  emoji:'🌲', label:'Pine'},
+      {key:'iris',  emoji:'🌿', label:'Iris'},
+      {key:'cactus',emoji:'🌵', label:'Cactus'},
+      {key:'bamboo',emoji:'🎋', label:'Bamboo'},
+    ];
+    const ALL_MOTIFS=[
+      {key:'sun',  emoji:'☀️', label:'Sun'},
+      {key:'bird', emoji:'🐦', label:'Bird'},
+      {key:'rain', emoji:'🌧️', label:'Rain'},
+      {key:'poem', emoji:'📝', label:'Poem'},
+      {key:'moon', emoji:'🌙', label:'Moon'},
+      {key:'fan',  emoji:'🪭', label:'Fan'},
+    ];
+    // === UI handles
+    const boardEl=document.getElementById('board');
+    const tileTpl=document.getElementById('tileTpl');
+    const statusBox=document.getElementById('statusBox');
+    const lastTile=document.getElementById('lastTile');
+    const turnText=document.getElementById('turnText');
+    const turnSwatch=document.getElementById('turnSwatch');
+    const newGameBtn=document.getElementById('newGameBtn');
+    const undoBtn=document.getElementById('undoBtn');
+    const toggleHintsBtn=document.getElementById('toggleHintsBtn');
+    const bestBtn=document.getElementById('bestBtn');
+    const engineBox=document.getElementById('engineBox');
+    const tooltip=document.getElementById('tooltip');
+    const seedInput=document.getElementById('seedInput');
+
+    // === Single mutable state bag for simplicity
+    const state={
+      n:4,
+      grid:[],           // 4×4 cells: { r,c,plant,motif,takenBy }
+      turn:'p1',         // 'p1' (Red) or 'p2' (Blue)
+      lastRemoved:null,  // { plant, motif } of the last removed tile
+      history:[],        // move stack for undo
+      winner:null,       // 'p1' | 'p2' | null
+      tt:new Map(),      // transposition table for the search
+      nodes:0,           // node counter for the last search
+      hints:null,        // cached per-move analysis for the side to move
+      hintsOn:false,     // if true: show hover labels, recompute after moves
+      bestOn:false ,     // if true: highlight set of best moves, recompute after moves
+      seed:"",
+      rng:Math.random,
+    };
+
+    // === Utility helpers
+    function modeSets(n){ return { plants: ALL_PLANTS.slice(0,n), motifs: ALL_MOTIFS.slice(0,n) }; }
+    function setMode(n){ state.n=n; const s=modeSets(n); state.plants=s.plants; state.motifs=s.motifs; state.winLen=Math.min(n,state.winLen||n);  }
+
+    function shuffled(a){ const rnd=state.rng||Math.random; return a.map(v=>[rnd(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]); }
+    function xfnv1a(str){ let h=2166136261>>>0; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return ()=>h>>>0; }
+    function mulberry32(a){ return function(){ let t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
+    function makeRngFromSeed(seed){ const h=xfnv1a(String(seed))(); return mulberry32(h); }
+    function randomSeedString(){ if(window.crypto&&crypto.getRandomValues){ const a=new Uint32Array(2); crypto.getRandomValues(a); return Array.from(a).map(x=>x.toString(16).padStart(8,'0')).join('').slice(0,8);} return Math.floor(Math.random()*0xffffffff).toString(16).padStart(8,'0'); }
+    function genDeck(){ const d=[]; for(const p of state.plants){ for(const m of state.motifs){ d.push({plant:p.key,motif:m.key}); } } return shuffled(d); }
+    function plantInfo(k){return ALL_PLANTS.find(p=>p.key===k)}
+    function motifInfo(k){return ALL_MOTIFS.find(m=>m.key===k)}
+    function isBorderCell(r,c){return r===0||c===0||r===3||c===3}
+
+    // === Game lifecycle
+    function newGame(){
+        setMode(4)
+      // Build a fresh randomized 4×4 grid of tiles
+      const seedValue = (seedInput.value || "").trim();
+      if (seedValue) {
+      state.seed = seedValue;
+      state.rng = makeRngFromSeed(seedValue);
+      } else {
+      const randomSeed = randomSeedString();
+      state.seed = randomSeed;
+      state.rng = makeRngFromSeed(randomSeed);
+      seedInput.value = randomSeed;
+      }
+      state.grid=Array.from({length:4},()=>Array.from({length:4},()=>({})));
+      const deck=genDeck();let i=0;
+      for(let r=0;r<4;r++)for(let c=0;c<4;c++)state.grid[r][c]={r,c,...deck[i++],takenBy:null};
+      state.turn='p1';
+      state.lastRemoved=null;
+      state.history=[];
+      state.winner=null;
+      state.tt.clear();
+      state.nodes=0;
+      state.hints=null;
+      state.hintsOn=false;
+      state.bestOn=false;
+      engineBox.textContent='—';
+      toggleHintsBtn.textContent='Hover Hints'; toggleHintsBtn.classList.remove('active');
+      bestBtn.textContent='Best Move'; bestBtn.classList.remove('active');
+      render();
+    }
+
+    // A cell is clickable if it's untaken and matches the Okiya constraint
+    function canClick(cell){
+      if(state.winner) return false;
+      if(cell.takenBy) return false;
+      if(!state.lastRemoved) return isBorderCell(cell.r,cell.c);
+      return cell.plant===state.lastRemoved.plant||cell.motif===state.lastRemoved.motif;
+    }
+
+    // Generate all legal moves from a last-removed tile filter
+    function legalMoves(lastRemoved,grid){
+      const moves=[]; const has=!!lastRemoved;
+      for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+        const cell=grid[r][c]; if(cell.takenBy) continue;
+        if(!has){ if(isBorderCell(r,c)) moves.push({r,c}); }
+        else if(cell.plant===lastRemoved.plant||cell.motif===lastRemoved.motif) moves.push({r,c});
+      }
+      return moves;
+    }
+
+    // Classic victory check: 4-in-line (rows/cols/diags) or any 2×2 block
+    function checkWinFor(player,grid){
+      for(let r=0;r<4;r++) if([0,1,2,3].every(c=>grid[r][c].takenBy===player)) return true;
+      for(let c=0;c<4;c++) if([0,1,2,3].every(r=>grid[r][c].takenBy===player)) return true;
+      if([0,1,2,3].every(i=>grid[i][i].takenBy===player)) return true;
+      if([0,1,2,3].every(i=>grid[i][3-i].takenBy===player)) return true;
+      for(let r=0;r<3;r++) for(let c=0;c<3;c++){
+        if(grid[r][c].takenBy===player&&grid[r+1][c].takenBy===player&&grid[r][c+1].takenBy===player&&grid[r+1][c+1].takenBy===player) return true;
+      }
+      return false;
+    }
+
+    function cloneGrid(g){ return g.map(row=>row.map(cell=>({...cell}))); }
+
+    // === Exact solver (α–β, negamax, distance-to-mate scoring)
+    // Scores are normalized so that a forced win for side-to-move = +INF - depth, forced loss = -INF + depth.
+    // This ensures the engine prefers faster wins and delays losses, which fixes inconsistent "win-in-N" readouts.
+    const INF=1000000;
+
+    function posKey(turn,lastRemoved,grid){
+      // Hash position by turn, lastRemoved tile, and a 16-char ownership mask
+      let bits=""; for(let r=0;r<4;r++) for(let c=0;c<4;c++) bits+=grid[r][c].takenBy?(grid[r][c].takenBy==='p1'?'1':'2'):'.';
+      const lr=lastRemoved?lastRemoved.plant+'|'+lastRemoved.motif:'NONE';
+      return turn+'#'+lr+'#'+bits;
+    }
+
+    function applyMove(grid,move,player){
+      // Mutate-in-place for speed; return new lastRemoved descriptor
+      const cell=grid[move.r][move.c]; const prev={plant:cell.plant,motif:cell.motif};
+      cell.takenBy=player; return prev;
+    }
+    function undoMove(grid,move){ grid[move.r][move.c].takenBy=null; }
+
+    function orderMoves(moves){
+      // Light heuristic: prefer central squares over edges over corners
+      return moves.slice().sort((a,b)=>{
+        const s=m=>{ const r=m.r,c=m.c; const center=(r===1||r===2)&&(c===1||c===2); const corner=(r===0||r===3)&&(c===0||c===3); return center?2:corner?0:1; };
+        return s(b)-s(a);
+      });
+    }
+
+    function negamax(player,lastRemoved,grid,alpha,beta,depth){
+      state.nodes++;
+      const opp=player==='p1'?'p2':'p1';
+
+      // If opponent just created a win, this node is losing (note the +depth tie-breaker on the negative side)
+      if(checkWinFor(opp,grid)) return {score:-INF+depth, exact:true};
+
+      // No legal moves = current player blocked => loss
+      let moves=legalMoves(lastRemoved,grid);
+      if(moves.length===0) return {score:-INF+depth, exact:true};
+
+      // Transposition look-up (only store exact nodes; see below)
+      const key=posKey(player,lastRemoved,grid);
+      const hit=state.tt.get(key); if(hit) return hit;
+
+      moves=orderMoves(moves);
+      let best=-INF; let exact=true;
+      for(const mv of moves){
+        const lr=applyMove(grid,mv,player);
+        let val;
+        if(checkWinFor(player,grid)){
+          // Immediate victory
+          val=INF-depth;
+        }else{
+          // Negamax flip with α–β window
+          const r=negamax(opp,lr,grid,-beta,-alpha,depth+1);
+          val=-r.score; if(!r.exact) exact=false;
+        }
+        undoMove(grid,mv);
+        if(val>best) best=val;
+        if(val>alpha) alpha=val;
+        if(alpha>=beta){ exact=false; break; }
+      }
+      const res={score:best, exact};
+      if(exact) state.tt.set(key,res);
+      return res;
+    }
+
+    function solve(turn,lastRemoved,grid){ state.nodes=0; state.tt.clear(); return negamax(turn,lastRemoved,grid,-INF,INF,0); }
+
+    // Evaluate all legal moves for the side to move; return scores and the subset of best moves
+    function evaluateAllMoves(){
+      if(state.winner) return null;
+      const grid=cloneGrid(state.grid);
+      const player=state.turn;
+      const moves=legalMoves(state.lastRemoved,grid);
+      const results=[]; state.nodes=0; state.tt.clear();
+      for(const mv of orderMoves(moves)){
+        const lr=applyMove(grid,mv,player);
+        let val;
+        if(checkWinFor(player,grid)){
+          // Mate in 1 is the theoretical maximum from this ply: +INF-1
+          val=INF-1;
+        }else{
+          const r=negamax(player==='p1'?'p2':'p1',lr,grid,-INF,INF,1);
+          val=-r.score;
+        }
+        undoMove(grid,mv);
+        results.push({mv,score:val});
+      }
+      let best=-INF; for(const r of results) if(r.score>best) best=r.score;
+      const bestMoves=results.filter(r=>r.score===best).map(r=>r.mv);
+      return {results,bestScore:best,bestMoves,nodes:state.nodes};
+    }
+
+    // Convert mate-distance score back to human text
+    function scoreToText(score){
+      if(score>0){ const d=INF-score; return d===1?`Win in 1`:`Win in ${d}`; }
+      if(score<0){ const d=INF+score; return d===1?`Loss in 1`:`Loss in ${d}`; }
+      return 'Draw';
+    }
+
+    // === Rendering & interaction
+    function render(){
+      // Header widgets
+      turnText.textContent=state.turn==='p1'?'Red':'Blue';
+      turnSwatch.style.background=state.turn==='p1'?'var(--p1)':'var(--p2)';
+      if(state.lastRemoved){ const p=plantInfo(state.lastRemoved.plant); const m=motifInfo(state.lastRemoved.motif); lastTile.innerHTML=`<span>${p.emoji}</span><span>${p.label}</span> · <span>${m.emoji}</span><span>${m.label}</span>`; }
+      else { lastTile.textContent='— (first move from border)'; }
+
+      // Status line
+      if(state.winner){ const who=state.winner==='p1'?'Red':'Blue'; statusBox.innerHTML=`<span class="winner">${who}</span> wins!`; }
+      else { const count=legalMoves(state.lastRemoved,state.grid).length; statusBox.innerHTML=`${count} legal move${count===1?'':'s'} available.`; }
+
+      // Determine which cells to tint as best when "Highlight Best Move" is on
+      const bestSet=new Set(); if(state.hints&&state.bestOn){ for(const mv of state.hints.bestMoves) bestSet.add(mv.r+','+mv.c); }
+
+      // Rebuild the 4×4 grid
+      boardEl.innerHTML='';
+      for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+        const cell=state.grid[r][c];
+        const node=tileTpl.content.firstElementChild.cloneNode(true);
+        node.dataset.r=r; node.dataset.c=c;
+        const p=plantInfo(cell.plant), m=motifInfo(cell.motif);
+        node.querySelector('.sym-emoji').textContent=`${p.emoji} ${m.emoji}`;
+        node.querySelector('.sym-text').textContent=`${p.label} · ${m.label}`;
+
+        const clickable=canClick(cell);
+        node.classList.toggle('disabled',!clickable);
+        node.classList.toggle('highlight',clickable);
+        if(bestSet.has(r+','+c)) node.classList.add('hint');
+
+        if(cell.takenBy){
+          const tok=document.createElement('div');
+          tok.className=`token ${cell.takenBy}`;
+          tok.textContent=cell.takenBy==='p1'?'RED':'BLUE';
+          node.appendChild(tok);
+          node.classList.remove('highlight','hint');
+        }
+
+        node.addEventListener('click',()=>placeToken(cell));
+        node.addEventListener('mousemove',e=>showTooltip(e,cell));
+        node.addEventListener('mouseleave',hideTooltip);
+        boardEl.appendChild(node);
+      }
+    }
+
+    function placeToken(cell){
+      if(!canClick(cell)) return;
+      // Record for undo
+      state.history.push({r:cell.r,c:cell.c,prevLast:state.lastRemoved?{...state.lastRemoved}:null,prevTurn:state.turn,prevWinner:state.winner});
+      // Update "last removed" with the contents of this tile
+      state.lastRemoved={plant:cell.plant,motif:cell.motif};
+      // Claim the square for the current player
+      cell.takenBy=state.turn;
+
+      // Immediate win?
+      if(checkWinFor(state.turn,state.grid)){
+        state.winner=state.turn; state.hints=null; engineBox.textContent='—'; render(); return;
+      }
+
+      // Switch sides
+      state.turn=state.turn==='p1'?'p2':'p1';
+
+      // Blocked opponent?
+      const lm=legalMoves(state.lastRemoved,state.grid);
+      if(lm.length===0){ state.winner=state.turn==='p1'?'p2':'p1'; }
+
+      // If either hints or best highlighting is enabled, recompute immediately so UI stays fresh
+      if(state.hintsOn||state.bestOn){
+        state.hints=evaluateAllMoves();
+        const verdict=state.hints?scoreToText(state.hints.bestScore):'—';
+        engineBox.textContent=state.hints?`${state.turn==='p1'?'Red':'Blue'} to move · ${verdict}. Nodes: ${state.hints.nodes.toLocaleString()}`:'—';
+      }else{
+        state.hints=null; engineBox.textContent='—';
+      }
+
+      render();
+    }
+
+    function undo(){
+      const step=state.history.pop(); if(!step) return;
+      const cell=state.grid[step.r][step.c];
+      cell.takenBy=null; state.lastRemoved=step.prevLast; state.turn=step.prevTurn; state.winner=step.prevWinner||null;
+      // Keep analysis in sync with toggles
+      if(state.hintsOn||state.bestOn){ state.hints=evaluateAllMoves(); const verdict=scoreToText(state.hints.bestScore); engineBox.textContent=`${state.turn==='p1'?'Red':'Blue'} to move · ${verdict}. Nodes: ${state.hints.nodes.toLocaleString()}`; }
+      else { state.hints=null; engineBox.textContent='—'; }
+      render();
+    }
+
+    // Compute and cache analysis for side to move; used by toggles and after moves
+    function computeHints(){
+      if(state.winner){ engineBox.textContent='Game over'; return; }
+      state.hints=evaluateAllMoves();
+      if(!state.hints){ engineBox.textContent='No moves'; return; }
+      const verdict=scoreToText(state.hints.bestScore);
+      engineBox.textContent=`${state.turn==='p1'?'Red':'Blue'} to move · ${verdict}. Nodes: ${state.hints.nodes.toLocaleString()}`;
+    }
+
+    function toggleHints(){
+      // Turning on hover hints computes immediately; while on, analysis is recomputed after every move/undo
+      state.hintsOn=!state.hintsOn;
+      if(state.hintsOn && !state.hints) computeHints();
+      toggleHintsBtn.classList.toggle('active',state.hintsOn); toggleHintsBtn.textContent='Hints';
+      render();
+    }
+
+    function toggleBest(){
+      // Turning on best-move highlighting also ensures analysis is present and refreshed on future moves
+      state.bestOn=!state.bestOn;
+      if(state.bestOn && !state.hints) computeHints();
+      bestBtn.classList.toggle('active',state.bestOn); bestBtn.textContent='Best Move';
+      render();
+    }
+
+    function moveScore(cell){
+      // On-demand per-tile verdict for tooltip; ensures computation exists when hints/highlight toggles are active
+      if(!canClick(cell)) return null;
+      if(!state.hints){ if(state.hintsOn||state.bestOn) state.hints=evaluateAllMoves(); }
+      if(!state.hints) return null;
+      for(const r of state.hints.results){ if(r.mv.r===cell.r&&r.mv.c===cell.c) return r.score; }
+      return null;
+    }
+
+    function showTooltip(e,cell){
+      if(!state.hintsOn) return hideTooltip();
+      const s=moveScore(cell);
+      if(s===null){ hideTooltip(); return; }
+      tooltip.textContent=scoreToText(s);
+      tooltip.style.left=e.clientX+'px';
+      tooltip.style.top=e.clientY+'px';
+      tooltip.style.opacity='1';
+    }
+
+    function hideTooltip(){ tooltip.style.opacity='0'; }
+
+    // === Wire up controls & hotkeys
+    newGameBtn.addEventListener('click',newGame);
+    undoBtn.addEventListener('click',undo);
+    toggleHintsBtn.addEventListener('click',toggleHints);
+    bestBtn.addEventListener('click',toggleBest);
+    window.addEventListener('keydown',e=>{
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z') undo();
+      if(e.key.toLowerCase()==='r') newGame();
+      if(e.key.toLowerCase()==='h') toggleHints();
+      if(e.key.toLowerCase()==='b') toggleBest();
+    });
+
+    // Boot
+    newGame();
+  </script>
+</body>
+</html>
