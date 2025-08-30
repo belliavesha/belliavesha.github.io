@@ -11,9 +11,9 @@ function showErrorMessage(){
     errorDiv.style.padding = '20px';
     errorDiv.style.borderRadius = '5px';
     errorDiv.style.zIndex = '9999';
-    errorDiv.style.width = '60%';
-    errorDiv.style.minHeight = 'calc(60vw * 9 / 16)';
-    errorDiv.style.maxHeight = 'calc(60vw * 9 / 16)';
+    errorDiv.style.width = '40%';
+    errorDiv.style.minHeight = 'calc(40vw * 9 / 16)';
+    errorDiv.style.maxHeight = 'calc(40vw * 9 / 16)';
     errorDiv.style.overflow = 'auto';
     errorDiv.style.backgroundImage = 'url(assets/images/wha.png)';
     errorDiv.style.backgroundSize = 'cover';
