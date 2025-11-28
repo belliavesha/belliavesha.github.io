@@ -665,18 +665,73 @@ function displaySequence(sequence, startNumber, cycleInfo = null) {
     let sequenceLineHtml = '';
     let infoHtml = '';
     
+    // Find the maximum value in the sequence
+    const numericSequence = sequence.filter(n => typeof n === 'number');
+    const maxValue = Math.max(...numericSequence);
+    
+    // Find the last number and its earlier occurrence
+    const lastNumber = sequence[sequence.length - 1];
+    let lastNumberIndex = sequence.length - 1;
+    let matchingIndex = -1;
+    
+    // Find the earlier occurrence of the last number (if it's a number)
+    if (typeof lastNumber === 'number') {
+        for (let i = sequence.length - 2; i >= 0; i--) {
+            if (sequence[i] === lastNumber) {
+                matchingIndex = i;
+                break;
+            }
+        }
+    }
+    
+    // Find the cycle start (minimum value of the cycle)
+    let cycleStartIndex = -1;
+    if (cycleInfo && cycleInfo.minValue !== undefined) {
+        // Find the first occurrence of the cycle's minimum value
+        for (let i = 0; i < sequence.length; i++) {
+            if (sequence[i] === cycleInfo.minValue) {
+                cycleStartIndex = i;
+                break;
+            }
+        }
+    }
+    
     // Add first number
-    sequenceLineHtml += `<span class="sequence-number highlight">${sequence[0]}</span>`;
+    const firstNumberClass = sequence[0] === maxValue ? 'sequence-number max-value highlight' : 
+                            'sequence-number highlight';
+    sequenceLineHtml += `<span class="${firstNumberClass}">${sequence[0]}</span>`;
     
     // Add arrow and subsequent numbers
     for (let i = 1; i < sequence.length; i++) {
         sequenceLineHtml += `<span class="sequence-arrow">→</span>`;
         
         if (sequence[i] === '→ ∞' || sequence[i] === '→ ERROR') {
-            sequenceLineHtml += sequence[i];
+            sequenceLineHtml += `<span style="color: #e74c3c; font-weight: bold;">${sequence[i]}</span>`;
             break;
         } else {
-            sequenceLineHtml += `<span class="sequence-number">${sequence[i]}</span>`;
+            // Determine the appropriate class for this number
+            let numberClass = 'sequence-number';
+            
+            if (sequence[i] === maxValue) {
+                numberClass += ' max-value';
+            }
+            
+            // Highlight last number
+            if (i === lastNumberIndex) {
+                numberClass += ' last-number';
+            }
+            
+            // Highlight matching occurrence of last number
+            if (i === matchingIndex) {
+                numberClass += ' cycle-match';
+            }
+            
+            // Highlight cycle start (minimum value)
+            if (i === cycleStartIndex) {
+                numberClass += ' cycle-start';
+            }
+            
+            sequenceLineHtml += `<span class="${numberClass}">${sequence[i]}</span>`;
         }
     }
     
@@ -684,7 +739,7 @@ function displaySequence(sequence, startNumber, cycleInfo = null) {
     if (cycleInfo) {
         infoHtml = `<div class="sequence-info">
             Length: ${cycleInfo.convergenceLength} steps | Height: ${cycleInfo.sequenceHeight} | 
-            Cycle → ${cycleInfo.minValue}
+            Cycle → ${cycleInfo.minValue} (Last: ${lastNumber})
         </div>`;
     }
     
