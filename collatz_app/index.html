@@ -44,7 +44,7 @@
                     <h2 id="grid-title">Start values</h2>
                     <div class="grid-controls info-box">
                         <div class="grid-size-section">
-                            <label for="grid-size">Grid Size:</label>
+                            <label for="grid-size", class="rule-header">Grid Size:</label>
                             <select id="grid-size" onchange="changeGridSize()">
                                 <option value="10" selected>10 x 10</option>
                                 <option value="16">16 x 16</option>
@@ -66,17 +66,12 @@
                                 <option value="95">95 x 95</option> -->
                                 <option value="100">100 x 100</option>
                             </select>
-                            <!-- <div id="grid-info"> (100 numbers) </div></div>  -->
-                            <div id="grid-info"> 100 numbers</div>
-                            <button onclick="simulateGrid()">Simulate All</button>
-                            <button onclick="clearAllRules()">Clear All</button>
+                            <button onclick="simulateGrid()" class="btn btn-success btn-small">Run</button>
+                            <button onclick="clearAllRules()" class="btn btn-danger btn-small">Clear</button>
                             <!-- <button id="generateGrid" onclick="changeGridSize()">Generate Grid</button>  -->
                         </div>
                                                     
-                        <!-- <div class="grid-info">
-                            <h3>Grid Information</h3>
-                            <div id="grid-info">Grid: 10x10 1-100 - Select a size and click "Generate Grid"</div>
-                        </div>  -->
+             
                     </div>
 
                     <div class="grid-container">
@@ -87,9 +82,36 @@
             </div>
 
             <div class="cycle-panel panel">
-                <h2> Convergence; 
-                    <span class="stat-value" id="cycles-found">0</span> cycles 
-                </h2>
+                <h2> Convergence</h2>
+
+                <div class="info-box">
+                    <h3>General Statistics</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Number of cycles:</span>
+                        <span class="stat-value" id="cycles-found">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Absolute Max Length:</span>
+                        <span class="stat-value" id="max-length-stat">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Absolute Max Height:</span>
+                        <span class="stat-value" id="max-height-stat">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Overflow Sequences:</span>
+                        <span class="stat-value" id="overflow-count-stat">0</span>
+                    </div>
+                </div>
+
+                <div class="coloring-options">
+                    <h3>Grid Coloring</h3>
+                    <div class="coloring-buttons">
+                        <button class="btn btn-primary btn-small coloring-btn active" data-mode="cycle"> Cycle</button>
+                        <button class="btn btn-primary btn-small coloring-btn" data-mode="length"> Length</button>
+                        <button class="btn btn-primary btn-small coloring-btn" data-mode="height"> Height</button>
+                    </div>
+                </div>
 
                 <div id="cycle-list"></div>
 
@@ -113,7 +135,9 @@
         <div class="authorship-content">
             <span class="author-text">
                 by <a href="https://belliavesha.github.io" target="_blank" class="author-link" rel="noopener">Vlad Loktev</a> 
-                using <a href="https://factory.ai" target="_blank" class="author-link" rel="noopener">GLM-4.6 via Factory</a>
+                using <a href="https://chat.z.ai" target="_blank" class="author-link" rel="noopener">GLM-4.6</a>
+                via  <a href="https://factory.ai" target="_blank" class="author-link" rel="noopener">droid</a>
+                
             </span>
         </div>
     </footer>

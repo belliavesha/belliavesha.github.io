@@ -3,17 +3,13 @@
 let currentRules = null;
 let currentSimulationResults = null;
 let currentGridSize = 10; // Default to 10x10 grid
+let currentColoringMode = 'cycle'; // 'cycle', 'length', or 'height'
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     // Create initial grid
     createEmptyGrid();
     
-    // Update initial grid info display
-    const totalCells = currentGridSize * currentGridSize;
-    const showNumbers = currentGridSize <= 19;
-    const gridInfo = document.getElementById('grid-info');
-    gridInfo.innerHTML = `1-${totalCells}`;
     
     // Load classic Collatz rules by default
     generateRules(2); // Default to M=2
@@ -21,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup event listeners
     setupEventListeners();
+    
+    // Setup coloring mode buttons
+    setupColoringButtons();
 });
 
 function createEmptyGrid() {
@@ -88,28 +87,17 @@ function createEmptyGrid() {
 function clearResults() {
     // Clear cycle panel
     document.getElementById('cycle-list').innerHTML = '';
-    // document.getElementById('total-numbers').textContent = '0';
-    document.getElementById('cycles-found').textContent = '0';
-    // document.getElementById('infinity-count').textContent = '0';
+    
+    // Reset all stat-value elements
+    const statValues = document.querySelectorAll('.stat-value');
+    statValues.forEach(element => {
+        element.textContent = element.id === 'cycles-stat' ? '0' : '-'; // Keep cycles at 0, others at dash
+    });
     
     // Clear simulation results
     currentSimulationResults = null;
     
-    // Reset grid status
-    const totalCells = currentGridSize * currentGridSize;
-    const showNumbers = currentGridSize <= 19;
-    // const status = document.getElementById('grid-status');
-    
-    // Update grid info display
-    const gridInfo = document.getElementById('grid-info');
-    
-    gridInfo.innerHTML = `1-${totalCells}`;
-    // if (showNumbers) {
-    //     status.textContent = `${currentGridSize}x${currentGridSize} grid (1-${totalCells})`;
-    // } else {
-    //     status.textContent = `${currentGridSize}x${currentGridSize} grid (${totalCells} numbers) - Compact display`;
-    // }
-    // status.className = 'grid-status';
+   
 }
 
 function changeGridSize() {
@@ -122,26 +110,6 @@ function changeGridSize() {
     const totalCells = currentGridSize * currentGridSize;
     const showNumbers = currentGridSize <= 19;
     
-    // Update grid title and status
-    // document.getElementById('grid-title').textContent = `Simulation Grid (1-${totalCells})`;
-    // const status = document.getElementById('grid-status');
-    
-    // Update grid info display
-    const gridInfo = document.getElementById('grid-info');
-
-    gridInfo.innerHTML = `${totalCells} numbers`;
-    // gridInfo.innerHTML = `
-    //     Grid Size: ${currentGridSize} x ${currentGridSize}<br>
-    //     Total Cells: ${totalCells}<br>
-    //     Numbers Displayed: ${showNumbers ? 'Yes' : 'No (grid too large)'}
-    // `;
-    
-    // if (showNumbers) {
-    //     status.textContent = `${currentGridSize}x${currentGridSize} grid (1-${totalCells})`;
-    // } else {
-    //     status.textContent = `${currentGridSize}x${currentGridSize} grid (${totalCells} numbers) - Compact display`;
-    // }
-    // status.className = 'grid-status';
     
     // Recreate grid with new size
     createEmptyGrid();
@@ -158,6 +126,24 @@ function setupEventListeners() {
         } else if (e.ctrlKey && e.key === 'g') {
             generateRules();
         }
+    });
+}
+
+function setupColoringButtons() {
+    const coloringButtons = document.querySelectorAll('.coloring-btn');
+    coloringButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            coloringButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            // Update coloring mode
+            currentColoringMode = this.dataset.mode;
+            // Re-render grid if we have results
+            if (currentSimulationResults) {
+                updateGrid(currentSimulationResults);
+            }
+        });
     });
 }
 
@@ -182,8 +168,8 @@ function generateRules(mValue = null) {
         ruleDiv.innerHTML = `
             <div class="rule-header">IF n mod ${m} = ${i}</div>
             <div class="rule-inputs">
-                <span> n →</span>
-                <input type="text" placeholder="Enter action" class="action-input" data-remainder="${i}">
+                <span> n  →</span>
+                <input type="text" placeholder="(n - ${i}) / ${m}" class="action-input" data-remainder="${i}">
             </div>
         `;
         
@@ -411,6 +397,9 @@ function displayResults(results) {
 function updateGrid(results) {
     const totalCells = currentGridSize * currentGridSize;
     
+    // Store results for re-rendering
+    currentSimulationResults = results;
+    
     // Reset all cells
     const cells = document.querySelectorAll('.grid-cell');
     cells.forEach(cell => {
@@ -418,31 +407,110 @@ function updateGrid(results) {
         cell.classList.remove('cell-infinity');
     });
     
-    // Color cells based on results
-    Object.entries(results.cycles).forEach(([, cycleData], index) => {
-        const color = generateColor(index, Object.keys(results.cycles).length);
-        const startNumbers = cycleData.startNumbers || cycleData.start_numbers || [];
-        startNumbers.forEach(num => {
-            if (num <= totalCells) {
-                const cell = document.querySelector(`[data-number="${num}"]`);
-                if (cell) {
-                    cell.style.backgroundColor = color;
-                    cell.dataset.cycleInfo = JSON.stringify({
-                        cycle: cycleData.info.cycle,
-                        length: cycleData.info.length
+    if (currentColoringMode === 'cycle') {
+        // Color by cycle (original logic)
+        Object.entries(results.cycles).forEach(([, cycleData], index) => {
+            const color = generateColor(index, Object.keys(results.cycles).length);
+            const startNumbers = cycleData.startNumbers || cycleData.start_numbers || [];
+            startNumbers.forEach(num => {
+                if (num <= totalCells) {
+                    const cell = document.querySelector(`[data-number="${num}"]`);
+                    if (cell) {
+                        cell.style.backgroundColor = color;
+                        cell.dataset.cycleInfo = JSON.stringify({
+                            cycle: cycleData.info.cycle,
+                            length: cycleData.info.length
+                        });
+                    }
+                }
+            });
+        });
+    } else if (currentColoringMode === 'length') {
+        // Color by length
+        const sequenceStats = [];
+        Object.entries(results.cycles).forEach(([, cycleData]) => {
+            const startNumbers = cycleData.startNumbers || cycleData.start_numbers || [];
+            const cycleStats = cycleData.sequenceStats || [];
+            startNumbers.forEach(startNum => {
+                const stats = cycleStats.find(s => s.startNumber === startNum);
+                if (stats && startNum <= totalCells) {
+                    sequenceStats.push({
+                        number: startNum,
+                        length: stats.convergenceLength || 0
                     });
                 }
-            }
+            });
         });
-    });
+        
+        if (sequenceStats.length > 0) {
+            const maxLength = Math.max(...sequenceStats.map(s => s.length));
+            const minLength = Math.min(...sequenceStats.map(s => s.length));
+            const maxScaledLength = scaleLength(maxLength);
+            const minScaledLength = scaleLength(minLength);
+            const range = maxScaledLength - minScaledLength || 1;
+            
+            sequenceStats.forEach(({ number, length }) => {
+                if (number <= totalCells) {
+                    const cell = document.querySelector(`[data-number="${number}"]`);
+                    if (cell) {
+                        const normalizedValue = (scaleLength(length) - minScaledLength) / range;
+                        const hue = (1 - normalizedValue) * 240; // From blue (240) to red (0)
+                        const color = `hsl(${hue}, 70%, 70%)`;
+                        cell.style.backgroundColor = color;
+                        cell.dataset.cycleInfo = JSON.stringify({ length });
+                    }
+                }
+            });
+        }
+    } else if (currentColoringMode === 'height') {
+        // Color by height (logarithmic)
+        const sequenceStats = [];
+        Object.entries(results.cycles).forEach(([, cycleData]) => {
+            const startNumbers = cycleData.startNumbers || cycleData.start_numbers || [];
+            const cycleStats = cycleData.sequenceStats || [];
+            startNumbers.forEach(startNum => {
+                const stats = cycleStats.find(s => s.startNumber === startNum);
+                if (stats && startNum <= totalCells) {
+                    sequenceStats.push({
+                        number: startNum,
+                        height: stats.sequenceHeight || 0
+                    });
+                }
+            });
+        });
+        
+        if (sequenceStats.length > 0) {
+            const maxHeight = Math.max(...sequenceStats.map(s => s.height));
+            const minHeight = Math.min(...sequenceStats.map(s => s.height));
+            const minScaledHeight = scaleHeight(minHeight); // Should be 0
+            const maxScaledHeight = scaleHeight(maxHeight);
+            const scaledRange = maxScaledHeight - minScaledHeight || 1;
+            
+            sequenceStats.forEach(({ number, height }) => {
+                if (number <= totalCells) {
+                    const cell = document.querySelector(`[data-number="${number}"]`);
+                    if (cell) {
+                        const scaledHeight = scaleHeight(height);
+                        const normalizedValue = (scaledHeight - minScaledHeight) / scaledRange;
+                        const hue = (1 - normalizedValue) * 240; // From blue (240) to red (0)
+                        const color = `hsl(${hue}, 70%, 70%)`;
+                        cell.style.backgroundColor = color;
+                        cell.dataset.cycleInfo = JSON.stringify({ height });
+                    }
+                }
+            });
+        }
+    }
     
-    // Color infinity cells
+    // Color infinity cells (always black)
     if (results.infinity) {
         results.infinity.forEach(num => {
             if (num <= totalCells) {
                 const cell = document.querySelector(`[data-number="${num}"]`);
                 if (cell) {
                     cell.classList.add('cell-infinity');
+                    cell.style.backgroundColor = '#000000';
+                    cell.style.color = '#ffffff';
                     cell.dataset.cycleInfo = JSON.stringify({ infinity: true });
                 }
             }
@@ -457,14 +525,72 @@ function generateColor(index, total) {
     return `hsl(${hue}, ${saturation * 100}%, ${lightness * 100}%)`;
 }
 
+function scaleHeight(height, maxHeight = null) {
+    if (height <= 1) return 0;
+    return Math.sqrt(Math.log2(height));
+}
+
+function scaleLength(length, maxLength = null) {
+    if (length <= 0) return 0;
+    return (Math.sqrt(length));
+}
+
+
+
 function updateCyclePanel(results) {
     const cycles = results.cycles || {};
     const infinity = results.infinity || [];
     const totalNumbers = Object.values(cycles).reduce((sum, cycle) => sum + (cycle.startNumbers?.length || cycle.start_numbers?.length || 0), 0) + infinity.length;
     
+    // Calculate general statistics
+    let absoluteMaxLength = 0;
+    let absoluteMaxLengthStart = 0;
+    let absoluteMaxHeight = 0;
+    let absoluteMaxHeightStart = 0;
+    
+    // Find max length and height across all cycles
+    Object.values(cycles).forEach(cycleData => {
+        const sequenceStats = cycleData.sequenceStats || [];
+        sequenceStats.forEach(stats => {
+            if (stats.convergenceLength > absoluteMaxLength) {
+                absoluteMaxLength = stats.convergenceLength;
+                absoluteMaxLengthStart = stats.startNumber;
+            }
+            if (stats.sequenceHeight > absoluteMaxHeight) {
+                absoluteMaxHeight = stats.sequenceHeight;
+                absoluteMaxHeightStart = stats.startNumber;
+            }
+        });
+    });
+    
+    // Update General Statistics panel
+    const maxLengthStat = document.getElementById('max-length-stat');
+    const maxHeightStat = document.getElementById('max-height-stat');
+    const overflowCountStat = document.getElementById('overflow-count-stat');
+    
+    if (absoluteMaxLength > 0) {
+        maxLengthStat.textContent = `${absoluteMaxLength} (from ${absoluteMaxLengthStart})`;
+    } else {
+        maxLengthStat.textContent = '-';
+    }
+    
+    if (absoluteMaxHeight > 0) {
+        maxHeightStat.textContent = `${absoluteMaxHeight} (from ${absoluteMaxHeightStart})`;
+    } else {
+        maxHeightStat.textContent = '-';
+    }
+    
+    const divergingSequences = infinity.length;
+    const totalSequences = totalNumbers;
+    overflowCountStat.textContent = `${divergingSequences}/${totalSequences}`;
+    
+    // Update cycles count in the General Statistics panel
+    const cyclesStat = document.getElementById('cycles-found');
+    cyclesStat.textContent = Object.keys(cycles).length;
+    
     // Update summary
     // document.getElementById('total-numbers').textContent = totalNumbers;
-    document.getElementById('cycles-found').textContent = Object.keys(cycles).length;
+    // document.getElementById('cycles-found').textContent = Object.keys(cycles).length;
     // document.getElementById('infinity-count').textContent = infinity.length;
     
     // Update cycle list
@@ -500,16 +626,24 @@ function updateCyclePanel(results) {
         
         const totalCells = currentGridSize * currentGridSize;
         const enhancedInfo = `
-            Length: ${info.length} <br>
-            Frequency: ${startNumbers.length}/${totalCells}
-        `;
-        
+            <span class="stat-label">Cycle length:</span>
+            <span class="stat-value">${info.length} </span> <br>
+            <span class="stat-label">Frequency:</span>
+            <span class="stat-value"> ${startNumbers.length}/${totalCells} </span> <br>
+            `;
+            
+            // <strong>Cycle length:</strong> ${info.length} <br>
+            // <strong>Frequency:</strong> ${startNumbers.length}/${totalCells}
         let maxInfo = '';
         if (maxLengthStart && maxHeightStart) {
             maxInfo = `
-                <br><strong>Max Length:</strong> ${maxLength} (start: ${maxLengthStart.startNumber})
-                <br><strong>Max Height:</strong> ${maxHeight} (start: ${maxHeightStart.startNumber})
+            <span class="stat-label">Max Length:</span>
+            <span class="stat-value">${maxLength} (start: ${maxLengthStart.startNumber} </span> <br>
+            <span class="stat-label">Max Height:</span>
+            <span class="stat-value"> ${maxHeight} (start: ${maxHeightStart.startNumber}) </span> <br>
             `;
+            // <br><strong>Max Length:</strong> ${maxLength} (start: ${maxLengthStart.startNumber}
+            // <br><strong>Max Height:</strong> ${maxHeight} (start: ${maxHeightStart.startNumber})
         }
         
         cycleDiv.innerHTML = `
@@ -526,7 +660,7 @@ function updateCyclePanel(results) {
     });
     
     // Add infinity section if exists (treat as cycle with min value infinity)
-    if (infinity.length > 0) {
+    if (infinity.length > 0 && false) {
         const infinityDiv = document.createElement('div');
         infinityDiv.className = 'infinity-item';
         const infinityStr = infinity.slice(0, 20).join(', ');
