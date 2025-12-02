@@ -1,0 +1,249 @@
+:root {
+    --bg-color: #1a1a1a;
+    --panel-color: #2c2c2c;
+    --text-color: #e0e0e0;
+    --accent-color: #4a90e2;
+    --input-bg: #3d3d3d;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
+    overflow: hidden;
+    display: flex;
+    height: 100vh;
+}
+
+#sidebar {
+    width: 280px;
+    flex-shrink: 0; /* Prevent shrinking */
+    background-color: var(--panel-color);
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.top-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 2px;
+}
+
+.top-buttons button {
+    margin-top: 0;
+    height: 100%;
+    font-size: 0.85rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.top-buttons button:hover {
+    background-color: #3e3e3e;
+    border-color: #666;
+    color: white;
+}
+
+.top-buttons button:active {
+    background-color: #2a2a2a;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+    transform: translateY(1px);
+}
+
+/* Floating Labels (Canvas) */
+.node-label {
+    position: absolute;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 12px;
+    pointer-events: none;
+    color: black;
+    font-weight: bold;
+    transform: translate(-50%, 0); /* Center horizontally */
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    z-index: 5;
+}
+
+/* Node Label Colors */
+.label-deep { background: rgba(46, 204, 113, 0.6); border: 2px solid #2ecc71; }
+.label-max { background: rgba(209, 88, 88, 0.6); border: 2px solid #d15858; }
+.label-min { background: rgba(241, 196, 15, 0.6); border: 2px solid #f1c40f; }
+.label-target { background: rgba(79, 172, 250, 0.6); border: 2px solid #4facfa; }
+.label-root { background: rgba(155, 89, 182, 0.6); border: 2px solid #9b59b6; }
+.label-start { background: rgba(255, 165, 0, 0.6); border: 2px solid #ff8c00; }
+
+.panel-section {
+    margin-bottom: 1px;
+    margin-top: 2px;
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 15px; /* Reduced horizontal gap */
+    align-items: center;
+}
+
+.control-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+input[type="number"], input[type="text"], select {
+    background-color: var(--input-bg);
+    border: 1px solid #555;
+    color: white;
+    padding: 4px 6px; /* Smaller padding */
+    border-radius: 3px;
+    font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box; /* Ensure padding doesn't add to width */
+}
+
+/* Specifically target the small inputs in the grid */
+.panel-grid input[type="number"] {
+    width: 100%;
+}
+
+.control-group.horizontal {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Rotary Knob Styles */
+.knob-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    user-select: none;
+}
+
+.knob {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #3a3a3a, #252525);
+    border: 2px solid #555;
+    position: relative;
+    cursor: ns-resize;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.3), -1px -1px 2px rgba(255,255,255,0.05);
+    transition: border-color 0.2s;
+}
+
+.knob:hover {
+    border-color: var(--accent-color);
+}
+
+.knob:active {
+    cursor: grabbing;
+}
+
+.knob-indicator {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    width: 2px;
+    height: 40%;
+    background: var(--accent-color);
+    transform-origin: bottom center;
+    transform: translateX(-50%); 
+    pointer-events: none;
+    box-shadow: 0 0 2px var(--accent-color);
+}
+
+/* Dot in the center for aesthetics */
+.knob::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px; height: 6px;
+    background: #777;
+    border-radius: 50%;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.knob-value {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: var(--accent-color);
+    cursor: text;
+}
+.knob-value:hover {
+    text-decoration: underline;
+}
+
+/* Hide old range slider styles if any remain */
+input[type="range"].hidden-slider {
+    display: none;
+}
+
+label { font-size: 0.7rem; letter-spacing: 0.5px; color: #aaa; margin-bottom: 2px; }
+
+#canvas-container {
+    flex-grow: 1;
+    /* width: 0;  Removed: flex-grow handles it, but let's ensure it can shrink if needed */
+    min-width: 0; /* Crucial for flex items to shrink properly */
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    background-color: #111; /* Slightly darker background for contrast */
+}
+
+
+#loading {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    display: none;
+}
+
+.legend {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-top: 5px;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+.box { width: 10px; height: 10px; display: inline-block; }
+
+#tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    border: 1px solid #555;
+}
