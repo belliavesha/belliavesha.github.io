@@ -30,7 +30,7 @@
         }
 
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ea6683 0%, #764ba2 100%);
             color: white;
             padding: 40px 20px;
             text-align: center;
@@ -39,6 +39,7 @@
         header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
+            text-shadow: 2px 3px #150010;
         }
 
         header p {
@@ -51,7 +52,7 @@
         }
 
         section {
-            margin-bottom: 50px;
+            margin-bottom: 10px;
             /* border: 1px solid #e0e0e0; */
             border-radius: 8px;
             overflow: hidden;
@@ -60,7 +61,7 @@
         .section-header {
             background: white;
             color: #667eea;
-            padding: 15px 20px;
+            padding: 10px 15px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -320,10 +321,13 @@
 
         .back-link {
             display: inline-block;
-            margin-bottom: 20px;
-            color: #667eea;
+            /* font-weight: bold; */
+            margin-bottom: 1px;
+            color: #93cd89;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 1500;
+            text-shadow: 1px 2px #150010;
+            font-size: large;
         }
 
         .back-link:hover {
@@ -335,12 +339,12 @@
 
 <div class="container">
     <header>
-        <h1>Collatz Tree Visualizer</h1>
-        <h4>Help & Guide</h4>
+        <h1>Help & Guide</h1>
+        <h4>
+            <a href="tree.html" class="back-link">← Back to Collatz Tree Visualizer</a></h4>
     </header>
 
     <main>
-        <a href="tree.html" class="back-link">← Back to Visualizer</a>
 
         <!-- Section 1: What is the Collatz Sequence? -->
         <section id="collatz-sequence">
@@ -824,30 +828,41 @@
             <h3>Other buttons and toggles</h3>
             <div class="ui-controls">
                 <div class="control-card">
-                    <h4>🔨 Build Trees</h4>
+                    <h4>Build Trees</h4>
                     <p>Reads all your settings and constructs the tree(s). This can take a few seconds for large samples.</p>
                 </div>
-
                 <div class="control-card">
-                    <h4>📦 Fit to Screen</h4>
-                    <p>Automatically zoom and pan to fit the entire tree in the canvas.</p>
+                    <h4>Load Trees</h4>
+                    <p>Load a tree from a json file (the one you get after pressing "Save Tree Data"). Alternatively you can pick from a list of pre-existing trees to get some inspiration!</p>
                 </div>
 
                 <div class="control-card">
-                    <h4>👁️ Hide/Show Labels</h4>
+                    <h4>Hide/Show Labels</h4>
                     <p>Toggle the colored node labels (special nodes highlighted with boxes).</p>
                 </div>
     
                 <div class="control-card">
-                    <h4>🌓 Dark/Light Background</h4>
-                    <p>Switch between dark and light canvas backgrounds for better visibility or preferred aesthetics.</p>
+                    <h4>Dark/Light Background</h4>
+                    <p>Switch between dark and light canvas backgrounds for better visibility or preferred aesthetics! 🌓</p>
+                </div>
+            
+
+
+                <div class="control-card">
+                    <h4>Download Image</h4>
+                    <p>Export the current tree as a high-resolution PNG image (4000px+) respecting your label and background settings.</p>
+                </div>
+                <div class="control-card">
+                    <h4>Download Tree Data</h4>
+                    <p>Export the current configurateion (rules, angles) and leaves of the current tree as a json file. It can be shared or later uploaded in Load Tree. Only the current tree is saved, the other roots are ginored</p>
+                </div>
+
+                <div class="control-card">
+                    <h4>Fit to Screen</h4>
+                    <p>Automatically zoom and pan to fit the entire tree in the screen.</p>
                 </div>
             </div>
 
-            <div class="control-card" style="margin: 20px 0;">
-                <h4>⬇️ Download High-Res</h4>
-                <p>Export the current tree as a high-resolution PNG image (4000px+) respecting your label and background settings.</p>
-            </div>
 
             <h3>Interactive canvas</h3>
             <ul style="margin-left: 30px; margin-bottom: 20px;">
@@ -905,8 +920,8 @@
     </main>
 
     <footer>
-        <p style="margin-top: 10px; font-size: 0.9em;">
-            <a href="tree.html" style="color: #667eea; text-decoration: none;">Return to Visualizer</a>
+        <p style="margin-top: 5px; margin-left: 25px; font-size: 1.1em;">
+            <a href="https://belliavesha.github.io/" style="color: #667eea; text-decoration: none;">By belliavesha</a>
         </p>
     </footer>
 </div>

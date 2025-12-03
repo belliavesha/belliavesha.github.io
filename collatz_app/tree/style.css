@@ -202,6 +202,33 @@ input[type="number"], input[type="text"], select {
     font-size: 0.9rem;
     width: 100%;
     box-sizing: border-box; /* Ensure padding doesn't add to width */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Remove Safari's glossy styling on select elements */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4H4z' fill='%23aaa'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 12px;
+    padding-right: 24px; /* Space for dropdown arrow */
+}
+
+select:hover {
+    background-color: #3e3e3e;
+    border-color: #666;
+    color: white;
+}
+
+select:active, select:focus {
+    background-color: #2a2a2a;
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 3px rgba(74, 144, 226, 0.3);
 }
 
 /* Specifically target the small inputs in the grid */
