@@ -18,56 +18,44 @@ let graph = {
 
 // --- Logic ---
 
-const ruleFunctionCache = new Map();
-
-function getNext(n, ruleObj) {
-    if (typeof ruleObj === 'string') {
-        // Legacy support
-        if (ruleObj === 'classic') {
-            if (n % 2 === 0) return n / 2;
-            return 3 * n + 1;
-        } else if (ruleObj === 'alternative') {
-            if (n % 2 === 0) return (n / 2) + 1;
-            return 3 * n + 1;
-        } else if (ruleObj === 'triple') {
-            const r = n % 3;
-            if (r === 0) return n / 3;
-            if (r === 1) return 2 * n + 1;
-            return 4 * n + 2;
-        }
-        return 1;
+class RuleSet {
+    constructor(config) {
+        this.mod = config.mod;
+        this.compiledRules = this.compileRules(config.rules);
     }
 
-    // General Rule Object: { mod: number, rules: string[] }
-    const mod = ruleObj.mod;
-    const r = n % mod;
-    
-    // Handle negative remainders if n < 0 (though usually n > 0 here)
-    // const rIndex = ((r % mod) + mod) % mod; 
-    const rIndex = r; 
+    compileRules(ruleStrings) {
+        const compiled = [];
+        for (const ruleStr of ruleStrings) {
+            if (!ruleStr) {
+                compiled.push((n) => 1); // fallback
+                continue;
+            }
 
-    const ruleStr = ruleObj.rules[rIndex];
-    
-    if (!ruleStr) return 1;
-
-    let func = ruleFunctionCache.get(ruleStr);
-    if (!func) {
-        try {
-            // Create a function that takes 'n' and returns the result
-            func = new Function('n', 'return ' + ruleStr);
-            ruleFunctionCache.set(ruleStr, func);
-        } catch (e) {
-            console.error("Invalid rule syntax:", ruleStr, e);
-            return n; // Fail safe
+            try {
+                // Create a function that takes 'n' and returns the result
+                const func = new Function('n', 'return ' + ruleStr);
+                compiled.push((n) => {
+                    try {
+                        return Math.floor(func(n));
+                    } catch (e) {
+                        console.error("Error executing rule:", ruleStr, e);
+                        return n; // fail safe
+                    }
+                });
+            } catch (e) {
+                console.error("Invalid rule syntax:", ruleStr, e);
+                compiled.push((n) => n); // fail safe
+            }
         }
+        return compiled;
     }
-    
-    try {
-        const result = func(n);
-        return Math.floor(result);
-    } catch (e) {
-        console.error("Error executing rule:", ruleStr, e);
-        return n;
+
+    getNext(n) {
+        const r = n % this.mod;
+        const ruleFunc = this.compiledRules[r];
+        if (!ruleFunc) return 1; // fallback
+        return ruleFunc(n);
     }
 }
 
@@ -80,14 +68,16 @@ function resetGraph() {
         depth: new Map(),
         height: new Map(),
         nodeList: [],
-        trees: {}
+        trees: {},
+        startValue: null,
+        divergentNodes: []
     };
 }
 
 /**
  * Add a sample to the graph
  */
-function addSampleToGraph(sample, rule, updateStats = false) { 
+function addSampleToGraph(sample, ruleSet, updateStats = false) { 
     if (graph.root.has(sample)) return; // Already part of a tree
     
     let sequence = [];
@@ -95,7 +85,8 @@ function addSampleToGraph(sample, rule, updateStats = false) {
     let foundRoot = null;
     let cycleStartIndex = -1;
     let rootIndexInSeq = -1;
-    const MAX_VALUE = 1e18; // Maximum value before considering sequence divergent
+    const MAX_VALUE = 1e19; // Maximum value before considering sequence divergent
+    const MAX_DEPTH = 1e4; // Maximum depth before considering sequence divergent
 
     // Trace forward
     const pathMap = new Map(); // val -> index in sequence
@@ -103,8 +94,13 @@ function addSampleToGraph(sample, rule, updateStats = false) {
         sequence.push(curr);
         
         // Check if sequence diverged (got too large)
-        if (curr > MAX_VALUE) {
+        if (Math.abs(curr) > MAX_VALUE ) {
             console.log(`Sample ${sample} diverged to ${curr}, skipping`);
+            graph.divergentNodes.push(sample);
+            return;
+        }
+        if (sequence.length > MAX_DEPTH) {
+            console.log(`Sample ${sample} did not converge in ${MAX_DEPTH} steps, skipping`);
             graph.divergentNodes.push(sample);
             return;
         }
@@ -133,14 +129,15 @@ function addSampleToGraph(sample, rule, updateStats = false) {
                     highestNode: foundRoot,
                     lowestNode: foundRoot,
                     deepestNode: foundRoot,
-                    highestLeaf: foundRoot, // Initialize highest leaf
+                    highestLeaf: foundRoot, 
                     startValue: null,
-                    rootNode: foundRoot
+                    rootNode: foundRoot,
+                    leafCount: 1
                 };
                 graph.root.set(foundRoot, foundRoot);
                 graph.parent.set(foundRoot, sequence[rootIndexInSeq+1]);
                 graph.depth.set(foundRoot, 0);
-                graph.height.set(foundRoot, foundRoot); // Root height is its value
+                graph.height.set(foundRoot, foundRoot); 
                 graph.children.set(foundRoot, []);
                 graph.nodeList.push(foundRoot);
             }
@@ -153,7 +150,7 @@ function addSampleToGraph(sample, rule, updateStats = false) {
         }
 
         pathMap.set(curr, sequence.length - 1);
-        curr = getNext(curr, rule);
+        curr = ruleSet.getNext(curr); 
     }
 
     for (let i = sequence.length - 2; i >= 0; i--) {
@@ -172,16 +169,32 @@ function addSampleToGraph(sample, rule, updateStats = false) {
     if (updateStats) {
         // Update weights from sample to root
         let curr = sample;
-        const root = graph.root.get(sample);
+        const tree = graph.trees[foundRoot];
         while (curr !== undefined) {
-            const w = graph.weight.get(curr) || 0;
-            graph.weight.set(curr, w + 1);
-            if (curr === root) break;
+            let w = graph.weight.get(curr) || 0;
+            let children = graph.children.get(curr);
+            if (children.length === 0) {
+                w = 1;
+            } else {
+                let sum = 0;
+                for (let child of children) {
+                    sum += graph.weight.get(child) || 0;
+                }
+                // console.log("cur", curr, w, sum, children)
+                if (w === sum){
+                    break;
+                }
+                w = sum;
+            }
+            graph.weight.set(curr, w);
+            if (curr === foundRoot) {
+                tree.leafCount = w;
+                break;
+            }
             curr = graph.parent.get(curr);
         }
 
         // Update Highest Leaf
-        const tree = graph.trees[foundRoot];
         if (tree) {
              const sampleHeight = graph.height.get(sample);
              const currentHigh = tree.highestNode;
@@ -309,6 +322,11 @@ function computeWeights() {
                 sum += graph.weight.get(child) || 0;
             }
             graph.weight.set(node, sum);
+
+            if (node === graph.root.get(node)){
+                const tree = graph.trees[node];
+                tree.leafCount = sum;
+            }
         }
 
     }

@@ -1,202 +1,668 @@
-A standalone js + html page that produces the image of Collatz tree. 
+# Collatz Tree Visualizer - Architecture & Implementation Guide
 
-For a sample start value, say 7, compute the collatz sequence until the cycle is found (a number repeats): 7→22→11→34→17→52→26→13→40→20→10→5→16→8→4→2→1→4.  
-in this example 4 repeated. now the root is the minimum value (1), if the tree with this root exist, we add all these edges to our tree (the ones that exist increase weight by 1). and if it does not (either it is the first sample or we miraculously found another cycle) create a new tree.
-write an optimized code, so big samples size does not freeze the browser.   
+## 1. Problem Overview
 
-Then render the first tree  (if there is more than one tree, user must be able to pick the tree to render via a drop-down).the length of each branch is scaled with the log distance from the root and the thickness and the color depend on the weight. 
+The Collatz Tree Visualizer generates and renders interactive trees of numerical sequences. For any starting number, a deterministic sequence is computed using mathematical rules (Collatz conjecture, alternatives, or generalizations). When the sequence enters a cycle, a tree is constructed with the minimum cycle value as the root. The visualization renders these trees with branches colored and sized by their properties.
 
-test agains the classical sequence :
-n % 2 == 0 =>  n -> n/2
-n % 2 == 1 => n -> 3*n + 1
-and the "alternative collatz" sequence:
-n % 2 == 0 =>  n -> n/2 + 1
-n % 2 == 1 => n -> 3*n + 1
-The alternative sequence is a good edge case test. it has one tree with just one node (sequence 2 → 2 → 2.... ) and at least 4 other trees. so the program should not fail this test. 
-and triple sequence 
-n % 3 == 0 => n -> n/3 
-n % 3 == 1 => n -> 2*n + 1
-n % 3 == 2 => n -> 4*n + 2
-just for the sake of complete generalization.
+## 2. Sequence Generation & Graph Construction
 
-for example of the alternative collatz rules, let's say we start with 9:
-9→28→15 (not 14 as in classic) →46→24→13→40→21→64→33→100→51→154→78→40.
-40 repeated. the root is 21 (not 9, and not 40), the minimum number of the cycle, not of the whole sequence. all the → edges are updated exept the one coming from the root: the edge 21→64 is special, it does not have a weight and its angle and length are not defined, we later highlight the node 65 with a special color box.
+### 2.1 Rule System
 
-the data about the longest path (the furthest leaf) and the maximum value (the maxium number across all nodes) is also kept. when the tree is rendered, the maximum node and the furthes node  are also captioned in special color boxes. 
+Rules define how to compute the next number in a sequence. The system supports flexible, modular rules:
 
-
-the graph consists of several maps and fields.
-for every number n (serves also as a key), exist several important maps for all the necessary values
-parent[n] = m - the number such that that n->m (it is unique, obviously) (for a root this is, naturally, the cycling node, the one we caption with a purple box), 
-root[n] = the root value of the node. the ultimate parent. 
-weight[n] - the number of times this node is visited (the root has the highest weight, naturally),
-children[n] = [m1, m2]  a list just a list of numbers m such as there's an edge m->n,
-depth[n] = the distance from the root (for the root node it is zero)
-
-for each tree we have a lookup map 'trees' -
-trees[root] = 
+**Rule Object Structure:**
+```javascript
 {
-    highestNode - the node with the maximum value (we caption with a red box)
-    lowestNode - the node with the minimum value (we caption with a yellow box, if it does not coinside with the root)
-    deepestNode - the node with the maximum depth (we caption with a blue box)
+  mod: number,           // Modulus (M) - number of rules (2 for classic Collatz, 3 for triple)
+  rules: string[]        // Array of M rule expressions (one per remainder class)
 }
+```
 
-there's also a list nodeList, the list of nodes in which each parent goes earlier than all of its children. 
+**Examples:**
 
-It makes sense to construct it from the sample and keep in memory. the general algorithm must be something like that:
-first we identify all the tree roots for all nodes:
-lets say we consider the sample number s = 9: 
-generate the list of nodes for this sequence  until we hit a value with the known root or cycle. for the sake of an example let's say it is our first sample of this pparticular tree, so we find a cycle first. 
-9→28→15→46→24→13→40→21→64→33→100→51→154→78→40.
-40 repeated, the root is 21, the minimum number after the first 40. 
-so we say r = 21.
-let's imagine it is a new root (the root[r] does not exist yet). we create the new tree by creating trees[r] with { highestNode = r, lowestNode = r, deepestNode = r}
-then we reverse the sequence (or run with the index decresing i=i-1). we run until seq[i] == r. 
-starting from the root and going back along the sequence we can fill the values:
-21 has depth = 0, root = 21, parent = 64 (not 40), children = [40], weight = 0, (will be recomputed later)
-40 has depth = 1, root = 21, parent = 21, children = [13], weight = 0, 
-13 has depth = 2, root = 21, parent = 40, children = [24], weight = 0,
-seq[i] has depth[seq[i]] = depth[seq[i+1]], root[seq[i]]=r, weight = 0, children[seq[i]] = [ seq[i-1] ] (if i>0) else []
-....
-finally 
-9 has depth = 7, root = 21, parent = 28, children = [], weight = 0, 
-(by the way, after each iteration we put the node into the nodeList)
+Classic Collatz (M=2):
+```javascript
+{ mod: 2, rules: ["n/2", "3*n+1"] }
+// if n % 2 == 0 → n/2
+// if n % 2 == 1 → 3*n+1
+```
 
-each iteration i we can also say that 
-    tree[r].highestNode = max(tree[r].highestNode, seq[i])
-    tree[r].lowestNode = min(tree[r].highestNode, seq[i])
-in the end we also do 
-    if tree[r].deepestNode > depth[seq[0]], tree[r].deepestNode = seq[0]
+Alternative Collatz (M=2):
+```javascript
+{ mod: 2, rules: ["n/2+1", "3*n+1"] }
+// if n % 2 == 0 → n/2+1 (diverges!)
+// if n % 2 == 1 → 3*n+1
+```
 
-let's say we then consider the sample s = 5. we run the sequence until we 
-5→16→9... aha! 9 was considered before (root[9] exists). 
-so we then say r=root[9]
-children[9] append (16), then we run our sequence backwards again (i= i-1):
-16 has depth = depth[9]+1 = 8, root = 21, parent = 9, children = [5], weight = 0
-seq[i] has depth[seq[i]] = depth[seq[i+1]], root[seq[i]]=r, weight = 0, children[seq[i]] = [ seq[i-1] ] (if i>0) else []
-5 has depth = depth[16]+1 = 9, root = 21, parent = 16, children = [], weight = 0
-in the end we also do 
-    if tree[r].deepestNode > depth[s], tree[r].deepestNode = 5.
+Triple Sequence (M=3):
+```javascript
+{ mod: 3, rules: ["n/3", "2*n+1", "4*n+2"] }
+// if n % 3 == 0 → n/3
+// if n % 3 == 1 → 2*n+1
+// if n % 3 == 2 → 4*n+2
+```
 
-let's say we then consider the sample 40. but root[40] already exists, so we just do nothing! 
+### 2.2 Sequence Computation
 
-then we consider the number 59. it gives us the sequence 59→178→90→46, and 46 already was earlier. 
-in the end our nodeList will be like that:
-[21, 40, 13, 24, 46, 15, 9, 28, 90, 178, 59]
+**Function:** `getNext(n, ruleObj) → number`
 
-if the value gets bigger than, say 1e18, webreak and ditch this sample. probably just add the sample value to the special list  graph.divergentNodes.
+For a number n, compute the next value:
+1. Calculate remainder: `r = n % ruleObj.mod`
+2. Get rule string: `ruleStr = ruleObj.rules[r]`
+3. Execute rule: Parse and evaluate the rule as a function of n
+4. Return result (floored to integer)
 
+Rules are cached in `ruleFunctionCache` for performance. Invalid rules default to returning n.
 
-# weight
-after we done that, we then compute weights in linear time, by using the nodeList smartly. 
-we just run over nodeList backwards (i=i-1) and apply the following algorithm of computing weights:
-take a number N = nodeList[i]. 
-    if it has children == [], then we put weight[N] = 1. 
-    if children is not empty we run weight[N] = sweight[N] of weight[c] for c in children[N].
+**Example trace (Alternative Collatz, start=9):**
+```
+9 → 28 → 15 → 46 → 24 → 13 → 40 → 21 → 64 → 33 → 100 → 51 → 154 → 78 → 40
+           cycle detected: 40 repeats
+root = 21 (minimum in cycle)
+```
+
+### 2.3 Graph Data Structures
+
+All tree data is stored in the global `graph` object:
+
+```javascript
+graph = {
+  parent: Map,        // node → parent (the node it points to in the sequence)
+  root: Map,          // node → root (which tree's root this node belongs to)
+  children: Map,      // node → array of nodes that point to it
+  weight: Map,        // node → visit count (how often this node appears)
+  depth: Map,         // node → distance from root (root has depth=0)
+  height: Map,        // node → max value on path to root
+  nodeList: [],       // Topologically sorted (parents before children)
+  trees: {},          // rootValue → {highestNode, lowestNode, deepestNode, highestLeaf, startValue}
+  startValue: null,   // Current highlighted starting point
+  divergentNodes: []  // Samples that exceeded MAX_VALUE (1e18)
+}
+```
+
+### 2.4 Tree Construction Algorithm
+
+**Function:** `buildGraph(minVal, range, maxSamples, rule, startVal)`
+
+**Step 1: Generate Sample Set**
+
+- If `maxSamples >= range`: Use all values in [minVal, minVal+range)
+- Else: Random sample without replacement of size maxSamples
+
+**Step 2: Trace Each Sample**
+
+For each sample s, compute the sequence until finding a **known root** or **detecting a cycle**:
+
+1. Trace forward, recording path in sequence array
+2. Stop when:
+   - `sequence[i]` exceeds MAX_VALUE (1e18) → divergent, skip sample
+   - `sequence[i]` already has `graph.root` set → found existing tree
+   - `sequence[i]` repeats in current path → found new cycle
+
+3. If new cycle detected:
+   - Find cycle start index
+   - Identify **root** = minimum value in cycle portion
+   - Create new tree entry: `graph.trees[root] = {highestNode: root, lowestNode: root, ...}`
+
+**Step 3: Backfill Graph**
+
+From sequence end (or found root), traverse backwards adding nodes:
+
+```
+for i = sequence.length - 2 downto 0:
+  node = sequence[i]
+  parent = sequence[i+1]
+  
+  if node not in graph:
+    graph.root[node] = root
+    graph.parent[node] = parent
+    graph.depth[node] = graph.depth[parent] + 1
+    graph.children[parent].append(node)
+    graph.nodeList.append(node)
+    update tree stats (highestNode, lowestNode, deepestNode)
+```
+
+### 2.5 Weight Computation
+
+**Function:** `computeWeights()`
+
+After graph is built, compute how many paths pass through each node:
+
+```
+for i = nodeList.length - 1 downto 0:
+  node = nodeList[i]
+  children = graph.children[node]
+  
+  if children is empty (leaf):
+    weight[node] = 1
+  else:
+    weight[node] = sum(weight[child] for child in children)
+```
+
+This is computed **backwards** through nodeList, ensuring children's weights are known before parents.
+
+### 2.6 Height Computation
+
+**Function:** `computeHeights()`
+
+For each node, compute the maximum value encountered on the path from that node to the root:
+
+```
+for i = 0 to nodeList.length - 1:
+  node = nodeList[i]
+  
+  if node is root:
+    height[node] = node
+  else:
+    parent = graph.parent[node]
+    height[node] = max(node, height[parent])
+  
+  if node is leaf:
+    update tree.highestLeaf if needed
+```
+
+This is computed **forwards** through nodeList, ensuring parents' heights are known before children.
+
+---
+
+## 3. Visualization Algorithm
+
+### 3.1 Tree Layout (BFS Position Calculation)
+
+**Function:** `render(autoFit)` → Layout Phase
+
+Starting from root at (0, 0), compute each node's 2D position:
+
+1. **Queue root:** `computedLayout.set(root, {x: 0, y: 0, angle: initialAngleRad})`
+
+2. **BFS traversal:**
+```
+for each parent in queue:
+  for each child of parent:
+    depth = graph.depth[child]
+    branchLen = baseLen / sqrt(depth * 0.5 - 0.2)
     
-run until i==0. voi la, the weights are computed in linear time. 
-# height
-similarly we do about height (the maximum node on the way to the root)
-this time we run through nodelist forward (i=i+1) and look at parents
-take a number N = nodeList[i]. 
-    if it is the root, then it equals its own height
-    otherwis etake parent P and height[N] = max(N, height[P])
+    angleOffset = angles[child % mod]  // Pick angle based on child value's remainder
+    childAngle = parent.angle + (angleOffset * π/180)
+    
+    childX = parent.x + cos(childAngle) * branchLen
+    childY = parent.y + sin(childAngle) * branchLen
+    
+    computedLayout.set(child, {x: childX, y: childY, angle: childAngle})
+    queue.push(child)
+    updateBounds(childX, childY)
+```
 
+**Key Parameters:**
+- `baseLen = 50` pixels
+- Branch length scales as `1/sqrt(depth)` to fit large trees
+- Angle offset chosen by `child % mod`, creating fan-like patterns
+- Each level rotates branches around the parent
 
-Ok now the trees are constructed, and the weightsa adn heights and depths are known and we can just use it in the rendering procedure without the need of computing them. 
-for the weights - maxWeight = weight[root] and minWeight = 1. maxDepth = depth[deepestNode].
-the purple box is at parent[root] and so on. cool? cool
+### 3.2 Viewport & Auto-Fit
 
-then write a debug printout function. consider "alternative collatz" and a sample of numbers [9, 5, 40, 59] and run the tree construction. print out the nodeList and for each node print out the depth, weight, parent and children.
+If `autoFit = true`:
 
-Now about drawing the tree:
+```
+width = maxX - minX
+height = maxY - minY
+padding = 50
 
-by going along nodeList in a normal direction we can compute each node position a plane and other things.
-for each node in the nodeList we compute its position and direction (except the node is the root, then the position is 0,0 and the direction is 0). 
-length of the branch ~ 1/sqrt(depth)
-width and transparency alpha of the branch ~1log(weight+1)  
-color (hue) of the branch depends on the log(value+1).
-the for the node n the angle[n] = angle[parent[n]] + angleList[n%M], where M is the number of rules (2 in classic collatz and 3 in triple collatz) and angleList is given by the user in the appropriate fields (by default it is 10 degrees and -19 degrees)
+scaleX = (canvas.width - 2*padding) / width
+scaleY = (canvas.height - 2*padding) / height
+zoom = min(scaleX, scaleY, maxZoom=2)
 
-the min and max X and Y coords are kept to automatically adjust the canvas to fit the entire tree
+treeCenterX = (minX + maxX) / 2
+treeCenterY = (minY + maxY) / 2
 
-several special nodes are to be captioned with a black monospace number under the node in a colored transparent box
-1. **Root Node** (Green Box `#2ecc71`)
-   - Always rendered with root value
-   - Background: `rgba(46, 204, 113, 0.4)`
+view.x = -(treeCenterX * zoom)
+view.y = -(treeCenterY * zoom)
+```
 
-2. **Maximum Node** (Red Box `#d15858`) 
-   - `highestNode` - highest value across all nodes
-   - Background: `rgba(209, 88, 88, 0.4)`
+Result: Entire tree fits in canvas, centered.
 
-3. **Lowest Node** (Yellow Box `#f1c40f`)
-   - `lowestNode` - minimum value in tree (omit if coinsides with the root)
-   - Background: `rgba(241, 196, 15, 0.4)`
+### 3.3 Edge Rendering
 
-4. **Furthest Node** (Blue Box `#4facfa`)
-   - `deepestNode` - node with maximum depth from root
-   - Background: `rgba(79, 172, 250, 0.4)`
+**Function:** `drawEdge(node, parentPos, nodeX, nodeY, treeMeta)`
 
-5. **Root Target/Purple Box** (`#9b59b6`)
-   - `parent[root]` - node that root points to in the cycle (e.g., "1->4" gives target = 4)
-   - Background: `rgba(155, 89, 182, 0.4)`
-6. **Start value, orange** (`#ff8c00`)
-   - background: rgba(255, 165, 0, 0.6); 
-   -  highlights the start value sample
-7. **Highest Leaf** (Red Box): Highlights the leaf node with the absolute maximum HEIGHT (the maximum value on the way from that leaf to the root).
-8. **Highest Node of the Deepest Leaf** (Blue Box): Highlights the node with the maximum value along the path from the deepest leaf to the root.
-9. **Height of the Start Value** (Orange Box): Highlights the node with the maximum value along the path from the current start value to the root.
+For each edge, encode properties as color and line width:
 
+```
+weight = graph.weight[node]
+logW = log(weight) / log(graph.weight[root])
+lineWidth = max(1, logW * 9)
+alpha = min(1, 0.3 + logW * 0.7)
 
+hue = 300 - (log(node + 1) / log(highestNode + 1)) * 320
 
+strokeStyle = hsla(hue, 75%, 50%, alpha)
+```
 
-if two boxes conside in value, the more important box wins. for example if the deepest and the highest node are the same the deepest wins and the blue box is rendered. the hierarchy is the following from most important to theleast: root, cycle target, deepest node, highest node, lowest node,and the start value (orange box) is the least important       
+**Encoding:**
+- **Hue** (color): Lower node values = more red (hue ~300°). Higher values = more blue (hue ~-20°)
+- **Thickness**: Heavy nodes (high weight) get thicker lines
+- **Transparency**: Low-weight nodes fade, high-weight emphasized
 
+### 3.4 Node Captions (Special Boxes)
 
-# **The controls**
- control panel is in two logical parts: 
-1. the geraph parameters : rulebook, the sample size and range (I think the render tree button must be called build trees, because this is what it does)
-2. render parameters : angle sliders, start value, root picker. 
+**Function:** `drawCaptions(treeMeta)`
 
+Certain nodes are highlighted with colored boxes and numeric labels. A priority system prevents overlaps:
 
-The first field is the number M (number of the rules, the module, it is going to be ne of the main parameters from now on), and then there are M fields where we input the rules for each remainder (eg `n/2` and `n*3 + 1`). when M is increased, the new rule line pops up (and the new angle slider pops up in the render control panel). 
-When all the rules are put into, the Rule object is created. it will be passed to the build tree and so on, instead of a string parameter with pre-defined functions.
+**Priority (highest to lowest):**
+1. Root (Green, #2ecc71)
+2. Cycle Target - `parent[root]` (Blue, #4facfa)
+3. Deepest Node (Green, #2ecc71)
+4. Highest Node of Deepest Leaf (Green)
+5. Highest Node (Red, #d15858)
+6. Highest Leaf (Red)
+7. Lowest Node (Yellow, #f1c40f) - omitted if equals root
+8. Start Value (Orange, #ff8c00)
+9. Height of Start Value (Orange)
 
+**Implementation:** For each node, track only the highest-priority caption. Filter duplicates. Render as DOM elements positioned at (screenX, screenY).
 
-there must be three fields where user inputs the parameters (min value (say 20000), range value (say 10000), number of samples from [min, min+range] (say 5000). 
-if sample size is less than the range, a random set of samples in the range is taken. if the sample size is larger than the range, our sample set is just the whole range of values from min to min+range. 
+**Special Nodes Explained:**
 
-the field "start value". what the tree selector dropdown menu does now is it puts the chosen tree root as the start value. but the user can also enter any other start value. Then the value is added to the sample, its root value is found the the correspoinding tree gets rendered. The start value is highlighted with an orange box. when the select tree option changes, the start value field is filled with the root value. 
+- **Root**: The minimum cycle value. Foundation of the tree. ALWAYS shown.
+- **Cycle Target**: `parent[root]` – the node the root points to (completing the cycle).
+- **Deepest Node**: Node with maximum distance from root (longest path downward).
+- **Highest Node**: Node with maximum numerical value across all nodes.
+- **Highest Leaf**: Leaf node with maximum HEIGHT (max value on path to root). Distinct from Highest Node.
+- **Lowest Node**: Minimum numerical value (excluding root if equal).
+- **Start Value**: The user's selected starting sample (orange highlight).
+- **Height of Start Value**: Max value on path from start value to root (orange).
 
+---
 
-There must also be three knobs for angles angles (10 and 19 degrees) and the initial angle (10 degrees by default) ) and then the image of the tree is rendered. 
+## 4. Visualization Parameters & Appearance
 
-the angle selectors are not dull input fields, but nice and tidy knobs. when they change, the tree gets re-rendered automatically.
-there is also a separate button to fit the tree entirely into the canvas 
+### 4.1 Branch Rendering
 
-the controls are layed out as follows: on the very top there are two buttons - build trees and fit tree. 
-next two blocks are sample parameters in the left column and at the same level the root selector parameters are in the right column. 
-next there are two expandable (downwards, with the increase of M) blocks of rules in the left and angles on the right.  
+**Branch Length:**
+```
+len = 50 / sqrt(depth * 0.5 - 0.2)
+```
+- Depth 1: ~54.8px
+- Depth 2: ~29.9px
+- Depth 3: ~20.4px
+- Depth 10: ~7.7px
 
-Also the canvas itself is interactive: 
-- **Tooltip:** Hovering over a node displays its Value, Weight, Depth and Height.
-- **Click:** Clicking a node sets it as the new "Start Value", adds it to the sample set and re-renders the tree.
+Logarithmic falloff ensures deep trees still show structure without sprawling off-canvas.
 
+**Branch Angle:**
+```
+childAngle = parentAngle + angleOffset[child % mod]
+```
+- angleOffset is user-adjustable per remainder class (range: -180° to +180°)
+- Default (M=2): [7.5°, -15°]
+- Each child of the same parent spreads at different angles based on its value's remainder
 
+**Branch Color (Hue):**
+```
+hue = 300 - (log(nodeValue + 1) / log(maxNodeValue + 1)) * 320
+```
+- Maps node values linearly to hue spectrum
+- Value = 1 → hue ≈ 300° (purple - magenta)
+- Value = maxNode → hue ≈ -20° (red-orange)
+- Intermediate values interpolate through blue/cyan/green/yellow
 
+**Branch Thickness & Opacity:**
+```
+lineWidth = max(1, log(weight) / log(rootWeight) * 9)
+alpha = min(1, 0.3 + log(weight) / log(rootWeight) * 0.7)
+```
+- Thicker, more opaque lines = frequently visited paths
+- Thin, transparent = rare branches
 
-# Project Structure & Interaction
+### 4.2 Node Captions
 
-The project is split into:
-- `tree.html`: The skeleton
-- `style.css`: Styles
-- `tree_math.js`: Algorithms and data structures
-- `tree_ui.js`: Rendering and interaction logic
+Labels are positioned directly below nodes, rendered as DOM elements with colored backgrounds:
 
-# New Features: Height and Advanced Captions
+- **Root** (Purple): Background: `rgba(155, 89, 182, 0.4)` `rgba(46, 204, 113, 0.6)`, border `#9b59b6`
+- **Cycle Start** (Blue): `rgba(79, 172, 250, 0.6)`, border `#4facfa`, - node that root points to in the cycle (e.g., "1->4" gives start = 4)
+- **Deepest Node** (Green): `rgba(46, 204, 113, 0.6)`, border `#2ecc71`
+- **Highest Node** (Red): `rgba(209, 88, 88, 0.6)`, border `#d15858`
+- **Smallest Node** (Yellow): `rgba(241, 196, 15, 0.6)`, border `#f1c40f`
+- **Start Value** (Orange): `rgba(255, 165, 0, 0.6)`, border `#ff8c00`
 
-The system now computes the **Height** for each node, defined as the maximum value encountered on the path from that node to the root. 
+Captions use monospace font, black text, centered horizontally below node.
 
-- **Tooltip Update**: Tooltips now display the node's height alongside value, weight, and depth.
-- **New Captions**:
+---
+
+## 5. User Interface & Controls
+
+### 5.1 Control Panel Layout
+
+**Top Section:**
+- **Build Trees** button: Triggers `processAndRender()` – reads all parameters and constructs graph
+- **Fit to Screen** button: Calls `render(autoFit=true)` – adjusts view to show entire tree
+
+**Middle Section (Two columns):**
+
+**Left: Sample Generation**
+- **Number of samples** (input): How many starting values to process [1, ∞)
+- **Lower limit** (input): Minimum value for sample range [1, ∞)
+- **Range** (input): Size of sample interval (upper = lower + range) [1, ∞)
+
+Sampling logic:
+```
+if numSamples >= range:
+  use all integers in [lower, lower+range)
+else:
+  random sample of size numSamples
+```
+
+**Right: Root/Start Selection**
+- **Select Tree** (dropdown): Choose which tree to render (enabled after Build Trees)
+- **Start Value** (input): Manually specify a starting node; added to sample set and highlighted
+
+**Lower Section (Dynamic, expands with modulus M):**
+
+**Left: Rule Definitions**
+- **Modulus** (input): Number M of rule classes [2, ∞)
+- For each remainder class i in [0, M-1):
+  - Label: `n % M = i; n →`
+  - Input field: Rule expression (e.g., "n/2", "3*n+1")
+
+**Right: Angle Configuration**
+- **Initial Angle** (rotary knob): Starting angle for root branches (range: -180° to +180°)
+- For each remainder class i in [0, M-1):
+  - Rotary knob: Angle offset for child branches (range: -90° to +90°)
+
+### 5.2 Knob Component
+
+**Class:** `RotaryKnob(container, inputId, min, max, initialValue, step, dragSensitivity)`
+
+Visual control for precise angle input:
+- **Visual:** Circular dial with indicator line, numeric display
+- **Interaction:**
+  - **Drag** (up/down): Smooth continuous adjustment
+  - **Scroll** (wheel): Step-based adjustment
+  - **Sensitivity:** 0.5 for initial angle (coarse), 0.05 for branch angles (fine)
+  - **Step:** 1° for initial, 0.1° for branch angles
+
+Updates hidden `<input type="range">` which triggers `render(false)` on change.
+
+### 5.3 Canvas Interaction
+
+**Zoom (Mouse Wheel):**
+```
+scaleFactor = 1.1
+if scroll up:
+  zoom *= scaleFactor
+else:
+  zoom /= scaleFactor
+
+// Maintain center point under cursor
+view.x *= (newZoom / oldZoom)
+view.y *= (newZoom / oldZoom)
+```
+
+**Pan (Click + Drag):**
+```
+on mousedown:
+  isDragging = true
+  lastX, lastY = current mouse position
+
+on mousemove (while dragging):
+  dx = currentX - lastX
+  dy = currentY - lastY
+  view.x += dx
+  view.y += dy
+  render(false)
+```
+
+**Click Node (Select as Start Value):**
+```
+on mouseup (after minimal drag):
+  if clicked on node:
+    set startValue to node
+    call addStartValueToSamples(node, currentRule)
+    (automatically re-renders tree)
+```
+
+**Hover Tooltip:**
+```
+on mousemove (not dragging):
+  node = hitTest(mouseWorldPos)
+  if node:
+    show tooltip with: Value, Weight, Depth, Height
+  else:
+    hide tooltip
+```
+
+---
+
+## 6. Project Structure & Dependencies
+
+### 6.1 File Organization
+
+```
+tree/
+├── tree.html           # HTML skeleton & control panel
+├── style.css           # Styling (sidebar, canvas, knobs, labels)
+├── tree_math.js        # Graph algorithms & data structures
+├── tree_ui.js          # Rendering, interaction, RotaryKnob class
+└── ARCHITECTURE.md     # This document, project description
+```
+
+### 6.2 Execution Flow
+
+1. **Page Load** (`tree.html`):
+   - Import `tree_math.js`, `tree_ui.js`
+   - Create canvas, sidebar controls
+   - Initialize static knobs: `setupStaticKnobs()`
+   - Initialize dynamic controls: `setupDynamicControls()`
+   - Attach event listeners to buttons, inputs, canvas
+
+2. **Build Trees** (Click):
+   - Call `processAndRender()`
+   - Extract UI parameters (min, range, count, rules, angles, start value)
+   - Call `buildGraph(min, range, count, ruleObj, startVal)`
+   - Call `computeWeights()`
+   - Call `computeHeights()`
+   - Populate tree selector dropdown
+   - Call `render(true)` with auto-fit
+
+3. **Change Modulus** (Input Change):
+   - Call `setupDynamicControls()`
+   - Dynamically create/remove rule inputs and angle knobs
+   - Update default values based on M
+
+4. **Adjust Angle** (Knob Change):
+   - Knob updates hidden input
+   - Input fires `input` event
+   - Event listener calls `render(false)` if tree exists
+
+5. **Select Tree** (Dropdown Change):
+   - Update `currentRoot`
+   - Set start value to root
+   - Call `render(true)` with auto-fit
+
+6. **Change Start Value** (Input Change):
+   - Call `addStartValueToSamples(value, ruleObj)`
+   - Adds value to sample set if not already present
+   - Updates tree metadata with start value
+   - Switches to appropriate tree
+   - Calls `render(false)` to highlight start value
+
+7. **Canvas Interaction**:
+   - Zoom: Adjusts `view.zoom`, maintains center
+   - Pan: Adjusts `view.x`, `view.y`
+   - Click: Sets start value and re-renders
+   - Hover: Shows tooltip
+   - All trigger `render(false)` for immediate update
+
+### 6.3 Key Functions Cross-Reference
+
+| Function | File | Called By | Purpose |
+|----------|------|-----------|---------|
+| `getNext()` | tree_math.js | addSampleToGraph | Compute next sequence value |
+| `buildGraph()` | tree_math.js | processAndRender | Construct tree from samples |
+| `addSampleToGraph()` | tree_math.js | buildGraph, addStartValueToSamples | Trace & add one sample |
+| `computeWeights()` | tree_math.js | processAndRender | Calculate edge weights |
+| `computeHeights()` | tree_math.js | processAndRender | Calculate max-on-path values |
+| `render()` | tree_ui.js | processAndRender, event listeners | Main render loop |
+| `drawEdge()` | tree_ui.js | render (edge phase) | Draw single edge |
+| `drawCaptions()` | tree_ui.js | render (caption phase) | Draw node labels |
+| `processAndRender()` | tree_ui.js | renderBtn click | UI→graph pipeline |
+| `addStartValueToSamples()` | tree_ui.js | startValue input, canvas click | Add node as start value |
+| `setupDynamicControls()` | tree_ui.js | modulus change, init | Create rule/angle inputs |
+| `RotaryKnob` (constructor) | tree_ui.js | setupStaticKnobs, setupDynamicControls | Create angle control |
+
+### 6.4 Global Variables
+
+```javascript
+// tree_math.js
+let graph = {...}              // Master data structure
+let ruleFunctionCache = Map()  // Cached rule functions
+
+// tree_ui.js
+let view = {...}              // Viewport state (x, y, zoom, isDragging)
+let currentRoot = null        // Currently displayed tree
+let computedLayout = Map()    // node → {x, y, angle}
+```
+
+---
+
+## 7. Performance Considerations
+
+### 7.1 Optimization Strategies
+
+**Weight Computation (O(n) linear time):**
+- Traverse nodeList backwards (children before parents)
+- Accumulate weights bottom-up
+- Avoids recursion and redundant calculation
+
+**Height Computation (O(n) linear time):**
+- Traverse nodeList forwards (parents before children)
+- Calculate max incrementally
+- Single pass sufficient
+
+**Rule Caching:**
+- Compile rule strings to functions once
+- Reuse across millions of samples
+- Avoids repeated `new Function()` calls
+
+**Sampling Optimization:**
+- If samples >= range: Use full range (no randomness overhead)
+- If samples < range: Random sample (efficient for sparse sampling)
+- No duplicates in sample set
+
+**Rendering Optimization:**
+- BFS layout: Single pass over nodeList
+- Canvas scaling: Viewport math applied once per render
+- DOM labels: Created only for visible captions (screen-space culling)
+
+### 7.2 Limits
+
+- **MAX_VALUE = 1e18**: Sequences exceeding this are considered divergent and discarded
+- **Max Canvas Size**: Browser-dependent (typically 8000-16000px per dimension)
+- **Max Nodes**: ~100K nodes renderable with reasonable performance
+
+---
+
+## 8. Testing & Validation
+
+### 8.1 Test Cases
+
+**Classic Collatz (n%2==0 → n/2, n%2==1 → 3n+1):**
+- Sample 7: 7→22→11→34→17→52→26→13→40→20→10→5→16→8→4→2→1→4 (cycle at 4, root=1)
+- Expected: Single large tree rooted at 1
+
+**Alternative Collatz (n%2==0 → n/2+1, n%2==1 → 3n+1):**
+- Sample 2: 2→2→2 (immediate self-loop)
+- Sample 9: 9→28→15→46→24→13→40→21→64→33→100→51→154→78→40 (cycle at 40, root=21)
+- Expected: Multiple trees (at least 5), including single-node tree at 2
+
+**Triple Sequence (n%3==0 → n/3, n%3==1 → 2n+1, n%3==2 → 4n+2):**
+- Multiple independent trees
+- Validates generalized rule system
+
+---
+
+## 9. Advanced Features
+
+### 9.1 Multiple Trees
+
+The visualizer can construct hundreds of independent trees. User selects which to display via dropdown.
+
+### 9.2 Dynamic Rule Definition
+
+Users define rules as arbitrary JavaScript expressions (e.g., "n/2", "3*n+1", "n*n+5"). Flexible but requires user to ensure convergence for meaningful results.
+
+### 9.3 Configurable Angles
+
+Each remainder class can have its own branch angle offset, creating unique tree topologies. Angles update in real-time without rebuilding the graph.
+
+### 9.4 Height Metric
+
+Beyond depth (distance from root), height captures the "tallest wall" encountered on the path to root. Useful for identifying nodes with large values deep in the tree.
+
+---
+
+## 10. Code Example: Adding a Sample
+
+```javascript
+// User inputs min=20000, range=10000, count=100 samples
+// Clicks "Build Trees" with classic Collatz rules
+
+// Internally:
+const ruleObj = { mod: 2, rules: ["n/2", "3*n+1"] };
+buildGraph(20000, 10000, 100, ruleObj, null);
+
+// For sample 70368:
+addSampleToGraph(70368, ruleObj);
+  // Trace forward until cycle detected
+  sequence = [70368, 35184, 17592, ..., 4, 2, 1, 4]  // cycle at 4
+  // Root = 1 (minimum in cycle [4, 2, 1, 4])
+  // If graph.root[1] not set, create new tree
+  // Backfill: 70368→parent, depth=37; 35184→parent, depth=36; ... 1→cycle target, depth=0
+  // graph.nodeList = [1, 4, 2, 8, 16, 5, 10, 20, ..., 35184, 70368]
+
+// Later:
+computeWeights();  // Root=1 has weight=count_of_samples_reaching_it
+computeHeights();  // For each node, max(nodeValue, height[parent])
+
+// Render:
+render(true);
+  // Position 1 at (0,0), angle=initialAngle
+  // Position children by branchLen and angleOffsets
+  // Draw edges with color based on value, width based on weight
+  // Add captions for special nodes (root=1, max, min, etc.)
+```
+
+---
+
+## 11. Extending the System
+
+### 11.1 Adding a New Sequence Type
+
+1. Define rule object: `{mod: M, rules: [...]}`
+2. Populate dropdown or accept as parameter
+3. No code changes needed – algorithm is generic
+
+### 11.2 Adding Node Metrics
+
+1. Create new `graph.metricName = Map()` in resetGraph()
+2. Populate in addToGraph() or post-processing function
+3. Use in rendering (color, size, captions)
+
+### 11.3 Exporting/Analyzing Trees
+
+1. Access `graph.nodeList`, `graph.trees[root]` for all data
+2. Serialize to JSON for storage or analysis
+3. Generate statistics (tree size, max depth, weight distribution)
+
+---
+
+## Summary
+
+The Collatz Tree Visualizer integrates three core systems:
+
+1. **Graph Construction** (tree_math.js): Traces sequences, detects cycles, builds hierarchical tree structure with weights and heights
+2. **Rendering Engine** (tree_ui.js, canvas): Positions nodes via BFS, colors by value, sizes by weight, adds interactive features
+3. **User Controls** (tree.html, tree_ui.js): Flexible rule definition, angle adjustment, sample generation, tree selection, canvas interaction
+
+All components work together to efficiently explore and visualize complex sequence behavior across many concurrent trees.

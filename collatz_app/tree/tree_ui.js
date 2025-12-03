@@ -13,8 +13,11 @@
 //     }
 // };
 
+// Global registry for knob instances
+const knobRegistry = new Map();
+
 class RotaryKnob {
-    constructor(container, inputId, min, max, initialValue, step = 1, dragSensitivity = 0.2) {
+    constructor(container, inputId, min, max, initialValue, step = 1, dragSensitivity = 0.5) {
         this.container = container;
         this.input = document.getElementById(inputId);
         this.min = min;
@@ -42,6 +45,11 @@ class RotaryKnob {
         this.updateVisuals();
     }
 
+    setValue(newValue) {
+        this.value = parseFloat(newValue);
+        this.updateVisuals();
+    }
+
     updateVisuals() {
         // Normalize value to avoid negative zero or tiny float errors
         let displayVal = this.value;
@@ -49,14 +57,18 @@ class RotaryKnob {
         
         // Rotate indicator
         this.indicatorEl.style.transform = `translateX(-50%) rotate(${displayVal}deg)`;
-        this.valueEl.textContent = displayVal.toFixed(1) + '°';
+        
+        // Display format depends on step size - whole numbers for step >= 1, decimal for smaller steps
+        const decimalPlaces = this.step >= 1 ? 0 : 1;
+        this.valueEl.textContent = displayVal.toFixed(decimalPlaces) + '°';
         
         // Update hidden input
         // Fix: Use a small epsilon for comparison to avoid unnecessary updates/flickering
         // and ensuring the input value is set to the rounded display value to match what user sees.
         const currentInputVal = parseFloat(this.input.value);
-        if (Math.abs(currentInputVal - displayVal) > 0.01) {
-            this.input.value = displayVal.toFixed(1);
+        const epsilon = this.step >= 1 ? 0.1 : 0.01;
+        if (Math.abs(currentInputVal - displayVal) > epsilon) {
+            this.input.value = displayVal.toFixed(decimalPlaces);
             // Trigger event for rendering
             const event = new Event('input', { bubbles: true });
             this.input.dispatchEvent(event);
@@ -130,6 +142,8 @@ const labelsContainer = document.getElementById('labels-container');
 let view = { x: 0, y: 0, zoom: 1, isDragging: false, lastX: 0, lastY: 0 };
 let currentRoot = null;
 let computedLayout = new Map(); // node -> {x, y, angle}
+let showLabels = true; // Toggle for showing/hiding captions
+let darkBackground = false; // Toggle for dark/light background
 
 function resizeCanvas() {
     canvas.width = document.getElementById('canvas-container').clientWidth;
@@ -138,17 +152,130 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-function render(autoFit = false) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    labelsContainer.innerHTML = ''; 
+function render(autoFit = false, highResExport = false) {
+    const renderStart = performance.now();
+    console.log(`🎬 RENDER START - Nodes: ${graph.nodeList.length}, Tree nodes: ${graph.nodeList.filter(n => graph.root.get(n) === currentRoot).length}`);
+    
+    // If high-res export, create temporary canvas
+    let targetCtx = ctx;
+    let targetCanvas = canvas;
+    let centerX, centerY;
+    
+    if (highResExport) {
+        const highResStart = performance.now();
+        
+        // Create off-screen canvas for high-res rendering
+        targetCanvas = document.createElement('canvas');
+        targetCtx = targetCanvas.getContext('2d');
+        
+        // We need the tree bounds first to calculate proper dimensions
+        if (!currentRoot || !graph.trees[currentRoot]) return;
 
-    if (!currentRoot || !graph.trees[currentRoot]) return;
+        const rootVal = currentRoot;
+        const angles = getAngles();
+        const treeMeta = graph.trees[rootVal];
+
+        // Compute layout to get bounds
+        const tempLayout = new Map();
+        const baseLen = 50;
+        let initialAngleRad = (parseFloat(document.getElementById('initAngle').value) || 0) * (Math.PI / 180) - Math.PI / 2;
+        
+        tempLayout.set(rootVal, { x: 0, y: 0, angle: initialAngleRad });
+
+        const queue = [rootVal];
+        let minX = 0, maxX = 0, minY = 0, maxY = 0;
+        const mod = parseInt(document.getElementById('modulus').value) || 2;
+
+        // BFS Layout Pass to calculate bounds
+        while (queue.length > 0) {
+            const p = queue.shift();
+            const pos = tempLayout.get(p);
+            const children = graph.children.get(p) || [];
+            const depth = graph.depth.get(p);
+
+            for (const child of children) {
+                const childDepth = depth + 1;
+                const len = baseLen / Math.sqrt(childDepth * 0.5 - 0.2); 
+                
+                const offsetDeg = angles[child % mod] || 0;
+                const newAngle = pos.angle + (offsetDeg * Math.PI / 180);
+                const newX = pos.x + Math.cos(newAngle) * len;
+                const newY = pos.y + Math.sin(newAngle) * len;
+                
+                tempLayout.set(child, { x: newX, y: newY, angle: newAngle });
+                queue.push(child);
+
+                if (newX < minX) minX = newX;
+                if (newX > maxX) maxX = newX;
+                if (newY < minY) minY = newY;
+                if (newY > maxY) maxY = newY;
+            }
+        }
+
+        // Calculate high-res canvas dimensions (4096px on longest side)
+        const MAX_RESOLUTION = 4096;
+        const padding = 100;
+        const width = maxX - minX;
+        const height = maxY - minY;
+        const aspectRatio = width / height;
+        
+        let canvasWidth, canvasHeight, zoom;
+        
+        if (aspectRatio >= 1) {
+            // Width is the longer side
+            canvasWidth = MAX_RESOLUTION - 2 * padding;
+            canvasHeight = canvasWidth / aspectRatio;
+            zoom = canvasWidth / width;
+        } else {
+            // Height is the longer side
+            canvasHeight = MAX_RESOLUTION - 2 * padding;
+            canvasWidth = canvasHeight * aspectRatio;
+            zoom = canvasHeight / height;
+        }
+        
+        canvasWidth += 2 * padding;
+        canvasHeight += 2 * padding;
+        
+        targetCanvas.width = Math.ceil(canvasWidth);
+        targetCanvas.height = Math.ceil(canvasHeight);
+        
+        centerX = canvasWidth / 2;
+        centerY = canvasHeight / 2;
+        
+        // Fill background
+        targetCtx.fillStyle = darkBackground ? '#fff0fa' : '#150010';
+        targetCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+        
+        const highResTime = performance.now() - highResStart;
+        console.log(`📐 High-res setup: ${highResTime.toFixed(2)}ms`);
+    } else {
+        const setupStart = performance.now();
+        
+        // Regular canvas rendering
+        targetCtx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Fill background
+        targetCtx.fillStyle = darkBackground ? '#fff0fa' : '#150010';
+        targetCtx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        labelsContainer.innerHTML = '';
+        centerX = canvas.width / 2;
+        centerY = canvas.height / 2;
+        
+        const setupTime = performance.now() - setupStart;
+        console.log(`🎨 Canvas setup: ${setupTime.toFixed(2)}ms`);
+    } 
+
+    if (!highResExport) {
+        if (!currentRoot || !graph.trees[currentRoot]) return;
+    }
 
     const rootVal = currentRoot;
     const angles = getAngles();
     const treeMeta = graph.trees[rootVal];
 
     // Viewport & Layout Setup
+    const layoutStart = performance.now();
     computedLayout.clear();
     const baseLen = 50;
     let initialAngleRad = (parseFloat(document.getElementById('initAngle').value) || 0) * (Math.PI / 180) - Math.PI / 2;
@@ -157,6 +284,7 @@ function render(autoFit = false) {
 
     const queue = [rootVal];
     let minX = 0, maxX = 0, minY = 0, maxY = 0;
+    let nodesProcessed = 0;
     
     const mod = parseInt(document.getElementById('modulus').value) || 2;
 
@@ -168,8 +296,9 @@ function render(autoFit = false) {
         const depth = graph.depth.get(p);
 
         for (const child of children) {
+            nodesProcessed++;
             const childDepth = depth + 1;
-            const len = baseLen / Math.sqrt(childDepth * 0.5 -0.2 ); 
+            const len = baseLen / Math.sqrt(childDepth * 0.5  ); 
             
             // Use modulo of child value to determine angle index
             const offsetDeg = angles[child % mod] || 0;
@@ -188,14 +317,18 @@ function render(autoFit = false) {
         }
     }
 
+    const layoutTime = performance.now() - layoutStart;
+    console.log(`📍 Layout calculation: ${layoutTime.toFixed(2)}ms, nodes processed: ${nodesProcessed}, layout size: ${computedLayout.size}`);
+    
     // 2. AutoFit Logic (Adjust view if needed)
+    const autofitStart = performance.now();
     if (autoFit) {
         const width = maxX - minX;
         const height = maxY - minY;
         const padding = 50;
         
-        const scaleX = (canvas.width - 2 * padding) / width;
-        const scaleY = (canvas.height - 2 * padding) / height;
+        const scaleX = (targetCanvas.width - 2 * padding) / width;
+        const scaleY = (targetCanvas.height - 2 * padding) / height;
         view.zoom = Math.min(scaleX, scaleY, 2);
         
         // Center the tree bounds
@@ -206,51 +339,91 @@ function render(autoFit = false) {
         view.x = -treeCenterX * view.zoom;
         view.y = -treeCenterY * view.zoom;
     }
+    const autofitTime = performance.now() - autofitStart;
+    console.log(`🎯 Auto-fit: ${autofitTime.toFixed(2)}ms`);
 
     // 3. Render Pass
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const renderPassStart = performance.now();
+    centerX = targetCanvas.width / 2;
+    centerY = targetCanvas.height / 2;
     
     // Note: ViewX acts as an offset from the center, accumulating pan drags.
     const translateX = centerX + view.x;
     const translateY = centerY + view.y;
     
-    ctx.save();
-    ctx.translate(translateX, translateY);
-    ctx.scale(view.zoom, view.zoom);
+    targetCtx.save();
+    targetCtx.translate(translateX, translateY);
+    targetCtx.scale(view.zoom, view.zoom);
 
     // Draw Edges
+    const edgesStart = performance.now();
+    let edgesDrawn = 0;
     for (let [node, pos] of computedLayout) {
         if (node === currentRoot) continue;
         const parent = graph.parent.get(node);
         const pPos = computedLayout.get(parent);
-        if (pPos) drawEdge(node, pPos, pos.x, pos.y, treeMeta);
+        if (pPos) {
+            drawEdge(node, pPos, pos.x, pos.y, treeMeta, targetCtx);
+            edgesDrawn++;
+        }
     }
-
+    const edgesTime = performance.now() - edgesStart;
+    console.log(`📐 Edge drawing: ${edgesTime.toFixed(2)}ms, edges drawn: ${edgesDrawn}`);
 
     // Captions
-    drawCaptions(treeMeta);
+    const captionsStart = performance.now();
+    drawCaptions(treeMeta, targetCtx, targetCanvas, highResExport);
+    const captionsTime = performance.now() - captionsStart;
+    console.log(`🏷️  Captions: ${captionsTime.toFixed(2)}ms`);
 
-    ctx.restore();
+    targetCtx.restore();
+    
+    const renderPassTime = performance.now() - renderPassStart;
+    console.log(`🎨 Render pass: ${renderPassTime.toFixed(2)}ms`);
+    
+    // If high-res export, download the image
+    if (highResExport) {
+        const exportStart = performance.now();
+        targetCanvas.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `collatz-tree-${currentRoot}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            const exportTime = performance.now() - exportStart;
+            console.log(`💾 Export & save: ${exportTime.toFixed(2)}ms`);
+        }, 'image/png');
+    }
+    
+    const totalRenderTime = performance.now() - renderStart;
+    console.log(`✅ RENDER COMPLETE - Total: ${totalRenderTime.toFixed(2)}ms`);
 }
 
-function drawEdge(node, pPos, x, y, treeMeta) {
+function drawEdge(node, pPos, x, y, treeMeta, targetCtx = ctx) {
     const weight = graph.weight.get(node);
-    const logW = Math.log(weight)/Math.log(graph.weight.get(treeMeta.rootNode));
-    const lineWidth = Math.max(1, logW * 9); 
-    const alpha = Math.min(1, 0.3 + logW*0.7 );
-    const hue = 300 - (Math.log(node + 1) / Math.log(treeMeta.highestNode + 1)) * 320;
+    const logW = Math.log2(weight);//Math.log(graph.weight.get(treeMeta.rootNode));
+    const logWnorm = Math.log2(treeMeta.leafCount);
+    const lineWidth = 2 + logW; 
+    const alpha = logWnorm == 0 ? 1 : Math.min(1, 0.25 + logW/logWnorm*0.75 );
+    const hue = 300 - (Math.log(node) / Math.log(treeMeta.highestNode)) * 320;
+    const darkness = darkBackground ? 50 : 0;
 
-    ctx.beginPath();
-    ctx.moveTo(pPos.x, pPos.y);
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = `hsla(${hue}, 75%, 50%, ${alpha})`;
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = 'round';
-    ctx.stroke();
+    targetCtx.beginPath();
+    targetCtx.moveTo(pPos.x, pPos.y);
+    targetCtx.lineTo(x, y);
+    targetCtx.strokeStyle = `hsla(${hue}, ${75-darkness}%, 50%, ${alpha})`;
+    targetCtx.lineWidth = lineWidth;
+    targetCtx.lineCap = 'round';
+    targetCtx.stroke();
 }
 
-function drawCaptions(treeMeta) {
+function drawCaptions(treeMeta, targetCtx = ctx, targetCanvas = canvas, highResExport = false) {
+    if (!showLabels) return;
+    
     // Build potential captions with priority
     const captionOptions = [
         { nodeId: currentRoot, type: 'root', text: currentRoot, priority: 1 },
@@ -279,30 +452,72 @@ function drawCaptions(treeMeta) {
         }
     }
 
-    // Get current transform for screen projection
-    // Note: Context is currently transformed. 
-    // To draw DOM elements we need Screen Coordinates.
-    // ScreenX = (NodeX * zoom) + translateX
-    // We need to reconstruct translateX/Y from the view state used in the transform.
     
     // Since we didn't pass translateX/Y to this function, let's recalculate or rely on view
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = targetCanvas.width / 2;
+    const centerY = targetCanvas.height / 2;
     const translateX = centerX + view.x;
     const translateY = centerY + view.y;
 
-    for (const item of captionByNode.values()) {
-        const pos = computedLayout.get(item.nodeId);
-        const screenX = (pos.x * view.zoom) + translateX;
-        const screenY = (pos.y * view.zoom) + translateY;
+    if (highResExport) {
+        // Draw captions directly on canvas for high-res export
+        const captionColorMap = {
+            'root': { bg: 'rgba(155, 89, 182, 0.8)', border: '#9b59b6' },
+            'target': { bg: 'rgba(79, 172, 250, 0.8)', border: '#4facfa' },
+            'deep': { bg: 'rgba(46, 204, 113, 0.8)', border: '#2ecc71' },
+            'max': { bg: 'rgba(209, 88, 88, 0.8)', border: '#d15858' },
+            'min': { bg: 'rgba(241, 196, 15, 0.8)', border: '#f1c40f' },
+            'start': { bg: 'rgba(255, 165, 0, 0.8)', border: '#ff8c00' }
+        };
 
-        if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
-            const el = document.createElement('div');
-            el.className = `node-label label-${item.type}`;
-            el.innerText = item.text;
-            el.style.left = screenX + 'px';
-            el.style.top = screenY + 'px';
-            labelsContainer.appendChild(el);
+        // Scale font size proportionally to the zoom level for high resolution
+        const baseFontSize = 14;
+        const scaledFontSize = Math.max(baseFontSize, baseFontSize * (view.zoom / 10));
+
+        for (const item of captionByNode.values()) {
+            const pos = computedLayout.get(item.nodeId);
+            const screenX = (pos.x * view.zoom) + translateX;
+            const screenY = (pos.y * view.zoom) + translateY;
+
+            if (screenX > -50 && screenX < targetCanvas.width + 50 && screenY > -50 && screenY < targetCanvas.height + 50) {
+                const colors = captionColorMap[item.type];
+                
+                targetCtx.font = `bold ${scaledFontSize}px monospace`;
+                const textWidth = targetCtx.measureText(item.text).width;
+                const boxWidth = textWidth + 8;
+                const boxHeight = scaledFontSize + 6;
+                
+                // Draw background box
+                targetCtx.fillStyle = colors.bg;
+                targetCtx.fillRect(screenX - boxWidth / 2, screenY, boxWidth, boxHeight);
+                
+                // Draw border
+                targetCtx.strokeStyle = colors.border;
+                targetCtx.lineWidth = 2;
+                targetCtx.strokeRect(screenX - boxWidth / 2, screenY, boxWidth, boxHeight);
+                
+                // Draw text
+                targetCtx.fillStyle = '#000000';
+                targetCtx.textAlign = 'center';
+                targetCtx.textBaseline = 'top';
+                targetCtx.fillText(item.text, screenX, screenY + 3);
+            }
+        }
+    } else {
+        // Regular DOM rendering for normal display
+        for (const item of captionByNode.values()) {
+            const pos = computedLayout.get(item.nodeId);
+            const screenX = (pos.x * view.zoom) + translateX;
+            const screenY = (pos.y * view.zoom) + translateY;
+
+            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
+                const el = document.createElement('div');
+                el.className = `node-label label-${item.type}`;
+                el.innerText = item.text;
+                el.style.left = screenX + 'px';
+                el.style.top = screenY + 'px';
+                labelsContainer.appendChild(el);
+            }
         }
     }
 }
@@ -319,7 +534,7 @@ function getAngles() {
     return angles;
 }
 
-function addStartValueToSamples(startValue, rule) {
+function addStartValueToSamples(startValue, ruleSet) {
     if (!startValue || isNaN(startValue)) return;
     
     const startValueInt = parseInt(startValue);
@@ -328,7 +543,7 @@ function addStartValueToSamples(startValue, rule) {
     graph.startValue = startValueInt;
     
     // Add the start value to the existing sample set
-    addSampleToGraph(startValueInt, rule, true); 
+    addSampleToGraph(startValueInt, ruleSet, true); 
     
     // Update the tree selector with any new trees found
     const select = document.getElementById('treeSelect');
@@ -338,14 +553,27 @@ function addStartValueToSamples(startValue, rule) {
         // Store the start value in the tree metadata
         graph.trees[rootOfStartValue].startValue = startValueInt;
         
-        // Switch to the tree that contains this start value
-        select.value = rootOfStartValue;
-        currentRoot = rootOfStartValue;
+        // Check if this tree root is already in the dropdown, if not add it
+        const optionExists = Array.from(select.options).some(option => option.value === rootOfStartValue.toString());
+        if (!optionExists) {
+            const newOption = document.createElement('option');
+            newOption.value = rootOfStartValue;
+            newOption.innerText = `${rootOfStartValue}`;
+            select.appendChild(newOption);
+        }
         
-        // Re-render the tree (without auto-fit to preserve user's view)
+        // Check if we're in start value mode (toggle checked = start value mode)
+        const toggle = document.getElementById('treeModeToggle');
+        
+        if (toggle.checked) {
+            // Start value mode - switch to the tree that contains this start value
+            select.value = rootOfStartValue;
+            currentRoot = rootOfStartValue;
+            // Re-render the tree (without auto-fit to preserve user's view)
+        }
         render(false);
         
-        console.log(`Added start value ${startValueInt} to tree with root ${rootOfStartValue}`);
+        // console.log(`Added start value ${startValueInt} to tree with root ${rootOfStartValue}`);
     }
 }
 
@@ -359,7 +587,8 @@ function processAndRender() {
     const rules = [];
     ruleInputs.forEach(input => rules.push(input.value));
     
-    const ruleObj = { mod: mod, rules: rules };
+    // Create RuleSet for performance
+    const ruleSet = new RuleSet({ mod: mod, rules: rules });
 
     const startInput = document.getElementById('startValue').value;
     const startValue = startInput ? parseInt(startInput) : null;
@@ -368,7 +597,7 @@ function processAndRender() {
 
     setTimeout(() => {
         const t0 = performance.now();
-        buildGraph(min, range, count, ruleObj, startValue);
+        buildGraph(min, range, count, ruleSet, startValue);
         computeWeights();
         computeHeights();
         const t1 = performance.now();
@@ -376,19 +605,21 @@ function processAndRender() {
         
         const select = document.getElementById('treeSelect');
         select.innerHTML = '';
-        const roots = Object.keys(graph.trees).sort((a,b) => parseInt(a)-parseInt(b));
+        // const roots = Object.keys(graph.trees).sort((a,b) => parseInt(a)-parseInt(b));
+
+        const roots = Object.keys(graph.trees).sort((a,b) => (graph.trees[b].leafCount-graph.trees[a].leafCount));
         
         if (roots.length === 0) {
             alert("No trees found (check parameters)");
             document.getElementById('loading').style.display = 'none';
             return;
         }
-
+        // console.log(select);
         roots.forEach(r => {
             const opt = document.createElement('option');
             opt.value = r;
-            let rootValue = Number(r);
-            opt.innerText = `Root: ${r} (size : ${graph.weight.get(rootValue)})`;
+            // let rootValue = Number(r); // (size : ${graph.weight.get(rootValue)})
+            opt.innerText = r; //`${r}`;
             select.appendChild(opt);
         });
         select.disabled = false;
@@ -404,7 +635,7 @@ function processAndRender() {
                 graph.trees[rootOfStartValue].startValue = startValue;
             }
             
-            console.log(`Rendering tree for start value ${startValue}, root ${rootOfStartValue}`);
+            // console.log(`Rendering tree for start value ${startValue}, root ${rootOfStartValue}`);
         } else {
             currentRoot = parseInt(roots[0]);
         } 
@@ -415,7 +646,7 @@ function processAndRender() {
         // Setup start value change handler
         const startValueInput = document.getElementById('startValue');
         startValueInput.onchange = (e) => {
-            addStartValueToSamples(e.target.value, ruleObj);
+            addStartValueToSamples(e.target.value, ruleSet);
         };
     }, 50);
 }
@@ -426,7 +657,8 @@ function setupStaticKnobs() {
     const initInput = document.getElementById('initAngle');
     if (initContainer && initInput) {
         // Keep Initial Angle coarser: Step 1, Sensitivity 0.2
-        new RotaryKnob(initContainer, 'initAngle', -180, 180, initInput.value, 1, 0.2);
+        const initKnob = new RotaryKnob(initContainer, 'initAngle', -180, 180, initInput.value, 1, 0.2);
+        knobRegistry.set('initAngle', initKnob);
         // Listen for input events on the hidden input
         initInput.addEventListener('input', () => {
              if (currentRoot) render(false);
@@ -464,18 +696,19 @@ function setupDynamicControls() {
         if (mod === 2) {
             if(i===0) defaultAngle = 7.5;
             if(i===1) defaultAngle = -15;
-        }
-        if (mod === 3) {
+        } else if (mod === 3) {
+            console.log("mod=3,i =",i)
             if(i===0) defaultAngle = 30;
             if(i===1) defaultAngle = -45;
             if(i===2) defaultAngle = 0;
-        } 
-        if (mod === 4) {
+        } else if (mod === 4) {
             if(i===0) defaultAngle = 10 ;
             if(i===1) defaultAngle = -20;
             if(i===2) defaultAngle = -10;
             if(i===3) defaultAngle = 20;
-        } 
+        } else {
+            defaultAngle = ((i%2)===0) ? 15 : -15;
+        }
 
 
         // Rule (Left)
@@ -495,13 +728,14 @@ function setupDynamicControls() {
         // <label for="${knobId}">Angle ${i}</label>
         angleGroup.innerHTML = `
             <div id="${knobId}-knob" class="knob-container"></div>
-            <input type="range" id="${knobId}" min="-180" max="180" step="0.1" value="${defaultAngle}" class="hidden-slider dynamic-angle">
+            <input type="range" id="${knobId}" min="-90" max="90" step="0.1" value="${defaultAngle}" class="hidden-slider dynamic-angle">
         `;
         grid.appendChild(angleGroup);
 
         // Initialize Knob
         // Branch Angles: Finer control. Step 0.1, Sensitivity 0.05 (slower drag)
-        new RotaryKnob(document.getElementById(`${knobId}-knob`), knobId, -180, 180, defaultAngle, 0.1, 0.05);
+        const dynamicKnob = new RotaryKnob(document.getElementById(`${knobId}-knob`), knobId, -90, 90, defaultAngle, 0.1, 0.05);
+        knobRegistry.set(knobId, dynamicKnob);
         
         // Attach listener to the newly created hidden input
         const hiddenInput = document.getElementById(knobId);
@@ -518,6 +752,11 @@ document.getElementById('renderBtn').addEventListener('click', processAndRender)
 document.getElementById('treeSelect').addEventListener('change', (e) => {
     currentRoot = parseInt(e.target.value);
     document.getElementById('startValue').value = currentRoot;
+    
+    // // Update tree selection mode based on toggle state
+    // const toggle = document.getElementById('treeModeToggle');
+    // const toggleLabel = document.querySelector('.toggle-label');
+
     render(true); 
 });
 
@@ -525,9 +764,317 @@ document.getElementById('fitBtn').addEventListener('click', () => {
     render(true);
 });
 
+document.getElementById('toggleLabelsBtn').addEventListener('click', () => {
+    showLabels = !showLabels;
+    const btn = document.getElementById('toggleLabelsBtn');
+    btn.innerText = showLabels ? 'Hide Labels' : 'Show Labels';
+    if (currentRoot) render(false);
+});
+
+document.getElementById('toggleBgBtn').addEventListener('click', () => {
+    darkBackground = !darkBackground;
+    const btn = document.getElementById('toggleBgBtn');
+    btn.innerText = darkBackground ? 'Dark Background' : 'Light Background';
+    if (currentRoot) render(false);
+});
+
+document.getElementById('saveImgBtn').addEventListener('click', () => {
+    render(true, true); // autoFit=true and highResExport=true
+    // render(true);
+});
+
+// Save Tree functionality
+document.getElementById('saveTreeBtn').addEventListener('click', () => {
+    if (!currentRoot || !graph.trees[currentRoot]) {
+        alert('No tree to save. Please build a tree first.');
+        return;
+    }
+
+    // Get all leaves of the current tree
+    const leaves = [];
+    for (const node of graph.nodeList) {
+        if (graph.root.get(node) === currentRoot) {
+            const children = graph.children.get(node) || [];
+            if (children.length === 0) {
+                leaves.push(node);
+            }
+        }
+    }
+
+    // Get current configuration
+    const mod = parseInt(document.getElementById('modulus').value);
+    const rules = [];
+    const ruleInputs = document.querySelectorAll('.rule-input');
+    ruleInputs.forEach(input => rules.push(input.value));
+
+    const angles = [];
+    const angleInputs = document.querySelectorAll('.dynamic-angle');
+    angleInputs.forEach(input => angles.push(parseFloat(input.value)));
+
+    const initAngle = parseFloat(document.getElementById('initAngle').value);
+
+    // Create tree data object
+    const treeData = {
+        version: '1.0',
+        root: currentRoot,
+        leaves: leaves,
+        config: {
+            modulus: mod,
+            rules: rules,
+            angles: angles,
+            initAngle: initAngle
+        }
+    };
+
+    // Download as JSON file
+    const dataStr = JSON.stringify(treeData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    // Create a descriptive filename with root and rules
+    const rulesStr = rules.map(rule => rule.replace(/\*/g, '×').replace(/\//g, '÷').replace(/ /g, '')).join('_');
+    link.download = `tree-${currentRoot}-rules-${rulesStr}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    console.log(`Saved tree ${currentRoot} with ${leaves.length} leaves`);
+});
+
+// Load Tree functionality - Dropdown
+const loadTreeBtn = document.getElementById('loadTreeBtn');
+const loadTreeDropdown = document.getElementById('loadTreeDropdown');
+const uploadOption = document.getElementById('uploadOption');
+
+// Toggle dropdown
+loadTreeBtn.addEventListener('click', () => {
+    loadTreeDropdown.classList.toggle('show');
+});
+
+// Handle dropdown item clicks
+document.querySelectorAll('.dropdown-item[data-file]').forEach(item => {
+    item.addEventListener('click', async () => {
+        const filePath = item.dataset.file;
+        try {
+            const response = await fetch(filePath);
+            if (!response.ok) {
+                throw new Error(`Failed to load file: ${response.status}`);
+            }
+            const treeData = await response.json();
+            loadTreeData(treeData);
+            loadTreeDropdown.classList.remove('show');
+        } catch (error) {
+            alert(`Error loading tree file ${filePath}: ${error.message}`);
+            console.error('Load tree error:', error);
+        }
+    });
+});
+
+// Handle upload option
+uploadOption.addEventListener('click', () => {
+    document.getElementById('loadTreeFile').click();
+    loadTreeDropdown.classList.remove('show');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown')) {
+        loadTreeDropdown.classList.remove('show');
+    }
+});
+
+document.getElementById('loadTreeFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            const treeData = JSON.parse(event.target.result);
+            loadTreeData(treeData);
+        } catch (error) {
+            alert('Invalid tree file. Please select a valid JSON tree file.');
+            console.error('Error loading tree:', error);
+        }
+    };
+    reader.readAsText(file);
+    
+    // Reset the file input
+    e.target.value = '';
+});
+
+function loadTreeData(treeData) {
+    try {
+        // Set modulus
+        document.getElementById('modulus').value = treeData.config.modulus;
+        
+        // Trigger modulus change to recreate dynamic controls
+        setupDynamicControls();
+        
+        // Wait for controls to be created, then populate them
+        setTimeout(() => {
+            // Set rules
+            const ruleInputs = document.querySelectorAll('.rule-input');
+            treeData.config.rules.forEach((rule, index) => {
+                if (ruleInputs[index]) {
+                    ruleInputs[index].value = rule;
+                }
+            });
+
+            // Set angles
+            const angleInputs = document.querySelectorAll('.dynamic-angle');
+            treeData.config.angles.forEach((angle, index) => {
+                if (angleInputs[index]) {
+                    angleInputs[index].value = angle;
+                }
+            });
+            
+            // Set initial angle
+            document.getElementById('initAngle').value = treeData.config.initAngle;
+            
+            // Update knob visuals to match loaded values
+            if (knobRegistry.has('initAngle')) {
+                knobRegistry.get('initAngle').setValue(treeData.config.initAngle);
+            }
+            
+            // Update dynamic angle knobs
+            angleInputs.forEach((input, index) => {
+                const knobId = input.id;
+                if (knobRegistry.has(knobId) && treeData.config.angles[index] !== undefined) {
+                    knobRegistry.get(knobId).setValue(treeData.config.angles[index]);
+                }
+            });
+
+            // Populate sample fields with illustrative values from the loaded data
+            const leaves = treeData.leaves;
+            if (leaves.length > 0) {
+                const minLeaf = Math.min(...leaves);
+                const maxLeaf = Math.max(...leaves);
+                const range = maxLeaf - minLeaf + 1;
+
+                // Set sample fields for user reference (illustrative only)
+                document.getElementById('sampleSize').value = leaves.length;
+                document.getElementById('minValue').value = minLeaf;
+                document.getElementById('rangeValue').value = range;
+                document.getElementById('startValue').value = maxLeaf;
+
+                // Build the tree DIRECTLY from the saved leaves
+                const ruleSet = new RuleSet({ 
+                    mod: treeData.config.modulus, 
+                    rules: treeData.config.rules 
+                });
+                
+                // Reset and build graph with exact leaf samples
+                resetGraph();
+                
+                // Add each leaf as a sample to build the exact same tree
+                for (const sample of treeData.leaves) {
+                    addSampleToGraph(sample, ruleSet);
+                }
+                
+                // Compute weights and heights
+                computeWeights();
+                computeHeights();
+                
+                // Update the tree selector dropdown
+                const select = document.getElementById('treeSelect');
+                select.innerHTML = '';
+                const roots = Object.keys(graph.trees).sort((a,b) => (graph.trees[b].leafCount-graph.trees[a].leafCount));
+                
+                roots.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r;  
+                    opt.innerText = r ;
+                    select.appendChild(opt);
+                });
+                select.disabled = false;
+
+
+
+                
+                // Set current root to the loaded tree's root
+                currentRoot = treeData.root;
+                select.value = treeData.root;
+                
+                // Store the start value in the tree metadata
+                if (graph.trees[treeData.root]) {
+                    // console.log("graph trees")
+                    // graph.trees[treeData.root].startValue = treeData.root;
+                    graph.trees[treeData.root].startValue = maxLeaf;
+                    const toggle = document.getElementById('treeModeToggle');
+                    const toggleLabel = document.querySelector('.toggle-label');
+                    toggle.checked = false; // Root mode by default after loading
+                    toggleLabel.textContent = 'By Root';
+                }
+
+                // Setup start value change handler 
+                const startValueInput = document.getElementById('startValue');
+                startValueInput.onchange = (e) => {
+                    addStartValueToSamples(e.target.value, ruleSet);
+                };
+
+                
+                // Render the tree
+                render(true); // Auto-fit on initial render
+                
+                
+                console.log(`Loaded tree ${treeData.root} with ${treeData.leaves.length} leaves`);
+            }
+            
+        }, 100); // Small delay to ensure DOM is updated
+        
+    } catch (error) {
+        alert('Error loading tree data: ' + error.message);
+        console.error('Load tree error:', error);
+    }
+}
+
+// Tree selection mode toggle
+document.getElementById('treeModeToggle').addEventListener('change', (e) => {
+    const toggle = e.target;
+    const toggleLabel = document.querySelector('.toggle-label');
+    const startValueInput = document.getElementById('startValue');
+    const treeSelect = document.getElementById('treeSelect');
+    
+    if (toggle.checked) {
+        // Start value mode (default) - disable tree select, enable start value
+        toggleLabel.textContent = 'By Start';
+        startValueInput.disabled = false;
+        treeSelect.disabled = false;
+        
+        // When switching to start value mode, update the tree based on current start value
+        const currentStartValue = parseInt(startValueInput.value);
+        if (currentStartValue && graph.root.has(currentStartValue)) {
+            const rootOfStartValue = graph.root.get(currentStartValue);
+            currentRoot = rootOfStartValue;
+            treeSelect.value = rootOfStartValue;
+        }
+    } else {
+        toggleLabel.textContent = 'By Root';
+        
+        // When switching to tree select mode, update start value to match current tree root
+        if (currentRoot) {
+            startValueInput.value = currentRoot;
+        }
+    }
+    
+    if (currentRoot) {
+        render(false); // Re-render with current tree
+    }
+});
+
 // Init on load
 setupDynamicControls();
 setupStaticKnobs();
+
+// Initialize tree selection mode toggle to start value mode (checked = start value mode)
+const toggle = document.getElementById('treeModeToggle');
+const toggleLabel = document.querySelector('.toggle-label');
+toggle.checked = true; // Start value mode by default
+toggleLabel.textContent = 'By Start';
+// Don't disable start value input initially, keep it enabled
 
 // ... existing code ...
 
@@ -585,19 +1132,22 @@ window.addEventListener('mouseup', e => {
         const { x, y } = getMouseWorldPos(e);
         const node = hitTest(x, y);
         if (node !== null) {
-             // Get current rule object to pass to addStartValueToSamples
+             // Create RuleSet to pass to addStartValueToSamples
              const mod = parseInt(document.getElementById('modulus').value);
              const ruleInputs = document.querySelectorAll('.rule-input');
              const rules = [];
              ruleInputs.forEach(input => rules.push(input.value));
-             const ruleObj = { mod: mod, rules: rules };
+             const ruleSet = new RuleSet({ mod: mod, rules: rules });
 
              document.getElementById('startValue').value = node;
-             addStartValueToSamples(node, ruleObj);
+             addStartValueToSamples(node, ruleSet);
              
-             // Highlight logic could be added here if we want persistent highlight, 
-             // but addStartValueToSamples already triggers re-render.
-             // The caption logic should handle highlighting if we treat startValue as the highlighted one.
+             // If in tree selection mode, update the tree selector to show the current tree
+             const toggle = document.getElementById('treeModeToggle');
+             if (!toggle.checked && graph.root.has(node)) {
+                 const rootOfNode = graph.root.get(node);
+                 document.getElementById('treeSelect').value = rootOfNode;
+             }
         }
     }
 });

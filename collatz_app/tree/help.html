@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collatz Tree Visualizer - Help & Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #c4c4e7;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        main {
+            padding: 40px;
+        }
+
+        section {
+            margin-bottom: 50px;
+            /* border: 1px solid #e0e0e0; */
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: white;
+            color: #667eea;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 3px solid #667eea;
+            position: relative;
+        }
+
+        .section-header::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #667eea;
+            transform: scaleX(1);
+            transform-origin: left;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section-header:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .section-header:hover::before {
+            transform: scaleX(1.02);
+        }
+
+        .section-header h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+
+        .section-toggle {
+            font-size: 1.5em;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #667eea;
+        }
+
+        .section-header.collapsed .section-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            padding: 40px;
+            transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+                        padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: none;
+            overflow: visible;
+            opacity: 1;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            padding-left: 40px;
+            padding-right: 40px;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        /* Default collapsed state for first 3 sections */
+        #collatz-sequence .section-content,
+        #tree-structure .section-content,
+        #controls .section-content {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            padding-left: 40px;
+            padding-right: 40px;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        #collatz-sequence .section-header,
+        #tree-structure .section-header,
+        #controls .section-header {
+            border-radius: 8px 8px 0 0;
+            background: white;
+        }
+
+        #collatz-sequence .section-header.collapsed,
+        #tree-structure .section-header.collapsed,
+        #controls .section-header.collapsed {
+            border-radius: 8px;
+            background: white;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 1.4em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        .example-box {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .sequence-example {
+            font-family: monospace;
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+
+        .placeholder-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            border: 2px dashed #999;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #666;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .color-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            border: 2px solid #333;
+            flex-shrink: 0;
+        }
+
+        .legend-text h4 {
+            margin: 0;
+            color: #333;
+        }
+
+        .legend-text p {
+            margin: 5px 0 0 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .ui-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .control-card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .control-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .control-card p {
+            font-size: 0.95em;
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .tip {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .tip strong {
+            color: #1976d2;
+        }
+
+        footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Collatz Tree Visualizer</h1>
+        <h4>Help & Guide</h4>
+    </header>
+
+    <main>
+        <a href="tree.html" class="back-link">← Back to Visualizer</a>
+
+        <!-- Section 1: What is the Collatz Sequence? -->
+        <section id="collatz-sequence">
+            <div class="section-header collapsed">
+                <h2>What is the Collatz Sequence Space?</h2>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-content collapsed">
+
+            <p>
+                The <strong>Collatz Conjecture</strong> is one of the most famous unsolved problems in mathematics. 
+                It proposes a simple algorithm: take any positive integer and repeatedly apply these rules:
+            </p>
+
+            <div class="example-box">
+                <!-- <strong>Classic Collatz Rules:</strong> -->
+                <ul style="margin: 1px; margin-left: 20px;">
+                    <li><strong>If the number is even:</strong> divide it by 2</li>
+                    <li><strong>If the number is odd:</strong> multiply it by 3 and add 1</li>
+                </ul>
+            </div>
+
+            <p>
+                The conjecture states that no matter which number you start with, you will <em>always</em> eventually reach the number 1 and then cycle 1 → 4 → 2 → 1 indefinitely. This has been verified for trillions of numbers, but no proof exists yet!
+            </p>
+
+            <h3>Example: Drawing a trajectory from a sample</h3>
+            <p>
+                Take sample number, say 9, and apply the Collatz alpgorithm:
+            </p>
+            <div class="sequence-example">
+                9 → 28 → 14 → 7 → 22 → 11 → 34 → 17 → 52 → 26 → 13 → 40 → 20 → 10 → 5 → 16 → 8 → 4 → 2 → 1
+            </div>
+
+            <p>
+                This sequence of 19 steps is called the <strong>trajectory</strong>. The number 1 is the <strong>root</strong> 
+                (the minimum value in the cycle 4-2-1).  
+            </p>
+
+            <figure style="margin: 30px 0;">
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 25px; align-items: start; margin-bottom: 20px;">
+                    <!-- Image on the left -->
+                    <div style="flex-shrink: 0;">
+                        <img src="trajectory_9_light.png" alt="Collatz Sequence Trajectory for 9: Path Diagram" 
+                             style="height: 254px; width: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    </div>
+                    
+                    <!-- Info box on the right -->
+                    <div style="background: #fff0fa; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); ">
+                        
+                    
+                        <strong style="display: block; margin-bottom: 8px; margin-bottom: 6px; font-size: 0.95em;">Sequence Path:</strong>
+                        <div style="font-size: 0.85em; color: #333; background: white; padding: 10px; border-radius: 4px; font-family: monospace; line-height: 1.4;">
+                            1 → 2 → 4 → 8 → 16 → 5<br>
+                            → 10 → 20 → 40 → 13 → 26<br>
+                            → 52 → 17 → 34 → 11 → 22<br>
+                            → 7 → 14 → 28 → 9
+                        </div>
+                        <strong style="display: block; margin-top: 12px; margin-bottom: 6px; font-size: 1em;">Line turns :</strong>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 15px 0; font-size: 0.9em;">
+                            <li style="margin-bottom: 8px;">
+                                <span style="color: #150010; font-weight: bold;">➜ 60° Clockwise:</span>
+                                <small style="color: #222;">If next number is <strong>even</strong></small>
+                            </li>
+                            <li>
+                                <span style="color: #150010; font-weight: bold;">➜ 60° Counterclockwise:</span>
+                                <small style="color: #222;">If next number is <strong>odd</strong></small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Caption below -->
+                <figcaption style="font-size: 0.9em; color: #150010; line-height: 1.5;">
+                    <strong>
+                    The diagram above visualizes the Collatz sequence as a path drawn backwards from root (1) to start value (9).</strong> <br> 
+                    Starting horizontally, 
+                    the line makes a <strong>60°</strong> turn at each step: turning <span style="color: #700090; font-weight: bold;">clockwise</span> towards 
+                    an <span style="color: #700090; font-weight: bold;">even</span> number, and <span style="color: #44aa00; font-weight: bold;">counterclockwise</span> towards an 
+                    <span style="color: #44aa00; font-weight: bold;">odd</span> number. The resulting jagged pattern beautifully reveals the rhythm and structure hidden within the sequence, 
+                    with alternating turns creating the distinctive zigzag pattern. This visual representation makes it immediately apparent which 
+                    numbers are even and which are odd throughout the entire sequence.
+                </figcaption>
+            </figure>
+
+            <h3>Example: An Alternative Collatz conjecture</h3>
+            <p>
+                This visualizer also supports <strong>alternative rules</strong>. For instance:
+            </p>
+
+            <div class="example-box">
+                <!-- <strong>Alternative Rules:</strong> -->
+                <ul style="margin-top: -1px; margin-left: 20px;">
+                    <li><strong>If even:</strong> divide by 2, then add 1</li>
+                    <li><strong>If odd:</strong> multiply by 3 and add 1 (same as classic)</li>
+                </ul>
+            </div>
+
+            <div class="sequence-example">
+                14 → 8 → 5 → 16 → 
+                9 → 28 → 15 → 46 → 24 → 13 → 40 → 21 → 64 → 33 → 100 → 51 → 154 → 78 → 40 ( entering an 8-step cycle)
+            </div>
+
+            <p>
+                Notice that the root here is <strong>21</strong> (the minimum in the cycle), 
+                not 5 (the minimum of the sequence) 
+                or 40 (the start of the cycle)!
+            </p>
+            <p>
+                But for this set of rules, there is more than one outcome. For example, starting from another sample we end up in a different cycle. 
+            </p>
+            <div class="sequence-example">
+                47 → 142 → 72 → 37 → 112 → 57 → 172 → 87 → 262 → 132 → 67 → 202 → 102 → 52 → 27 → 82 → 42 → 22 → 12 → 7 → 22 (a three-step cycle )
+            </div>
+            <p> And even a boring case of a single number 2 that goes to itself and nothing else converges to it.</p>
+            <h3>Different Number of Rules</h3>
+            <p>
+                You can even define sequences based on remainders modulo 3:
+            </p>
+
+            <div class="example-box">
+                <!-- <strong>Triple Sequence Rules:</strong> -->
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>If n % 3 = 0:</strong> divide by 3</li>
+                    <li><strong>If n % 3 = 1:</strong> multiply by 2 and add 1</li>
+                    <li><strong>If n % 3 = 2:</strong> multiply by 4 and add 2</li>
+                </ul>
+            </div>
+            <p>Possible cycling sequences would be</p>
+            
+            <div class="sequence-example">
+                24 → 8 → 34 → 69 → 23 → 94 → 189 → 63 → 21 → 7 → 15 → 5 → 22 → 45 → 15 (4-step cycle)
+            </div>
+            <div class="sequence-example">
+                25 → 51 → 17 → 70 → 141 → 47 → 190 → 381 → 127 → 255 → 85 → 171 → 57 → 19 → 39 → 13 → 27 → 9 → 3 → 1 → 3 (2-step cycle)
+            </div>
+
+
+            <p>
+                The beauty of this visualizer is that it works with <em>any</em> modulus and <em>any</em> rules you define! If in your rule set the sample value diverges to infinity or does not converge for too long, the script will skip this value. 
+            </p>
+        </section>
+
+        <!-- Section 2: The Tree Visualisation -->
+        <section id="tree-structure">
+            <div class="section-header collapsed">
+                <h2>Understanding the Tree Visualization</h2>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-content collapsed">
+
+            <p>
+                Instead of showing single sequences, the visualizer builds <strong>trees</strong>. Here's how:
+            </p>
+
+            <ol style="margin-left: 30px; margin-bottom: 20px;">
+                <li>You choose a <strong>range of starting numbers</strong> (e.g., from 1 to 100)</li>
+                <li>For each number, trace its Collatz sequence until it reaches a <strong>cycle</strong></li>
+                <li>All sequences that reach the same cycle form a <strong>tree</strong> with the cycle's minimum as the <strong>root</strong></li>
+                <li>Branches show which numbers lead to which other numbers</li>
+            </ol>
+
+            <figure style="margin: 30px 0;">
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 25px; align-items: start; margin-bottom: 20px;">
+                    <!-- Image on the left -->
+                    <div style="flex-shrink: 0;">
+                        <img src="tree_99_light.png" alt="Collatz Tree - Classic Collatz Sequence with Angles 28° and -49°" 
+                             style="height: 313px; width: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    </div>
+                    
+                    <!-- Legend on the right -->
+                    <div style="background: #fff0fa; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                        <strong style="display: block; margin-bottom: 6px; font-size: 1em;">Highlighted Nodes:</strong>
+                        <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9em;">
+                            <li style="margin-bottom: 4px;">
+                                <span style="color: #9b59b6; font-weight: bold;">● 1 (Purple):</span>
+                                <small style="color: #222;">Root node</small>
+                            </li>
+                            <li style="margin-bottom: 4px;">
+                                <span style="color: #4facfa; font-weight: bold;">● 4 (Blue):</span>
+                                <small style="color: #222;">Cycle start (where the root points to)</small>
+                            </li>
+                            <li style="margin-bottom: 4px;">
+                                <span style="color: #2ecc71; font-weight: bold;">● 97 (Green):</span>
+                                <small style="color: #222;">Deepest leaf</small>
+                            </li>
+                            <li style="margin-bottom: 4px;">
+                                <span style="color: #d15858; font-weight: bold;">● 9232 (Red):</span>
+                                <small style="color: #222;">Highest value</small>
+                            </li>
+                            <li style="margin-bottom: 4px;">
+                                <span style="color: #ff8c00; font-weight: bold;">● 99 (Orange):</span>
+                                <small style="color: #222;">Start value (chosen to be the last from the sample)</small>
+                            </li>
+                            <li>
+                                <span style="color: #ff8c00; font-weight: bold;">● 448 (Orange):</span>
+                                <small style="color: #222;">Max height from 99</small>
+                            </li>
+                        </ul>
+                        <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9em;">  
+                            <strong style="display: block; margin-bottom: 6px; margin-top: 12px; font-size: 1em;">Branch angles: </strong>
+                            <!-- <strong> Branch angles: </strong>  -->
+                            <li style="margin-bottom: 4px;">● 28° <small style="color: #222;">to even nodes </small>  </li> 
+                            <li style="margin-bottom: 4px;">●  -49° <small style="color: #222;">to odd nodes </small>  </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Caption below -->
+                <figcaption style="font-size: 0.9em; color: #666; line-height: 1.5;">
+                <strong>The figure above shows a classic Collatz tree that contains all numbers below 100.</strong><br>
+                     The sequence from the deepest leaf, 
+                    <span style="color: #2ecc71; font-weight: bold;">97</span>, passes through the highest 
+                    value, <span style="color: #d15858; font-weight: bold;">9232</span>, on its way down to the root at <span style="color: #9b59b6; font-weight: bold;">1</span> 
+                    and loops to the cycle 1→<span style="color: #4facfa; font-weight: bold;">4</span>→2→1...
+                </figcaption>
+            </figure>
+
+            <h3>Example Node Metrics</h3>
+            <p>
+                Here are the key metrics (weight, height, depth) for several nodes in a classic Collatz tree with values below 100 (see the figure above):
+            </p>
+
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Definition</th>
+                    <th>Node 52</th>
+                    <th>Node 53</th>
+                    <th>Node 97</th>
+                    <th>Node 98</th>
+                    <th>Node 99</th>
+                </tr>
+                <tr>
+                    <td><strong>Weight</strong></td>
+                    <td>Number of leaves that pass through this node</td>
+                    <td>10</td>
+                    <td>6</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td><strong>Height</strong></td>
+                    <td>Maximum value encountered on path to root</td>
+                    <td>52</td>
+                    <td>160</td>
+                    <td>9232</td>
+                    <td>148</td>
+                    <td>448</td>
+                </tr>
+                <tr>
+                    <td><strong>Depth</strong></td>
+                    <td>Number of steps to reach root</td>
+                    <td>11</td>
+                    <td>11</td>
+                    <td>118</td>
+                    <td>25</td>
+                    <td>25</td>
+                </tr>
+            </table>
+
+            <h3>Branch Thickness (Weight Encoding)</h3>
+            <p>
+                Branch thickness encodes the <strong>weight</strong> of each node. <strong>Thicker branches</strong> indicate more leaves have their path to the root through them.  <strong>Thinner, more transparent branches</strong> represent rare or specialized paths.
+                The line thickness uses is proportional to <code style="background: #f4f4f4; padding: 2px 6px; border-radius: 4px;">2+log2(weight)</code>, which scales dynamically with the number of leaves. 
+                This logarithmic encoding is optimal because each node can potentially split the weight in half. 
+                The tree above has only 19 leaves in total, and 16 of them treminate via 40 → 20 → 10 → 5 → 16 → 8 → 4 → 2 → 1, 
+                so the node 40 has weight 16, then it splits into a branch of weight 10 (40 ← 13 ← 26 ← 52) coming from the direction of 99, and a branch of weight 6 (80 ← 160 ← 53) coming from the direction of 97.
+            </p>
+
+            <h3>Branch Length (Depth Encoding)</h3>
+            <p>
+                As nodes get deeper in the tree (further from root), 
+                their branches become progressively shorter.
+                This prevents deep trees from sprawling infinitely across the canvas while still 
+                maintaining visual clarity at multiple depths.
+                The branch length follows a <strong>inverse square root</strong> relationship provides optimal scaling. 
+                Tt compresses rapidly at shallow depths but gradually for deeper nodes. 
+            </p>
+
+            
+
+            <h3>Branch Colors (Value Encoding)</h3>
+            <p>
+                Each branch's color represents the <strong>logarithm of the child node's numerical value</strong>. 
+                The entire spectrum from purple-blue (small numbers) through cyan, green, yellow, to red-orange (large numbers) is generated dynamically, the largest value branch in the tree is always red.
+                Here's a continuous gradient showing how node values map to hues:
+            </p>
+
+
+            <div style="margin: 30px 0;">
+                <div id="colorGradientBar" style="width: 100%; height: 60px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.05);"></div>
+                
+                <div style="display: flex; gap: 20px; justify-content: space-between; align-items: center; margin-top: 15px; font-size: 0.85em; color: #666;">
+                    <div style="text-align: center;">
+                        <strong style="color: #333;">Smallest values</strong><br>
+                        <small>(Purple-Blue)</small>
+                    </div>
+                    <div style="text-align: center; flex: 1;">
+                        <strong style="color: #333;">Intermediate values</strong><br>
+                        <small>(Cyan-Green-Yellow)</small>
+                    </div>
+                    <div style="text-align: center;">
+                        <strong style="color: #333;">Maximum values</strong><br>
+                        <small>(Red-Orange)</small>
+                    </div>
+                </div>
+                
+            <!-- <div class="example-box">
+                <strong>Color Formula:</strong>
+                <div style="margin-top: 10px; font-family: monospace; background: #f4f4f4; padding: 10px; border-radius: 4px;">
+                    hue = 300° - 320° × (log(nodeValue + 1) / log(maxNodeValue + 1))
+                </div>
+            </div> -->
+
+            </div>
+
+            <script>
+                (function(){
+                    const bar = document.getElementById('colorGradientBar');
+                    const steps = 1024;
+                    const stops = [];
+
+                    for(let i = 0; i <= steps; i++){
+                        const t = i / steps;
+                        let hue = 300 - 320 * t;
+                        hue = ((hue % 360) + 360) % 360;
+                        const pos = (t * 100).toFixed(2) + '%';
+                        stops.push(`hsl(${hue.toFixed(2)}, 50%, 50%) ${pos}`);
+                    }
+
+                    const gradient = `linear-gradient(90deg, ${stops.join(', ')})`;
+                    bar.style.background = gradient;
+                })();
+            </script>
+
+            
+            
+
+     
+            <h3>Special Node Highlights</h3>
+            <p>
+                Certain important nodes are marked with colored boxes:
+            </p>
+
+            <div class="color-legend">
+                <div class="legend-item">
+                    <div class="color-box" style="background: rgba(155, 89, 182, 0.6); border-color: #9b59b6;"></div>
+                    <div class="legend-text">
+                        <h4>Root (Purple)</h4>
+                        <p>The minimum cycle value. The foundation of the tree.</p>
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="color-box" style="background: rgba(79, 172, 250, 0.6); border-color: #4facfa;"></div>
+                    <div class="legend-text">
+                        <h4>Cycle Start (Blue)</h4>
+                        <p>Where the root points to in the cycle.</p>
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="color-box" style="background: rgba(46, 204, 113, 0.6); border-color: #2ecc71;"></div>
+                    <div class="legend-text">
+                        <h4>Deepest Node (Green)</h4>
+                        <p>The node furthest from the root (longest path).</p>
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="color-box" style="background: rgba(209, 88, 88, 0.6); border-color: #d15858;"></div>
+                    <div class="legend-text">
+                        <h4>Highest Node (Red)</h4>
+                        <p>The node with the largest numerical value.</p>
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="color-box" style="background: rgba(241, 196, 15, 0.6); border-color: #f1c40f;"></div>
+                    <div class="legend-text">
+                        <h4>Smallest Node (Yellow)</h4>
+                        <p>The node with the smallest numerical value.</p>
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="color-box" style="background: rgba(255, 165, 0, 0.6); border-color: #ff8c00;"></div>
+                    <div class="legend-text">
+                        <h4>Highlighted (Orange)</h4>
+                        <p>The currently selected start value.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Controls & Interaction -->
+        <section id="controls">
+            <div class="section-header collapsed">
+                <h2>Interacting with the Tree</h2>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-content collapsed">
+            
+            <h3>Define the sample set</h3>
+            <div class="ui-controls">
+                <div class="control-card">
+                    <h4>Number of Samples</h4>
+                    <p>How many starting numbers to test. More samples = more detail but slower.</p>
+                </div>
+
+                <div class="control-card">
+                    <h4>Lower Limit</h4>
+                    <p>Only consider starting samples above this number. Default: 1</p>
+                </div>
+
+                <div class="control-card">
+                    <h4>Range</h4>
+                    <p>The span of numbers to consider (upper limit = lower + range). If the range is smaller than the number of samples, then every number from the range is sampled. </p>
+                </div>
+            </div>
+
+            <h3>Select the tree</h3>
+            <div class="ui-controls">
+                <div class="control-card">
+                    <h4>Select Tree</h4>
+                    <p>Choose which tree to display (populated after clicking "Build Trees"). Different cycles create diferent trees.</p>
+                </div>
+
+                <div class="control-card">
+                    <h4>Start Value</h4>
+                    <p>Enter any number to pick the root to which this value converges to. If it has not been considered before, it will be added to the corresponding tree and processed correctly and the wights will be recomputed. The start value and its height will be highlighted in the tree. </p>
+                </div>
+            </div>
+            <div class="tip">
+                <strong>Toggle between tree selectors</strong> <br> By default the tree containing the start value is rendered, but you can lock the tree selection by the root, and start values from different trees will not cause them to be rendered. This helps when you are trying to populate a tree that only coveres a small fraction of samples. 
+            </div>
+
+
+            <h3>Define rules</h3>
+            <div class="ui-controls">
+
+                <div class="control-card" style="margin: 20px 0;">
+                    <h4>Modulus (Number of rules)</h4>
+                    <p>
+                        The number of different rules. Each rule applies based on the remainder modulo this number. 
+                        Change this and new rule input fields appear automatically.
+                    </p>
+                </div>
+                <div class="control-card">
+                    <h4>Individual Rules </h4>
+                    <p>For each remainder, set a formula to compute the next number in the sequence. This will determine the structure of the tree. For example, if Modulus = 2, you will have have rules for "n % 2 = 0" (even) and "n % 2 = 1" (odd). Each rule is a JavaScript expression: <code>n/2</code>, <code>3*n+1</code>, etc. </p>
+                </div>
+            </div>
+
+      
+
+            <h3>Configure angles</h3>
+            
+            <div class="ui-controls">
+                <div class="control-card">
+                    <h4>Initial Angle</h4>
+                    <p>The starting direction for the root's branches (default: 0° is upwards). Range: -180° to +180°.</p>
+                </div>
+                
+                <div class="control-card">
+                    <h4>Branch Angles</h4>
+                    <p>For each rule, set the angle offset. Adjust branch angles precisely to 0.1° This determines how branches spread out from their parents.
+                        Adjust angles to create visually pleasing tree layouts. Angles update in real-time! 
+                    </p>
+                    
+                </div>
+            </div>
+            <div class="tip">
+                You can drag the knobs with the mouse or control them with a scroll wheel or a trackpad.
+            </div>
+
+
+
+            <h3>Other buttons and toggles</h3>
+            <div class="ui-controls">
+                <div class="control-card">
+                    <h4>🔨 Build Trees</h4>
+                    <p>Reads all your settings and constructs the tree(s). This can take a few seconds for large samples.</p>
+                </div>
+
+                <div class="control-card">
+                    <h4>📦 Fit to Screen</h4>
+                    <p>Automatically zoom and pan to fit the entire tree in the canvas.</p>
+                </div>
+
+                <div class="control-card">
+                    <h4>👁️ Hide/Show Labels</h4>
+                    <p>Toggle the colored node labels (special nodes highlighted with boxes).</p>
+                </div>
+    
+                <div class="control-card">
+                    <h4>🌓 Dark/Light Background</h4>
+                    <p>Switch between dark and light canvas backgrounds for better visibility or preferred aesthetics.</p>
+                </div>
+            </div>
+
+            <div class="control-card" style="margin: 20px 0;">
+                <h4>⬇️ Download High-Res</h4>
+                <p>Export the current tree as a high-resolution PNG image (4000px+) respecting your label and background settings.</p>
+            </div>
+
+            <h3>Interactive canvas</h3>
+            <ul style="margin-left: 30px; margin-bottom: 20px;">
+                <li><strong>Zoom:</strong> Scroll up/down with your mouse wheel</li>
+                <li><strong>Pan:</strong> Click and drag the tree to move it around</li>
+                <li><strong>Auto-fit:</strong> Click the "Fit to Screen" button to see the entire tree</li>
+            </ul>
+            <p>
+                <strong>Hover over any node</strong> to see a tooltip showing its <strong>Value, Weight, Depth and Height</strong>
+            </p>
+            <!-- <ul style="margin-left: 30px; margin-bottom: 20px;">
+                <li><strong>Value:</strong> The number at this node</li>
+                <li><strong>Weight:</strong> How many paths pass through it</li>
+                <li><strong>Depth:</strong> Distance from the root</li>
+                <li><strong>Height:</strong> Max value on path to root</li>
+            </ul> -->
+
+            <p>
+                <strong>Click on any node</strong> to set it as your "Start Value". The tree will automatically update to highlight this node and its height.
+            </p>
+
+            <!-- <div class="placeholder-image">
+                🖱️ PLACEHOLDER: Animated GIF or screenshot showing interaction
+                <br><br>
+                <small style="font-size: 0.8em; color: #999;">
+                    Should show: 1) Mouse scrolling to zoom, 2) Click-drag to pan, 3) Hovering over a node to show tooltip, 
+                    4) Clicking a node to highlight it (orange box appears).
+                </small>
+            </div> -->
+            </div>
+        </section>
+
+
+
+        <!-- Section  FAQ -->
+        <section id="faq">
+            <div class="section-header">
+                <h2>Frequently Asked Questions</h2>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-content">
+
+            <h3>Is this the Collatz Tree Visualizer?</h3>
+            <p>
+                Yes, it is.
+            </p>
+
+            <h3>Can I visualize different Collatz trees with this tool?</h3>
+            <p>
+                Yes, you can.
+            </p>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            <a href="tree.html" style="color: #667eea; text-decoration: none;">Return to Visualizer</a>
+        </p>
+    </footer>
+</div>
+
+<script>
+// Add toggle functionality for collapsible sections
+document.addEventListener('DOMContentLoaded', function() {
+    const sectionHeaders = document.querySelectorAll('.section-header');
+    
+    sectionHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const section = this.closest('section');
+            const content = section.querySelector('.section-content');
+            const isCollapsed = this.classList.contains('collapsed');
+            
+            // // Calculate actual content height for smooth animation
+            const tempHeight = content.scrollHeight;
+            // console.log('Section clicked:', section.id, 'Current state:', isCollapsed, 'Content height:', tempHeight);
+            
+            if (isCollapsed) {
+                this.classList.remove('collapsed');
+                content.classList.remove('collapsed');
+                // Use actual content height for smooth transition
+                requestAnimationFrame(() => {
+                    content.style.maxHeight = tempHeight + 'px';
+                    content.style.overflow = 'visible';
+                    content.style.paddingTop = '40px';
+                    content.style.paddingBottom = '40px';
+                    content.style.paddingLeft = '40px';
+                    content.style.paddingRight = '40px';
+                    content.style.opacity = '1';
+                    
+                    // After animation completes, remove max-height constraint
+                    setTimeout(() => {
+                        content.style.maxHeight = 'none';
+                    }, 600);
+                });
+            } else {
+                this.classList.add('collapsed');
+                content.classList.add('collapsed');
+                // Set max-height before collapsing for smooth animation
+                content.style.maxHeight = content.scrollHeight + 'px';
+                requestAnimationFrame(() => {
+                    content.style.maxHeight = '0';
+                    content.style.overflow = 'hidden';
+                    content.style.paddingTop = '0';
+                    content.style.paddingBottom = '0';
+                    content.style.paddingLeft = '40px';
+                    content.style.paddingRight = '40px';
+                    content.style.opacity = '0';
+                });
+            }
+        });
+    });
+    
+    // Initialize collapsed state properly for all sections except FAQ
+    document.querySelectorAll('#collatz-sequence, #tree-structure, #controls').forEach(section => {
+        const header = section.querySelector('.section-header');
+        const content = section.querySelector('.section-content');
+        header.classList.add('collapsed');
+        content.classList.add('collapsed');
+        content.style.maxHeight = '0';
+        content.style.overflow = 'hidden';
+        content.style.paddingTop = '0';
+        content.style.paddingBottom = '0';
+        content.style.paddingLeft = '40px';
+        content.style.paddingRight = '40px';
+        content.style.opacity = '0';
+    });
+});
+</script>
+
+</body>
+</html>
