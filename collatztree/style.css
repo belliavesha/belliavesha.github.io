@@ -193,6 +193,10 @@ body {
     margin-top: 6px;
 }
 
+#renderBtn {
+    background-color: #204d1f;
+}
+
 input[type="number"], input[type="text"], select {
     background-color: var(--input-bg);
     border: 1px solid #555;
