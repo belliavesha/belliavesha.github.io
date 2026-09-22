@@ -1,0 +1,14 @@
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313002/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313012/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/05/8//80511301004/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313013/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/05/8//80511301002/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/08/3//30801012002/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313016/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313008/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313006/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313014/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313010/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/00/3//30001141002/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313004/
+wget -q -nH --no-check-certificate --cut-dirs=6 -r -l0 -w1 -c -N -np -R 'index*' -erobots=off https://heasarc.gsfc.nasa.gov/FTP/nustar/data/obs/10/1//11001313015/
