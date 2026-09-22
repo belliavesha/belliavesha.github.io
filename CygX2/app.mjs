@@ -260,6 +260,11 @@ function rebuild(){
 $('#observation-legend').addEventListener('change',e=>{const obsid=e.target.dataset.obsid;if(!obsid)return;if(e.target.checked)visibleObs.add(obsid);else visibleObs.delete(obsid);if(prepared[state.selected]&&!visibleObs.has(prepared[state.selected].segment.obsid)){const next=prepared.findIndex(row=>visibleObs.has(row.segment.obsid));if(next>=0)state.selected=next;detailsKey=null;}draw();});
 async function getJSON(url){const response=await fetch(url);if(!response.ok)throw new Error((await response.text()).slice(0,200));return response.json();}
 async function initialize(){
+  if(location.protocol==='file:'){
+    $('#loading').textContent='This site is ready to use, but browsers cannot load bundled spectra from a file URL. Open it through your website or any local web server.';
+    $('#loading').style.color='#9a332b';
+    return;
+  }
   try{
     const observations=await Promise.all(catalogRows.map(row=>getJSON(row.file)));
     for(let index=0;index<catalogRows.length;index++){
