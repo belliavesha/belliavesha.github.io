@@ -128,7 +128,8 @@ function drawCygnet(ctx,point,w,h,index){
   ctx.beginPath();ctx.moveTo(x-2*scale,y-43*scale);ctx.lineTo(x-13*scale,y-39*scale);ctx.lineTo(x-2*scale,y-36*scale);ctx.stroke();
   ctx.fillStyle='rgba(24,45,58,.88)';ctx.beginPath();ctx.arc(x+2*scale,y-44*scale,1.2*scale,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='rgba(18,127,152,.88)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(head.x,head.y,11*scale,0,Math.PI*2);ctx.stroke();
-  ctx.font=`${11*scale}px system-ui`;ctx.fillText(String(index+1),x-3*scale,y+4*scale);ctx.restore();
+  // ctx.font=`${11*scale}px system-ui`;ctx.fillText(String(index+1),x-3*scale,y+4*scale);
+  ctx.restore();
 }
 function drawSwan(){
   const {ctx,w,h}=canvasContext('#swan-layer');
@@ -243,7 +244,7 @@ function showDetails(){
   const rows=[['Observation',observation.obsid],['Segments',observation.segments.length],['Native channels','675 in 3–30 keV'],['Source radius',`${observation.provenance.A.source_radius_arcsec} arcsec`],['Live exposure A',`${fmt(observation.segments.reduce((s,x)=>s+x.exposure_A,0)/1000,2)} ks`],['Live exposure B',`${fmt(observation.segments.reduce((s,x)=>s+x.exposure_B,0)/1000,2)} ks`],['Excluded short GTIs',`${fmt(observation.excluded_short_gti_seconds,1)} s`]];
   $('#extraction').innerHTML=rows.map(([k,v])=>`<div><dt>${escape(k)}</dt><dd>${escape(v)}</dd></div>`).join('');
   $('#method').innerHTML=`<p>${escape(observation.intensity_definition)}</p><p>Each point stores a native-channel spectrum. Either axis can show a band count rate or a hard/soft color. Band edges snap to 0.04 keV boundaries within 3–30 keV; prefix sums evaluate every axis in constant time.</p><p>The total spectrum is weighted by segment elapsed time across the observations currently checked in the legend. Only common A/B good-time intervals are used. Short tails are merged within the same GTI; intervals shorter than ${observation.minimum_segment_seconds} s are excluded.</p>`+observation.limitations.map(s=>`<p>${escape(s)}</p>`).join('');
-  $('#region-link').href=`./data/regions/${encodeURIComponent(observation.obsid)}.png`;
+  // $('#region-link').href=`./data/regions/${encodeURIComponent(observation.obsid)}.png`;
 }
 function rebuild(){
   const selected=prepared?.[state.selected]?.segment;
@@ -252,9 +253,9 @@ function rebuild(){
   if(!prepared.length)return;
   const first=datasets.get(ordered[0].obsid);data={...first,segments:prepared.map(r=>r.segment)};
   state.selected=selected?Math.max(0,prepared.findIndex(r=>r.segment.obsid===selected.obsid&&r.segment.id===selected.id)):0;
-  $('#observation-count').textContent=`${datasets.size} observations`;
-  const days=ordered.map(row=>datasets.get(row.obsid).date_obs.slice(0,10)).sort();
-  $('#date').textContent=`${days[0]}${days.at(-1)!==days[0]?' – '+days.at(-1):''} · ${fmt(ordered.reduce((sum,row)=>sum+datasets.get(row.obsid).retained_seconds,0)/1000,2)} ks good time`;
+  // $('#observation-count').textContent=`${datasets.size} observations`;
+  // const days=ordered.map(row=>datasets.get(row.obsid).date_obs.slice(0,10)).sort();
+  // $('#date').textContent=`${days[0]}${days.at(-1)!==days[0]?' – '+days.at(-1):''} · ${fmt(ordered.reduce((sum,row)=>sum+datasets.get(row.obsid).retained_seconds,0)/1000,2)} ks good time`;
   $('#observation-legend').innerHTML=ordered.map(row=>{const observation=datasets.get(row.obsid),date=observation.date_obs.slice(0,10);return `<label class="legend-item" title="ObsID ${escape(row.obsid)}"><input type="checkbox" data-obsid="${escape(row.obsid)}" ${visibleObs.has(row.obsid)?'checked':''} aria-label="Include ${escape(date)} observation ${escape(row.obsid)}"><i class="legend-swatch" style="background:${escape(row.color)}"></i>${escape(date)} <small>(${observation.segments.length})</small></label>`;}).join('');
 }
 $('#observation-legend').addEventListener('change',e=>{const obsid=e.target.dataset.obsid;if(!obsid)return;if(e.target.checked)visibleObs.add(obsid);else visibleObs.delete(obsid);if(prepared[state.selected]&&!visibleObs.has(prepared[state.selected].segment.obsid)){const next=prepared.findIndex(row=>visibleObs.has(row.segment.obsid));if(next>=0)state.selected=next;detailsKey=null;}draw();});

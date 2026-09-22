@@ -4,10 +4,11 @@ export const DEFAULT_SWAN = Object.freeze({
   wingAngle: -.12,
   wingScale: 1,
   bodyScaleX: 1,
-  cygnetScales: Object.freeze([1,1]),
+  cygnetScales: Object.freeze([1,1,1]),
   cygnets: Object.freeze([
     Object.freeze({x: .27, y: .70}),
     Object.freeze({x: .82, y: .72}),
+    Object.freeze({x: .54, y: .82}),
   ]),
 });
 
