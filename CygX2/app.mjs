@@ -1,5 +1,6 @@
 import {prepare,calculateAxes,band,ENERGY_MIN,ENERGY_MAX,ENERGY_STEP} from './hid_math.mjs';
 import {freshSwan,movePart,neckBezier,wingTransformFromPoint,bodyStretchFromPoint,cygnetScaleFromPoint} from './swan_math.mjs';
+import {freshSnail,moveSnailPart,snailScaleFromPoint,shellStretchFromPoint,anchoredEllipse} from './snail_math.mjs';
 const $=s=>document.querySelector(s);
 const defaultAxes=()=>({x:{kind:'color',band:[3,30],soft:[6,10],hard:[10,20]},y:{kind:'rate',band:[3,30],soft:[6,10],hard:[10,20]}});
 const state={axes:defaultAxes(),module:'AB',selected:0,errors:false};
@@ -14,7 +15,8 @@ const catalogRows=[
 ].map(([obsid,color])=>({obsid,color,file:`./data/${obsid}.json`}));
 let detailsKey=null;
 const SPAN=ENERGY_MAX-ENERGY_MIN;
-let swan=freshSwan(),swanEnabled=false,swanReversed=false,cygnetCount=1,swanDrag=null,swanConsumedClick=false;
+let swan=freshSwan(),swanEnabled=false,swanReversed=false,cygnetCount=1;
+let snail=freshSnail(),snailEnabled=false,overlayDrag=null,overlayConsumedClick=false;
 const fmt=(n,d=2)=>Number(n).toFixed(d).replace(/\.00$/,'');
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const snap=x=>Math.round((x-3)/.04)*.04+3;
@@ -131,9 +133,7 @@ function drawCygnet(ctx,point,w,h,index){
   // ctx.font=`${11*scale}px system-ui`;ctx.fillText(String(index+1),x-3*scale,y+4*scale);
   ctx.restore();
 }
-function drawSwan(){
-  const {ctx,w,h}=canvasContext('#swan-layer');
-  if(!swanEnabled)return;
+function drawSwanOn(ctx,w,h){
   const metrics=swanMetrics(w,h),{scale,bx,by,bodyLeft,bodyTail,wingAnchor,hx,hy}=metrics;
   const neckRoot={x:(bodyLeft+14*scale)/w,y:(by-3*scale)/h},neck=neckBezier(neckRoot,swan.head);
   const p=value=>({x:value.x*w,y:value.y*h});
@@ -163,28 +163,91 @@ function hitSwan(x,y,w,h){
   if(((x-bodyCenter)/(116*scale*swan.bodyScaleX))**2+((y-by)/(68*scale))**2<1.15)return 'body';
   return null;
 }
-function swanPointer(e){const rect=$('#hid').getBoundingClientRect(),rawX=e.clientX-rect.left;return {x:swanReversed?rect.width-rawX:rawX,y:e.clientY-rect.top,w:rect.width,h:rect.height};}
-function setupSwan(){
+function snailGeometry(w,h){
+  const baseScale=Math.min(w/800,h/500),scale=baseScale*snail.scale,originX=snail.center.x*w,originY=snail.center.y*h;
+  const baseRx=112*scale,baseRy=67*scale,shellLeft=originX-baseRx,shellBottom=originY+baseRy;
+  const {rx,ry,cx,cy}=anchoredEllipse(shellLeft,shellBottom,baseRx,baseRy,snail.shellScaleX,snail.shellScaleY);
+  const head={x:(snail.center.x+snail.headOffset.x*snail.scale)*w,y:(snail.center.y+snail.headOffset.y*snail.scale)*h};
+  const tail={x:(snail.center.x+snail.tailOffset.x*snail.scale)*w,y:(snail.center.y+snail.tailOffset.y*snail.scale)*h};
+  const neckRoot={x:cx-rx*.78,y:cy+ry*.30};
+  const shellWidth={x:cx+rx,y:cy};
+  const shellHeight={x:cx,y:cy-ry};
+  const scaleVector={x:-baseRx+2*rx+31*scale,y:baseRy+27*scale};
+  const scaleHandle={x:originX+scaleVector.x,y:originY+scaleVector.y};
+  return {baseScale,scale,originX,originY,shellLeft,shellBottom,cx,cy,rx,ry,head,tail,neckRoot,shellWidth,shellHeight,scaleVector,scaleHandle};
+}
+function drawHandle(ctx,x,y,shape='ring'){
+  ctx.fillStyle='rgba(255,255,255,.94)';ctx.strokeStyle='rgba(18,127,152,.96)';ctx.lineWidth=2;ctx.beginPath();
+  if(shape==='square')ctx.rect(x-6,y-6,12,12);
+  else if(shape==='diamond'){ctx.moveTo(x,y-8);ctx.lineTo(x+8,y);ctx.lineTo(x,y+8);ctx.lineTo(x-8,y);ctx.closePath();}
+  else ctx.arc(x,y,7,0,Math.PI*2);
+  ctx.fill();ctx.stroke();
+}
+function drawSnailOn(ctx,w,h){
+  const g=snailGeometry(w,h),{scale,cx,cy,rx,ry,head,tail,neckRoot}=g;
+  const footY=Math.max(cy+ry*.70,tail.y),front={x:head.x-55*scale,y:footY+5*scale};
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='rgba(24,45,58,.92)';ctx.lineWidth=2.2;
+  const foot=new Path2D();foot.moveTo(front.x,front.y);foot.bezierCurveTo(head.x+55*scale,footY+24*scale,cx+rx*.56,footY+20*scale,tail.x,tail.y);foot.bezierCurveTo(tail.x-18*scale,tail.y-20*scale,cx+rx*.54,footY-15*scale,cx-rx*.22,footY-9*scale);foot.bezierCurveTo(cx-rx*.72,footY-6*scale,head.x+12*scale,head.y+54*scale,head.x-5*scale,head.y+29*scale);foot.bezierCurveTo(head.x-18*scale,footY-31*scale,front.x+18*scale,footY-17*scale,front.x,front.y);foot.closePath();ctx.fillStyle='rgba(255,255,255,.48)';ctx.fill(foot);ctx.stroke(foot);
+  const neck=new Path2D();neck.moveTo(head.x-18*scale,head.y+7*scale);neck.bezierCurveTo(head.x-10*scale,head.y+43*scale,neckRoot.x-38*scale,neckRoot.y-34*scale,neckRoot.x-18*scale,neckRoot.y+9*scale);neck.bezierCurveTo(neckRoot.x-7*scale,neckRoot.y+20*scale,neckRoot.x+10*scale,neckRoot.y+18*scale,neckRoot.x+18*scale,neckRoot.y+7*scale);neck.bezierCurveTo(neckRoot.x+5*scale,neckRoot.y-42*scale,head.x+14*scale,head.y+42*scale,head.x+18*scale,head.y+7*scale);neck.closePath();ctx.strokeStyle='rgba(24,45,58,.92)';ctx.lineWidth=2.2;ctx.stroke(neck);
+  const drawFeeler=(direction,behind)=>{const baseX=head.x+direction*(behind?16:11)*scale,baseY=head.y-(behind?15:20)*scale,tipX=head.x+direction*(behind?30:27)*scale,tipY=head.y-(behind?66:70)*scale;ctx.strokeStyle='rgba(24,45,58,.92)';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(baseX,baseY);ctx.bezierCurveTo(baseX+direction*3*scale,baseY-18*scale,tipX-direction*4*scale,tipY+12*scale,tipX,tipY);ctx.stroke();ctx.fillStyle='rgba(24,45,58,.92)';ctx.beginPath();ctx.arc(tipX,tipY,5.5*scale,0,Math.PI*2);ctx.fill();};
+  drawFeeler(1,true);
+  ctx.fillStyle='rgba(255,255,255,.62)';ctx.strokeStyle='rgba(24,45,58,.92)';ctx.lineWidth=2.2;ctx.beginPath();ctx.ellipse(head.x,head.y,22*scale,27*scale,-.18,0,Math.PI*2);ctx.fill();ctx.stroke();
+  drawFeeler(-1,false);
+  ctx.fillStyle='rgba(255,255,255,.38)';ctx.strokeStyle='rgba(24,45,58,.94)';ctx.lineWidth=2.6;ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,-.03,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.beginPath();let started=false;for(let i=0;i<=54;i++){const angle=i/54*Math.PI*4.7,r=.68*(1-i/60),x=cx+Math.cos(angle)*rx*r,y=cy+Math.sin(angle)*ry*r;if(started)ctx.lineTo(x,y);else{ctx.moveTo(x,y);started=true;}}ctx.stroke();
+  drawHandle(ctx,head.x,head.y);drawHandle(ctx,g.shellWidth.x,g.shellWidth.y);drawHandle(ctx,g.shellHeight.x,g.shellHeight.y);drawHandle(ctx,tail.x,tail.y,'square');drawHandle(ctx,g.scaleHandle.x,g.scaleHandle.y,'diamond');
+  ctx.restore();
+}
+function drawOverlays(){
+  const {ctx,w,h}=canvasContext('#swan-layer');
+  if(swanEnabled)drawSwanOn(ctx,w,h);
+  if(snailEnabled)drawSnailOn(ctx,w,h);
+}
+function hitSnail(x,y,w,h){
+  if(!snailEnabled)return null;
+  const g=snailGeometry(w,h),s=g.scale;
+  if(Math.hypot(x-g.scaleHandle.x,y-g.scaleHandle.y)<15)return 'scale';
+  if(Math.hypot(x-g.shellWidth.x,y-g.shellWidth.y)<15)return 'shell-width';
+  if(Math.hypot(x-g.shellHeight.x,y-g.shellHeight.y)<15)return 'shell-height';
+  if(Math.hypot(x-g.tail.x,y-g.tail.y)<16)return 'tail';
+  if(Math.hypot(x-g.head.x,y-g.head.y)<34*s)return 'head';
+  if(((x-g.cx)/g.rx)**2+((y-g.cy)/g.ry)**2<1.15)return 'body';
+  const footY=Math.max(g.cy+g.ry*.70,g.tail.y);if(x>=Math.min(g.head.x,g.tail.x)-25*s&&x<=Math.max(g.head.x,g.tail.x)+12*s&&Math.abs(y-footY)<29*s)return 'body';
+  return null;
+}
+function canvasPointer(e,reverse=false){const rect=$('#hid').getBoundingClientRect(),rawX=e.clientX-rect.left;return {x:reverse?rect.width-rawX:rawX,y:e.clientY-rect.top,w:rect.width,h:rect.height};}
+function hitOverlay(raw){
+  const snailPart=hitSnail(raw.x,raw.y,raw.w,raw.h);if(snailPart)return {kind:'snail',part:snailPart,point:raw};
+  const point=swanReversed?{...raw,x:raw.w-raw.x}:raw,swanPart=hitSwan(point.x,point.y,point.w,point.h);return swanPart?{kind:'swan',part:swanPart,point}:null;
+}
+function cursorFor(hit){if(!hit)return '';if(hit.kind==='snail'&&hit.part==='shell-width')return 'ew-resize';if(hit.kind==='snail'&&hit.part==='shell-height')return 'ns-resize';if(hit.kind==='snail'&&hit.part==='scale')return 'nwse-resize';if(hit.kind==='snail'&&hit.part==='tail')return 'ew-resize';if(hit.kind==='swan'&&hit.part==='wing')return 'grab';return 'move';}
+function setupOverlays(){
   const canvas=$('#hid');
   canvas.addEventListener('pointerdown',e=>{
-    const point=swanPointer(e),part=hitSwan(point.x,point.y,point.w,point.h);if(!part)return;
-    swanDrag={part,lastX:point.x/point.w,lastY:point.y/point.h,moved:false};swanConsumedClick=true;canvas.setPointerCapture(e.pointerId);$('#tooltip').hidden=true;e.preventDefault();
+    const hit=hitOverlay(canvasPointer(e));if(!hit)return;const {point}=hit;
+    overlayDrag={kind:hit.kind,part:hit.part,lastX:point.x/point.w,lastY:point.y/point.h,moved:false};overlayConsumedClick=true;canvas.setPointerCapture(e.pointerId);$('#tooltip').hidden=true;e.preventDefault();
   });
   canvas.addEventListener('pointermove',e=>{
-    const point=swanPointer(e);
-    if(swanDrag){
-      if(swanDrag.part==='wing'){
+    const raw=canvasPointer(e),point=overlayDrag?.kind==='swan'&&swanReversed?{...raw,x:raw.w-raw.x}:raw;
+    if(overlayDrag){
+      if(overlayDrag.kind==='snail'){
+        const g=snailGeometry(point.w,point.h);
+        if(overlayDrag.part==='scale')snail={...snail,scale:snailScaleFromPoint({x:g.originX,y:g.originY},{x:point.x,y:point.y},Math.hypot(g.scaleVector.x,g.scaleVector.y)/snail.scale)};
+        else if(overlayDrag.part==='shell-width')snail={...snail,shellScaleX:shellStretchFromPoint(g.shellLeft,point.x,224*g.baseScale,snail.scale)};
+        else if(overlayDrag.part==='shell-height')snail={...snail,shellScaleY:shellStretchFromPoint(g.shellBottom,point.y,134*g.baseScale,snail.scale)};
+        else{snail=moveSnailPart(snail,overlayDrag.part,point.x/point.w-overlayDrag.lastX,point.y/point.h-overlayDrag.lastY);overlayDrag.lastX=point.x/point.w;overlayDrag.lastY=point.y/point.h;}
+      }else if(overlayDrag.part==='wing'){
         const metrics=swanMetrics(point.w,point.h),transform=wingTransformFromPoint(metrics.wingAnchor,{x:point.x,y:point.y},{x:153*metrics.scale,y:-15*metrics.scale});swan={...swan,wingAngle:transform.angle,wingScale:transform.scale};
-      }else if(swanDrag.part==='body-tail'){
+      }else if(overlayDrag.part==='body-tail'){
         const metrics=swanMetrics(point.w,point.h);swan={...swan,bodyScaleX:bodyStretchFromPoint(metrics.bodyLeft,point.x,224*metrics.scale)};
-      }else if(swanDrag.part.startsWith('cygnet-scale-')){
-        const index=Number(swanDrag.part.slice(13)),g=cygnetGeometry(swan.cygnets[index],point.w,point.h,index),scales=[...swan.cygnetScales];scales[index]=cygnetScaleFromPoint({x:g.x,y:g.y},{x:point.x,y:point.y},Math.hypot(4,42)*g.baseScale);swan={...swan,cygnetScales:scales};
-      }else{swan=movePart(swan,swanDrag.part,point.x/point.w-swanDrag.lastX,point.y/point.h-swanDrag.lastY);swanDrag.lastX=point.x/point.w;swanDrag.lastY=point.y/point.h;}
-      swanDrag.moved=true;canvas.style.cursor=swanDrag.part==='wing'?'grabbing':'move';drawSwan();e.preventDefault();return;
+      }else if(overlayDrag.part.startsWith('cygnet-scale-')){
+        const index=Number(overlayDrag.part.slice(13)),g=cygnetGeometry(swan.cygnets[index],point.w,point.h,index),scales=[...swan.cygnetScales];scales[index]=cygnetScaleFromPoint({x:g.x,y:g.y},{x:point.x,y:point.y},Math.hypot(4,42)*g.baseScale);swan={...swan,cygnetScales:scales};
+      }else{swan=movePart(swan,overlayDrag.part,point.x/point.w-overlayDrag.lastX,point.y/point.h-overlayDrag.lastY);overlayDrag.lastX=point.x/point.w;overlayDrag.lastY=point.y/point.h;}
+      overlayDrag.moved=true;canvas.style.cursor=cursorFor({kind:overlayDrag.kind,part:overlayDrag.part});drawOverlays();e.preventDefault();return;
     }
-    const part=hitSwan(point.x,point.y,point.w,point.h);canvas.style.cursor=part?(part==='wing'?'grab':'move'):'';
+    canvas.style.cursor=cursorFor(hitOverlay(raw));
   });
-  const finish=e=>{if(!swanDrag)return;swanConsumedClick=true;swanDrag=null;canvas.style.cursor='';if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);};
+  const finish=e=>{if(!overlayDrag)return;overlayConsumedClick=true;overlayDrag=null;canvas.style.cursor='';if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);};
   canvas.addEventListener('pointerup',finish);canvas.addEventListener('pointercancel',finish);
 }
 function observationColor(i){return colors.get(prepared[i].segment.obsid)||'#0072b2';}
@@ -192,7 +255,7 @@ function drawHid(){
   const {ctx,w,h}=canvasContext('#hid'),valid=points.filter(p=>p.valid&&visibleObs.has(p.obsid)).map(p=>({...p,plotX:p.x,plotY:p.y,plotXE:p.xe,plotYE:p.ye}));
   screenPoints=[];
   const xLabel=axisLabel('x'),yLabel=axisLabel('y');
-  if(!valid.length){axes(ctx,w,h,[0,1],[0,1],xLabel,yLabel);ctx.fillStyle='#657680';ctx.textAlign='center';ctx.font='14px system-ui';ctx.fillText(visibleObs.size?'No valid segments for these axis bands.':'Select at least one observation.',w/2,h/2);drawSwan();return;}
+  if(!valid.length){axes(ctx,w,h,[0,1],[0,1],xLabel,yLabel);ctx.fillStyle='#657680';ctx.textAlign='center';ctx.font='14px system-ui';ctx.fillText(visibleObs.size?'No valid segments for these axis bands.':'Select at least one observation.',w/2,h/2);drawOverlays();return;}
   const xb=bounds(valid.flatMap(p=>state.errors?[p.plotX-p.plotXE,p.plotX+p.plotXE]:[p.plotX]));
   const yb=bounds(valid.flatMap(p=>state.errors?[p.plotY-p.plotYE,p.plotY+p.plotYE]:[p.plotY]));
   const a=axes(ctx,w,h,xb,yb,xLabel,yLabel);
@@ -203,7 +266,7 @@ function drawHid(){
   }
   const selected=screenPoints.find(p=>p.i===state.selected);
   if(selected){ctx.strokeStyle='#142f41';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(selected.px,selected.py,7.5,0,2*Math.PI);ctx.stroke();}
-  drawSwan();
+  drawOverlays();
 }
 function drawSpectrum(){
   const included=prepared.filter(row=>visibleObs.has(row.segment.obsid)),{ctx,w,h}=canvasContext('#spectrum'),values=[];
@@ -228,16 +291,18 @@ function draw(){
 }
 function choose(i){state.selected=clamp(i,0,data.segments.length-1);draw();}
 function nearest(e){const rect=$('#hid').getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;let best=null,d=144;for(const p of screenPoints){const dist=(p.px-x)**2+(p.py-y)**2;if(dist<d){d=dist;best=p;}}return best;}
-$('#hid').addEventListener('pointermove',e=>{const position=swanPointer(e),tip=$('#tooltip');if(swanDrag||hitSwan(position.x,position.y,position.w,position.h)){tip.hidden=true;return;}const p=nearest(e);if(!p){tip.hidden=true;return;}const row=prepared[p.i],s=row.segment;tip.innerHTML=`<strong>${escape(row.observation.date_obs.slice(0,10))}</strong> · ${escape(s.obsid)} · segment ${s.id+1}<br>${fmt((s.start-row.observation.time_origin_met)/1000,2)} ks since observation start<br>X ${fmt(p.x,3)} ± ${fmt(p.xe,3)}<br>Y ${fmt(p.y,3)} ± ${fmt(p.ye,3)}`;
+$('#hid').addEventListener('pointermove',e=>{const position=canvasPointer(e),tip=$('#tooltip');if(overlayDrag||hitOverlay(position)){tip.hidden=true;return;}const p=nearest(e);if(!p){tip.hidden=true;return;}const row=prepared[p.i],s=row.segment;tip.innerHTML=`<strong>${escape(row.observation.date_obs.slice(0,10))}</strong> · ${escape(s.obsid)} · segment ${s.id+1}<br>${fmt((s.start-row.observation.time_origin_met)/1000,2)} ks since observation start<br>X ${fmt(p.x,3)} ± ${fmt(p.xe,3)}<br>Y ${fmt(p.y,3)} ± ${fmt(p.ye,3)}`;
   tip.hidden=false;tip.style.left=`${clamp(p.px+20,10,$('.chart-wrap').clientWidth-tip.offsetWidth-10)}px`;tip.style.top=`${clamp(p.py-30,10,$('.chart-wrap').clientHeight-tip.offsetHeight-10)}px`;});
-$('#hid').addEventListener('pointerleave',()=>$('#tooltip').hidden=true);$('#hid').addEventListener('click',e=>{if(swanConsumedClick){swanConsumedClick=false;return;}const p=nearest(e);if(p)choose(p.i);});
+$('#hid').addEventListener('pointerleave',()=>$('#tooltip').hidden=true);$('#hid').addEventListener('click',e=>{if(overlayConsumedClick){overlayConsumedClick=false;return;}const p=nearest(e);if(p)choose(p.i);});
 $('#reset').onclick=()=>{state.axes=defaultAxes();schedule();};
 for(const axis of ['x','y'])$(`#${axis}-kind`).onchange=e=>{state.axes[axis].kind=e.target.value;schedule();};
 $('#errors').onchange=e=>{state.errors=e.target.checked;draw();};$('#module').onchange=e=>{state.module=e.target.value;rebuild();schedule();};
-$('#swan-overlay').onchange=e=>{swanEnabled=e.target.checked;swanDrag=null;$('#hid').style.cursor='';$('#swan-controls').disabled=!swanEnabled;drawSwan();};
-$('#swan-reverse').onchange=e=>{swanReversed=e.target.checked;swanDrag=null;$('#hid').style.cursor='';drawSwan();};
-$('#cygnet-count').onchange=e=>{cygnetCount=Number(e.target.value);drawSwan();};
-$('#reset-swan').onclick=()=>{swan=freshSwan();drawSwan();};
+$('#swan-overlay').onchange=e=>{swanEnabled=e.target.checked;overlayDrag=null;$('#hid').style.cursor='';$('#swan-controls').disabled=!swanEnabled;drawOverlays();};
+$('#swan-reverse').onchange=e=>{swanReversed=e.target.checked;overlayDrag=null;$('#hid').style.cursor='';drawOverlays();};
+$('#cygnet-count').onchange=e=>{cygnetCount=Number(e.target.value);drawOverlays();};
+$('#reset-swan').onclick=()=>{swan=freshSwan();drawOverlays();};
+$('#snail-overlay').onchange=e=>{snailEnabled=e.target.checked;overlayDrag=null;$('#hid').style.cursor='';$('#snail-controls').disabled=!snailEnabled;drawOverlays();};
+$('#reset-snail').onclick=()=>{snail=freshSnail();drawOverlays();};
 function showDetails(){
   const observation=prepared[state.selected].observation,key=observation.obsid+':'+revisions.get(observation.obsid);
   if(detailsKey===key)return;detailsKey=key;
@@ -278,6 +343,6 @@ async function initialize(){
     $('#loading').textContent=`Unable to load bundled spectra: ${e.message}`;$('#loading').style.color='#9a332b';
   }
 }
-setupWindows();setupSwan();updateControls();
+setupWindows();setupOverlays();updateControls();
 new ResizeObserver(()=>draw()).observe($('.plot-panel'));
 initialize();

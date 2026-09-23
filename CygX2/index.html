@@ -10,7 +10,7 @@
 <div id="loading" role="status">Loading channel-resolved spectra…</div>
 <main id="workspace" hidden>
 <section class="plot-panel"><div class="plot-heading"><div><h2>Segment diagram</h2><p id="plot-caption"></p></div><span id="performance" class="badge"></span></div>
-<div class="chart-wrap"><canvas id="hid" tabindex="0" aria-label="Configurable count-rate and color diagram. Click a point to inspect its observation. When the swan overlay is enabled, drag its body, head, wing handle, or cygnets."></canvas><canvas id="swan-layer" aria-hidden="true"></canvas><div id="tooltip" hidden></div></div>
+<div class="chart-wrap"><canvas id="hid" tabindex="0" aria-label="Configurable count-rate and color diagram. Click a point to inspect its observation. Optional swan and snail overlays can be dragged and reshaped."></canvas><canvas id="swan-layer" aria-hidden="true"></canvas><div id="tooltip" hidden></div></div>
 <div class="plot-footer"><span id="point-count"></span><span>Color = observation</span><label><input id="errors" type="checkbox"> 1σ error bars</label></div>
 <div id="observation-legend" aria-label="Observation color legend"></div>
 </section>
@@ -33,6 +33,12 @@
 </select>
 <p class="hint compact">Drag the body or head; the neck follows both. Drag the wing-tip ring to rotate and stretch the wing, the square tail handle to stretch the body, or a cygnet head to resize that cygnet. Drag each cygnet’s body to move it. Reverse direction mirrors the whole editable swan.</p>
 <button id="reset-swan" class="preset" type="button">Reset swan positions</button>
+</fieldset>
+<div class="divider"></div>
+<div class="snail-heading"><h2>Snail overlay</h2><label><input id="snail-overlay" type="checkbox"> Show</label></div>
+<fieldset id="snail-controls" disabled>
+<p class="hint compact">Drag the head to stretch the thick neck, the shell’s side and top rings to reshape its ellipse, or the square tail to extend the foot. Drag the diamond to scale the whole snail. Drag the shell or lower body to move it.</p>
+<button id="reset-snail" class="preset" type="button">Reset snail shape</button>
 </fieldset></div></details>
 </aside>
 <section class="spectrum-panel"><div class="plot-heading"><div><h2>Total average spectrum</h2><p id="spectrum-summary"></p></div></div><canvas id="spectrum" aria-label="Average count-rate spectrum across all included segments and observations, with logarithmic energy and rate axes"></canvas><div class="spectrum-footer"><span>Good-time weighted · 0.4 keV display bins · log energy and rate</span><span>3–30 keV</span></div></section>
