@@ -1,8 +1,9 @@
 import {prepare,calculateAxes,band,ENERGY_MIN,ENERGY_MAX,ENERGY_STEP} from './hid_math.mjs';
 import {freshSwan,movePart,neckBezier,wingTransformFromPoint,bodyStretchFromPoint,cygnetScaleFromPoint} from './swan_math.mjs';
 import {freshSnail,moveSnailPart,snailScaleFromPoint,shellStretchFromPoint,anchoredEllipse} from './snail_math.mjs';
+import {freshPeacock,movePeacockPart,peacockScaleFromPoint,tailScaleFromPoint,tailSpreadFromPoint} from './peacock_math.mjs';
 const $=s=>document.querySelector(s);
-const defaultAxes=()=>({x:{kind:'color',band:[3,30],soft:[6,10],hard:[10,20]},y:{kind:'rate',band:[3,30],soft:[6,10],hard:[10,20]}});
+const defaultAxes=()=>({x:{kind:'rate',band:[3,30],soft:[6,10],hard:[10,20]},y:{kind:'color',band:[3,30],soft:[6,10],hard:[10,20]}});
 const state={axes:defaultAxes(),module:'AB',selected:0,errors:false};
 let data,prepared,points,screenPoints=[],pending=false,calculationMs=0;
 const datasets=new Map(),revisions=new Map(),colors=new Map();
@@ -16,7 +17,7 @@ const catalogRows=[
 let detailsKey=null;
 const SPAN=ENERGY_MAX-ENERGY_MIN;
 let swan=freshSwan(),swanEnabled=false,swanReversed=false,cygnetCount=1;
-let snail=freshSnail(),snailEnabled=false,overlayDrag=null,overlayConsumedClick=false;
+let snail=freshSnail(),snailEnabled=false,peacock=freshPeacock(),peacockEnabled=false,overlayDrag=null,overlayConsumedClick=false;
 const fmt=(n,d=2)=>Number(n).toFixed(d).replace(/\.00$/,'');
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const snap=x=>Math.round((x-3)/.04)*.04+3;
@@ -198,10 +199,56 @@ function drawSnailOn(ctx,w,h){
   drawHandle(ctx,head.x,head.y);drawHandle(ctx,g.shellWidth.x,g.shellWidth.y);drawHandle(ctx,g.shellHeight.x,g.shellHeight.y);drawHandle(ctx,tail.x,tail.y,'square');drawHandle(ctx,g.scaleHandle.x,g.scaleHandle.y,'diamond');
   ctx.restore();
 }
+function peacockGeometry(w,h){
+  const baseScale=Math.min(w/800,h/500),scale=baseScale*peacock.scale,bx=peacock.center.x*w,by=peacock.center.y*h;
+  const bodyRx=88*scale,bodyRy=80*scale;
+  const head={x:(peacock.center.x+peacock.headOffset.x*peacock.scale)*w,y:(peacock.center.y+peacock.headOffset.y*peacock.scale)*h};
+  const feet=peacock.footOffsets.map(offset=>({x:(peacock.center.x+offset.x*peacock.scale)*w,y:(peacock.center.y+offset.y*peacock.scale)*h}));
+  const hips=[{x:bx-40*scale,y:by+55*scale},{x:bx+35*scale,y:by+58*scale}];
+  const neckRoot={x:bx-40*scale,y:by-62*scale},tailAnchor={x:bx+59*scale,y:by+18*scale},tailAxis=.04,tailLength=224*scale*peacock.tailScale;
+  const topAngle=tailAxis-peacock.tailSpread/2,topLength=tailLength*.76;
+  const tailSizeHandle={x:tailAnchor.x+Math.cos(tailAxis)*tailLength,y:tailAnchor.y+Math.sin(tailAxis)*tailLength};
+  const tailSpreadHandle={x:tailAnchor.x+Math.cos(topAngle)*topLength,y:tailAnchor.y+Math.sin(topAngle)*topLength};
+  const scaleVector={x:-122*scale,y:118*scale},scaleHandle={x:bx+scaleVector.x,y:by+scaleVector.y};
+  return {baseScale,scale,bx,by,bodyRx,bodyRy,head,feet,hips,neckRoot,tailAnchor,tailAxis,tailLength,tailSizeHandle,tailSpreadHandle,scaleVector,scaleHandle};
+}
+function drawPeacockFeather(ctx,anchor,angle,length,width,scale,index){
+  const ux=Math.cos(angle),uy=Math.sin(angle),nx=-uy,ny=ux,tip={x:anchor.x+ux*length,y:anchor.y+uy*length};
+  const feather=new Path2D();feather.moveTo(anchor.x+nx*3*scale,anchor.y+ny*3*scale);feather.bezierCurveTo(anchor.x+ux*length*.36+nx*width*.22,anchor.y+uy*length*.36+ny*width*.22,tip.x-ux*length*.12+nx*width,tip.y-uy*length*.12+ny*width,tip.x,tip.y);feather.bezierCurveTo(tip.x-ux*length*.12-nx*width,tip.y-uy*length*.12-ny*width,anchor.x+ux*length*.36-nx*width*.22,anchor.y+uy*length*.36-ny*width*.22,anchor.x-nx*3*scale,anchor.y-ny*3*scale);feather.closePath();
+  ctx.fillStyle=index%2?'rgba(204,121,167,.055)':'rgba(18,127,152,.045)';ctx.strokeStyle='rgba(24,45,58,.88)';ctx.lineWidth=2.1;ctx.fill(feather);ctx.stroke(feather);
+  const eyeScale=scale*peacock.tailScale,eyeX=anchor.x+ux*length*.77,eyeY=anchor.y+uy*length*.77;ctx.save();ctx.translate(eyeX,eyeY);ctx.rotate(angle);ctx.beginPath();ctx.ellipse(0,0,11*eyeScale,7.5*eyeScale,0,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.ellipse(0,0,5*eyeScale,3.2*eyeScale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+}
+function drawPeacockOn(ctx,w,h){
+  const g=peacockGeometry(w,h),{scale,bx,by,bodyRx,bodyRy,head,feet,hips,neckRoot,tailAnchor,tailAxis,tailLength}=g;
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  const featherCount=7;for(let i=featherCount-1;i>=0;i--){const t=i/(featherCount-1),angle=tailAxis-peacock.tailSpread/2+t*peacock.tailSpread,length=tailLength*(.76+.24*Math.sin(t*Math.PI)),width=27*scale*peacock.tailScale;drawPeacockFeather(ctx,tailAnchor,angle,length,width,scale,i);}
+  for(let i=0;i<2;i++){const hip=hips[i],foot=feet[i],knee={x:hip.x+(foot.x-hip.x)*.56+(i?8:-8)*scale,y:hip.y+(foot.y-hip.y)*.54};ctx.strokeStyle='rgba(24,45,58,.90)';ctx.lineWidth=10*scale;ctx.beginPath();ctx.moveTo(hip.x,hip.y);ctx.lineTo(knee.x,knee.y);ctx.lineTo(foot.x,foot.y);ctx.stroke();ctx.strokeStyle='rgba(255,255,255,.62)';ctx.lineWidth=6*scale;ctx.stroke();ctx.strokeStyle='rgba(24,45,58,.90)';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(foot.x,foot.y);ctx.lineTo(foot.x-25*scale,foot.y+7*scale);ctx.moveTo(foot.x,foot.y);ctx.lineTo(foot.x+25*scale,foot.y+6*scale);ctx.moveTo(foot.x,foot.y);ctx.lineTo(foot.x+4*scale,foot.y-8*scale);ctx.stroke();}
+  ctx.fillStyle='rgba(255,255,255,.30)';ctx.strokeStyle='rgba(24,45,58,.92)';ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(bx,by,bodyRx,bodyRy,-.08,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(18,127,152,.055)';ctx.beginPath();ctx.ellipse(bx-29*scale,by+10*scale,45*scale,69*scale,.12,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.ellipse(bx+31*scale,by+12*scale,45*scale,66*scale,-.10,0,Math.PI*2);ctx.fill();ctx.stroke();
+  const neck=new Path2D();neck.moveTo(head.x-18*scale,head.y+8*scale);neck.bezierCurveTo(head.x-8*scale,head.y+44*scale,neckRoot.x-23*scale,neckRoot.y-22*scale,neckRoot.x-21*scale,neckRoot.y+13*scale);neck.bezierCurveTo(neckRoot.x-5*scale,neckRoot.y+24*scale,neckRoot.x+16*scale,neckRoot.y+20*scale,neckRoot.x+23*scale,neckRoot.y+7*scale);neck.bezierCurveTo(neckRoot.x+10*scale,neckRoot.y-25*scale,head.x+18*scale,head.y+43*scale,head.x+19*scale,head.y+8*scale);neck.closePath();ctx.strokeStyle='rgba(24,45,58,.94)';ctx.lineWidth=2.3;ctx.stroke(neck);
+  ctx.fillStyle='rgba(255,255,255,.36)';ctx.beginPath();ctx.ellipse(head.x,head.y,23*scale,25*scale,-.18,0,Math.PI*2);ctx.fill();ctx.stroke();
+  const beak=new Path2D();beak.moveTo(head.x-18*scale,head.y-2*scale);beak.lineTo(head.x-50*scale,head.y+13*scale);beak.lineTo(head.x-19*scale,head.y+14*scale);beak.closePath();ctx.fillStyle='rgba(255,255,255,.40)';ctx.fill(beak);ctx.stroke(beak);
+  ctx.fillStyle='rgba(24,45,58,.92)';ctx.beginPath();ctx.arc(head.x-7*scale,head.y-7*scale,2.2*scale,0,Math.PI*2);ctx.fill();
+  for(let i=-2;i<=2;i++){const baseX=head.x+i*5*scale,baseY=head.y-21*scale,tipX=head.x+i*10*scale,tipY=head.y-(50-Math.abs(i)*4)*scale;ctx.strokeStyle='rgba(24,45,58,.92)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(baseX,baseY);ctx.quadraticCurveTo(head.x+i*7*scale,head.y-36*scale,tipX,tipY);ctx.stroke();ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();ctx.arc(tipX,tipY,4.3*scale,0,Math.PI*2);ctx.fill();ctx.stroke();}
+  drawHandle(ctx,head.x,head.y);for(const foot of feet)drawHandle(ctx,foot.x,foot.y,'square');drawHandle(ctx,g.tailSizeHandle.x,g.tailSizeHandle.y,'diamond');drawHandle(ctx,g.tailSpreadHandle.x,g.tailSpreadHandle.y);drawHandle(ctx,g.scaleHandle.x,g.scaleHandle.y,'diamond');
+  ctx.restore();
+}
+function hitPeacock(x,y,w,h){
+  if(!peacockEnabled)return null;
+  const g=peacockGeometry(w,h),s=g.scale;
+  if(Math.hypot(x-g.scaleHandle.x,y-g.scaleHandle.y)<16)return 'scale';
+  if(Math.hypot(x-g.tailSizeHandle.x,y-g.tailSizeHandle.y)<16)return 'tail-size';
+  if(Math.hypot(x-g.tailSpreadHandle.x,y-g.tailSpreadHandle.y)<16)return 'tail-spread';
+  for(let i=0;i<g.feet.length;i++)if(Math.hypot(x-g.feet[i].x,y-g.feet[i].y)<17)return `leg-${i}`;
+  if(Math.hypot(x-g.head.x,y-g.head.y)<35*s)return 'head';
+  if(((x-g.bx)/g.bodyRx)**2+((y-g.by)/g.bodyRy)**2<1.18)return 'body';
+  return null;
+}
 function drawOverlays(){
   const {ctx,w,h}=canvasContext('#swan-layer');
   if(swanEnabled)drawSwanOn(ctx,w,h);
   if(snailEnabled)drawSnailOn(ctx,w,h);
+  if(peacockEnabled)drawPeacockOn(ctx,w,h);
 }
 function hitSnail(x,y,w,h){
   if(!snailEnabled)return null;
@@ -217,10 +264,11 @@ function hitSnail(x,y,w,h){
 }
 function canvasPointer(e,reverse=false){const rect=$('#hid').getBoundingClientRect(),rawX=e.clientX-rect.left;return {x:reverse?rect.width-rawX:rawX,y:e.clientY-rect.top,w:rect.width,h:rect.height};}
 function hitOverlay(raw){
+  const peacockPart=hitPeacock(raw.x,raw.y,raw.w,raw.h);if(peacockPart)return {kind:'peacock',part:peacockPart,point:raw};
   const snailPart=hitSnail(raw.x,raw.y,raw.w,raw.h);if(snailPart)return {kind:'snail',part:snailPart,point:raw};
   const point=swanReversed?{...raw,x:raw.w-raw.x}:raw,swanPart=hitSwan(point.x,point.y,point.w,point.h);return swanPart?{kind:'swan',part:swanPart,point}:null;
 }
-function cursorFor(hit){if(!hit)return '';if(hit.kind==='snail'&&hit.part==='shell-width')return 'ew-resize';if(hit.kind==='snail'&&hit.part==='shell-height')return 'ns-resize';if(hit.kind==='snail'&&hit.part==='scale')return 'nwse-resize';if(hit.kind==='snail'&&hit.part==='tail')return 'ew-resize';if(hit.kind==='swan'&&hit.part==='wing')return 'grab';return 'move';}
+function cursorFor(hit){if(!hit)return '';if(hit.kind==='snail'&&hit.part==='shell-width')return 'ew-resize';if(hit.kind==='snail'&&hit.part==='shell-height')return 'ns-resize';if(hit.kind==='snail'&&hit.part==='scale')return 'nwse-resize';if(hit.kind==='snail'&&hit.part==='tail')return 'ew-resize';if(hit.kind==='peacock'&&(hit.part==='scale'||hit.part==='tail-size'))return 'nwse-resize';if(hit.kind==='peacock'&&hit.part==='tail-spread')return 'grab';if(hit.kind==='swan'&&hit.part==='wing')return 'grab';return 'move';}
 function setupOverlays(){
   const canvas=$('#hid');
   canvas.addEventListener('pointerdown',e=>{
@@ -230,7 +278,13 @@ function setupOverlays(){
   canvas.addEventListener('pointermove',e=>{
     const raw=canvasPointer(e),point=overlayDrag?.kind==='swan'&&swanReversed?{...raw,x:raw.w-raw.x}:raw;
     if(overlayDrag){
-      if(overlayDrag.kind==='snail'){
+      if(overlayDrag.kind==='peacock'){
+        const g=peacockGeometry(point.w,point.h);
+        if(overlayDrag.part==='scale')peacock={...peacock,scale:peacockScaleFromPoint({x:g.bx,y:g.by},{x:point.x,y:point.y},Math.hypot(g.scaleVector.x,g.scaleVector.y)/peacock.scale)};
+        else if(overlayDrag.part==='tail-size')peacock={...peacock,tailScale:tailScaleFromPoint(g.tailAnchor,{x:point.x,y:point.y},224*g.scale)};
+        else if(overlayDrag.part==='tail-spread')peacock={...peacock,tailSpread:tailSpreadFromPoint(g.tailAnchor,{x:point.x,y:point.y},g.tailAxis)};
+        else{peacock=movePeacockPart(peacock,overlayDrag.part,point.x/point.w-overlayDrag.lastX,point.y/point.h-overlayDrag.lastY);overlayDrag.lastX=point.x/point.w;overlayDrag.lastY=point.y/point.h;}
+      }else if(overlayDrag.kind==='snail'){
         const g=snailGeometry(point.w,point.h);
         if(overlayDrag.part==='scale')snail={...snail,scale:snailScaleFromPoint({x:g.originX,y:g.originY},{x:point.x,y:point.y},Math.hypot(g.scaleVector.x,g.scaleVector.y)/snail.scale)};
         else if(overlayDrag.part==='shell-width')snail={...snail,shellScaleX:shellStretchFromPoint(g.shellLeft,point.x,224*g.baseScale,snail.scale)};
@@ -303,6 +357,8 @@ $('#cygnet-count').onchange=e=>{cygnetCount=Number(e.target.value);drawOverlays(
 $('#reset-swan').onclick=()=>{swan=freshSwan();drawOverlays();};
 $('#snail-overlay').onchange=e=>{snailEnabled=e.target.checked;overlayDrag=null;$('#hid').style.cursor='';$('#snail-controls').disabled=!snailEnabled;drawOverlays();};
 $('#reset-snail').onclick=()=>{snail=freshSnail();drawOverlays();};
+$('#peacock-overlay').onchange=e=>{peacockEnabled=e.target.checked;overlayDrag=null;$('#hid').style.cursor='';$('#peacock-controls').disabled=!peacockEnabled;drawOverlays();};
+$('#reset-peacock').onclick=()=>{peacock=freshPeacock();drawOverlays();};
 function showDetails(){
   const observation=prepared[state.selected].observation,key=observation.obsid+':'+revisions.get(observation.obsid);
   if(detailsKey===key)return;detailsKey=key;
