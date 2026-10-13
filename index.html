@@ -60,6 +60,8 @@ button{font:inherit;color:inherit}
 
 .hero-text{position:absolute;z-index:3;left:max(24px,5.5cqw);top:clamp(64px,12cqh,128px);width:min(600px,calc(100% - 48px));color:var(--sky-ink)}
 .hero.ready .hero-text{transition:color 1.5s ease}
+/* a soft halo in the scrim's colour round each letter: the text may cross the birch trunk, which is brighter than the scrim can cover */
+.hero h1,.lead{text-shadow:0 0 2px var(--scrim-c),0 0 6px var(--scrim-c),0 0 12px var(--scrim-c)}
 .scrim{position:absolute;inset:-34px -40px;border-radius:60px;background:var(--scrim-c);opacity:var(--scrim-a);filter:blur(26px);z-index:-1;pointer-events:none}
 .hero.ready .scrim{transition:opacity 1.5s ease,background-color 1.5s ease}
 .hero h1{margin:0;font-weight:360;font-size:clamp(46px,7cqw,100px);line-height:.98;letter-spacing:-.018em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
@@ -349,7 +351,7 @@ function applyTheme() { document.documentElement.dataset.light = S.night ? 'nigh
    A pair [a, b] means [desktop, mobile] (mobile = hero narrower than 700 px). H and W are the hero's height and width. */
 const SCENE = {
   horizon: [0.46, 0.58],        // the far shore (horizon line), as a fraction of H …
-  textGap: 54,                  // … but never closer than this many px below the hero text (the forest mustn't run through it)
+  textGap: -30,                 // … but at least this many px below the bottom of the hero text (negative: the text may reach a little below the horizon)
   horizonMax: 0.66,             // … and never lower than this fraction of H
   shore: [0.75, 0.79],          // the water line (near shore), fraction of H; the ground the hedgehog walks on is below it
   shoreWave: 7,                 // px: how much the water line undulates
@@ -368,12 +370,15 @@ const SCENE = {
     lair: 0.2,                  // the hedgehog's lair (a hole in the plinth), ÷ front width from the left wall
   },
   mailbox: { height: 0.5, x: 0.8 },    // height ÷ wall height · its centre sits this many mailbox-widths left of the house's left wall
-  birch: { x: 0.18, top: [-40, null], width: [26, 16], lean: [14, 5], limbs: [14, 8], limbLength: [215, 92], curtain: [118, 50] },
+  birch: { x: 0.18, top: [-40, -40], width: [26, 16], lean: [14, 5], limbs: [14, 8], limbLength: [215, 92], curtain: [118, 50] },
   //       trunk ÷ front width from the left wall · trunk top (px; null = just below the text) · trunk width px · lean px · limbs · limb length px · hanging-twig length px
   rainbow: { spread: 3.0, width: 1.25, fade: [3, 24], baseBoost: 1.2, alpha: 0.62 },
   //         colour-band spread (1 = a thin bow) · stroke width · fully bright below fade[0]°, gone above fade[1]° · extra width at the base · opacity
   hog: { size: [57, 46], cell: 1.22, walkAngle: 15, stride: 0.109, dockGap: 64 },
   //     HS px · rendered cell ÷ HS · max climb/descent while walking (°) · distance per drawing ÷ HB · keep his feet this far above the bottom (the dock)
+  hogJump: { chance: 0.0067, height: [3, 5], dist: [3, 8], g: 1100, frame: 0.17, land: 0.11 },
+  //         the long jump, once in a blue moon: chance each time he picks something to do · apex height and length, in sprite sizes (HB) ·
+  //         gravity px/s² · s per drawing in the air (01·02 up, 03·04 down) · s on the landing drawing (05)
   apple: { dropX: 0.08, hang: 0.28, g: 1400, missStay: 20, regrow: 3, roofBounce: 0.3 },
   //       hangs above the roof at this ÷ front width from the left wall · this far above the roof ÷ house height · gravity px/s² · s on the grass if it misses · s to grow a new one · how much of its speed it keeps bouncing off the roof (0 = none)
   iceTrail: { life: 7, barb: 1 },   // stones on ice: s the scratch stays · feather-barb size
@@ -573,7 +578,7 @@ function buildFG() {
   const tww = y => tw * (0.42 + 0.58 * Math.pow(tu(y), 0.8));
   let Lp = '', Rr = '';
   for (let y = topY; y <= gy + 10; y += 8) { Lp += `${(tx(y) - tww(y) / 2).toFixed(1)} ${y.toFixed(1)} `; Rr = `${(tx(y) + tww(y) / 2).toFixed(1)} ${y.toFixed(1)} ` + Rr; }
-  const crown = birchSVG(R, night, topY, crownBase, tx, tww, mobile ? null : { right: htr.right - hrr.left, bottom: textBottom });
+  const crown = birchSVG(R, night, topY, crownBase, tx, tww, mobile ? null : { right: (htr.right - hrr.left) / SC, bottom: textBottom });
   const marks = [];
   for (let y = topY + 6; y < crownBase + 40; y += 5 + R() * 15) {
     const w = tww(y), left = R() < 0.5, ml = w * (R() < 0.18 ? 0.7 + R() * 0.3 : 0.15 + R() * 0.4);
@@ -1422,7 +1427,7 @@ const appleEl = $('#apple'), apple = { st: 'ground', x: 0, y: 0 }, burrowEl = $(
 let ptr = null, dragging = null;                         // the cursor (or a finger) over the scene, in hero px · what's being dragged
 const F = { stand: [0, 0], blink: [0, 6], air: [3, 0], alert: [4, 0], sniff: [1, 4], sniff2: [1, 5], back: [5, 0],
   doze: [1, 0], sleep: [1, 1], sleep2: [1, 2], stretch: [1, 3], curl1: [2, 0], curl2: [2, 1], ball: [2, 2], un1: [2, 3], un2: [2, 4] };
-const RUNF = [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5]];
+const RUNF = [[0, 0], [0, 2], [0, 3], [0, 5]], RUNFN = RUNF.length;   // the trot: 00 02 03 05 (01 and 04 are kept for the long jump)
 const isStill = f => (f[0] === 0 || f[0] === 4) && f[1] === 0 || f[0] === 1 && f[1] === 4;   // (0,0) (4,0) (1,4): he can switch between these at will
 const is = (a, b) => a[0] === b[0] && a[1] === b[1];
 const still = () => isStill(hog.fr) ? hog.fr : F.stand;
@@ -1506,6 +1511,7 @@ function think() {                                       // he's free: what now?
     if (S.hibernate && S.pileX != null && Math.hypot(hog.x - S.pileX - 4, hog.y - S.pileY - 2) > 4) { hog.next = 'sleep'; return go('walk', [S.pileX + 4, S.pileY + 2]); }   // in the cold months he beds down in the leaf pile
     return fallAsleep();
   }
+  if (!hog.carrying && !reduced() && Math.random() < SCENE.hogJump.chance && startJump()) return;   // once in a blue moon: the long jump
   const r = Math.random(), sp = APPLE.spot;
   // he knows where the apples land: now and then he goes to have a sniff there (more often when one is lying on the grass)
   if (sp && (apple.st === 'ground' ? r < 0.3 : (apple.st === 'tree' || apple.st === 'grow') && r < 0.03) && Math.hypot(hog.x - sp[0], hog.y - sp[1]) > 4) { hog.next = 'spot'; return go('walk', sp); }
@@ -1515,6 +1521,36 @@ function think() {                                       // he's free: what now?
   if (r < 0.84) return idle('air', SEQ.air());
   if (r < 0.93) return idle('turn', SEQ.turn(still(), Math.random() < 0.4).concat([K(F.stand, 0.6 + Math.random())]));
   idle('blink', SEQ.blink());
+}
+/* the long jump: a parabola from where he stands, h sprite sizes high at the top, landing d sprite sizes on (on his strip of shore).
+   Up: 01·02, down: 03·04, and he lands on 05. h, d default to random within SCENE.hogJump; returns what he actually did, or null. */
+function startJump(h, d) {
+  const J = SCENE.hogJump, lo = 30, hi = Math.max(40, xLimit()), rnd = ([a, b]) => a + Math.random() * (b - a);
+  h = h == null ? rnd(J.height) : h; d = d == null ? rnd(J.dist) : d;
+  let dir = hog.dir, x1 = hog.x + dir * d * HB;
+  if (x1 < lo || x1 > hi) {                              // no room ahead: the other way, or as far as the shore goes
+    const back = hog.x - dir * d * HB;
+    if (back >= lo && back <= hi) { dir = -dir; x1 = back; }
+    else { const fwd = clamp(x1, lo, hi), bwd = clamp(back, lo, hi); if (Math.abs(bwd - hog.x) > Math.abs(fwd - hog.x)) { dir = -dir; x1 = bwd; } else x1 = fwd; }
+  }
+  if (Math.abs(x1 - hog.x) < HB * 0.5) return null;      // nowhere to go
+  const y1 = clamp(hog.y, hogYMin(x1), hogYMax(x1)), H = h * HB, v0 = Math.sqrt(2 * J.g * H), tu = v0 / J.g;
+  const td = Math.sqrt(2 * Math.max(1, H + y1 - hog.y) / J.g);
+  hog.jump = { x0: hog.x, y0: hog.y, x1, y1, v0, tu, T: tu + td };
+  hog.seq = null; hog.act = null; hog.path = []; hog.next = null; hog.dir = dir; hog.sc = 1; setHog('jump');
+  return { h, d: Math.abs(x1 - hog.x) / HB };
+}
+function stepJump() {
+  const j = hog.jump, J = SCENE.hogJump, t = Math.min(hog.ft, j.T);
+  hog.x = j.x0 + (j.x1 - j.x0) * t / j.T;
+  hog.y = j.y0 - (j.v0 * t - J.g * t * t / 2);
+  const up = t < j.tu, k = Math.floor((up ? t : t - j.tu) / J.frame) % 2;   // each half of the arc starts on its first drawing
+  hog.fr = up ? (k ? [0, 2] : [0, 1]) : (k ? [0, 4] : [0, 3]);
+  if (hog.ft >= j.T) {                                   // touchdown: 05, then back on his feet
+    hog.x = j.x1; hog.y = j.y1; hog.jump = null;
+    if (S.snowGround) { footprint(hog.x, hog.y); hog.lastFoot = hog.x; hog.lastFootY = hog.y; }
+    setHog('idle'); hog.act = 'stand'; play([K([0, 5], J.land), K(F.stand, 0.35)], think);
+  }
 }
 function fallAsleep(len) {
   const day = S.sun && S.sun.alt > 0;
@@ -1609,7 +1645,7 @@ function updateHog(dt) {
       if (Math.abs(dx) > 0.5) hog.dir = dx > 0 ? 1 : -1;
       const step = Math.min(d, hogSpeed() * dt);
       hog.x += dx / d * step; hog.y += dy / d * step; hog.dist += step;
-      hog.fr = RUNF[Math.floor(hog.dist / (HB * SCENE.hog.stride)) % 6];   // one drawing per stride·HB px: his feet keep pace at any speed
+      hog.fr = RUNF[Math.floor(hog.dist / (HB * SCENE.hog.stride)) % RUNFN];   // one drawing per stride·HB px: his feet keep pace at any speed
       if (S.snowGround && Math.hypot(hog.x - hog.lastFoot, hog.y - (hog.lastFootY || 0)) > 8) { footprint(hog.x, hog.y); hog.lastFoot = hog.x; hog.lastFootY = hog.y; }
       break;
     }
@@ -1617,6 +1653,7 @@ function updateHog(dt) {
     case 'sleep': hog.tm -= dt; stepSeq(dt); break;
     case 'curl': stepSeq(dt); if ((hog.tm -= dt) <= 0 && hog.calm > 1.5 && hog.fr === F.ball) uncurl(); break;   // unrolls once it feels safe
     case 'held': stepSeq(dt); break;
+    case 'jump': stepJump(); break;
     case 'fall': stepSeq(dt); hog.vy += 1400 * dt; hog.y = Math.min(hog.floor, hog.y + hog.vy * dt); if (hog.y >= hog.floor) { hog.vy = 0; curl(hog.carrying ? 0.6 : 1.3); } break;
     case 'enter': {                                      // into the lair: his back to us, (5,0), shrinking into the dark
       const p = clamp(hog.ft / 1.3, 0, 1), [fx, fy] = lairFront(), y1 = CAB.base - HB * 0.12;
@@ -1625,7 +1662,7 @@ function updateHog(dt) {
       break;
     }
     case 'inside': if ((hog.tm -= dt) <= 0) { openBurrow(false); hog.carrying = false; hogEl.classList.remove('carrying'); hog.x = BUR; hog.y = lairFront()[1]; hog.dir = -1; setHog('exit', 0.8); } break;
-    case 'exit': { const p = clamp(hog.ft / 0.8, 0, 1); hog.op = p; hog.sc = 0.65 + 0.35 * p; hog.x = BUR - HB * 0.5 * p; hog.fr = RUNF[Math.floor(hog.ft * 8) % 6]; if (p >= 1) { hog.op = 1; hog.sc = 1; hog.fr = F.stand; think(); setTimeout(respawnApple, 1500); } break; }
+    case 'exit': { const p = clamp(hog.ft / 0.8, 0, 1); hog.op = p; hog.sc = 0.65 + 0.35 * p; hog.x = BUR - HB * 0.5 * p; hog.fr = RUNF[Math.floor(hog.ft * 8) % RUNFN]; if (p >= 1) { hog.op = 1; hog.sc = 1; hog.fr = F.stand; think(); setTimeout(respawnApple, 1500); } break; }
   }
   renderHog();
 }
@@ -1804,8 +1841,16 @@ RV.hooks.hog = v => {
     return 'he’s already awake.';
   }
 };
+RV.hooks.hogJump = (h, d) => {
+  if (['held', 'fall', 'look', 'enter', 'inside', 'exit'].includes(hog.st)) return 'he’s busy just now — try again in a moment.';
+  if (hog.st === 'jump') return 'he’s already in the air!';
+  if (hog.st === 'sleep') return 'he’s asleep. (hog wake first.)';
+  if (hog.st === 'curl') return 'he’s rolled up in a ball. give him a moment.';
+  const r = startJump(h, d);
+  return r ? `hop! ${r.h.toFixed(1)} sprite sizes up, ${r.d.toFixed(1)} along.` : 'no room for a run-up here.';
+};
 RV.hooks.hogStatus = () => hog.st === 'idle' ? ({ stand: 'standing about', blink: 'blinking', air: 'sniffing the air', ground: 'sniffing the ground', turn: 'turning round' })[hog.act] || 'pottering about'
-  : ({ walk: hog.next === 'spot' ? 'off to where the apples land' : 'pottering along', home: 'going home with an apple', alert: friendly() ? 'sniffing at your apple' : 'on the alert — keeping an eye on you', curl: 'rolled up in a ball', uncurl: 'unrolling', sleep: 'asleep', wake: 'waking up', held: 'being carried', fall: 'landing', look: 'glancing back', enter: 'going into his burrow', inside: 'in his burrow', exit: 'coming out' })[hog.st];
+  : ({ walk: hog.next === 'spot' ? 'off to where the apples land' : 'pottering along', home: 'going home with an apple', alert: friendly() ? 'sniffing at your apple' : 'on the alert — keeping an eye on you', curl: 'rolled up in a ball', uncurl: 'unrolling', sleep: 'asleep', wake: 'waking up', held: 'being carried', fall: 'landing', jump: 'jumping!', look: 'glancing back', enter: 'going into his burrow', inside: 'in his burrow', exit: 'coming out' })[hog.st];
 RV.hooks.fish = () => { const was = fish.st; rodClick(); return was === 'idle' ? 'casting from the jetty… type fish again (or click the rod) to reel in — within a second of a dip.' : 'reeling in…'; };
 RV.hooks.skip = () => { const x = W * (mobile ? 0.22 + Math.random() * 0.2 : 0.18 + Math.random() * 0.25), y = HY + (ground(x) - HY) * (0.55 + Math.random() * 0.3); throwStone(Math.min(x, S.skipMaxX - 10), y); return ''; };
 

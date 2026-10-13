@@ -797,7 +797,7 @@ const PAGES = { research: 'research.html', about: 'about.html', merits: 'merits.
   interests: 'research.html#interests', path: 'research.html#path', career: 'research.html#path', contact: 'about.html#contact', contacts: 'about.html#contact', bio: 'about.html', wall: 'merits.html', certificates: 'merits.html', cabin: 'merits.html', lake: 'index.html' };
 for (const n of SITE.nav) if (!PAGES[n.key] && n.key !== 'home') PAGES[n.key] = n.href;
 const EXT = { cv: [SITE.CV, 'CV_Loktev.pdf'], ads: [SITE.ADS, 'all publications on ADS'], orcid: ['https://orcid.org/' + SITE.ORCID, 'ORCID ' + SITE.ORCID], github: [SITE.GITHUB, 'github.com/belliavesha'], telegram: [SITE.TELEGRAM, 'telegram.me/belliavesha'] };
-const hookHome = (name, arg) => { if (!onHome()) return null; const f = RV.hooks[name]; return f ? f(arg) : null; };
+const hookHome = (name, ...args) => { if (!onHome()) return null; const f = RV.hooks[name]; return f ? f(...args) : null; };
 const C = {
   help: a => a[0] ? (MAN[a[0].toLowerCase()] || [`<span class="m">no extra help for ${esc(a[0])}; try it and see.</span>`]) : HELP(),
   man: a => !a[0] ? ['<span class="m">What manual page do you want? Try </span>' + cmdLink('man vlad')] : MAN[a[0].toLowerCase()] || (C[a[0].toLowerCase()] && !HIDDEN.has(a[0].toLowerCase()) ? [`<span class="m">${esc(a[0])}: it does what it says. </span>${cmdLink('help')}`] : [`<span class="r">No manual entry for ${esc(a[0])}</span>`]),
@@ -816,6 +816,12 @@ const C = {
     const s = (a[0] || 'status').toLowerCase();
     if (onoff(s) === 'on' || onoff(s) === 'off') { RV.setOpt('hog', onoff(s)); return [onoff(s) === 'on' ? 'the hedgehog is back on the shore.' : `the hedgehog went to visit his cousins. <span class="m">(</span>${cmdLink('hog on')}<span class="m"> brings him back)</span>`].concat(onHome() ? [] : homeOnly('the hedgehog')); }
     if (s === 'speed') { const x = parseFloat(a[1]); if (!isFinite(x) || x <= 0) return ['<span class="m">hog speed &lt;0.25–4&gt;, e.g. </span>' + cmdLink('hog speed 2')]; const v = clamp(x, 0.25, 4); RV.set({ hogSpeed: v }); return [v > 2 ? `speed ×${v}. he is not built for this.` : v < 0.6 ? `speed ×${v}. a very thoughtful hedgehog.` : `speed ×${v}.`]; }
+    if (s === 'jump') {                                  // (for testing) hog jump [height] [length], in sprite sizes; random when left out
+      if (RV.opt('hog') === 'off') return ['<span class="m">he’s away — </span>' + cmdLink('hog on') + '<span class="m"> first.</span>'];
+      const num = v => { if (v == null) return null; const x = parseFloat(v); return isFinite(x) ? x : NaN; }, h = num(a[1]), d = num(a[2]);
+      if (Number.isNaN(h) || Number.isNaN(d) || (h != null && (h <= 0 || h > 12)) || (d != null && (d < 0 || d > 20))) return ['<span class="m">hog jump [height 0–12] [length 0–20], in sprite sizes</span>'];
+      const r = hookHome('hogJump', h, d); return r == null ? homeOnly('the hedgehog') : [r];
+    }
     if (['come', 'here', 'sleep', 'nap', 'wake', 'roll'].includes(s)) { if (RV.opt('hog') === 'off') return ['<span class="m">he’s away — </span>' + cmdLink('hog on') + '<span class="m"> first.</span>']; const r = hookHome('hog', s === 'here' ? 'come' : s === 'nap' ? 'sleep' : s); return r ? [r] : homeOnly('the hedgehog'); }
     const st = hookHome('hogStatus');
     return [`the hedgehog: <span class="a">${RV.opt('hog') === 'on' ? 'on the shore' : 'away'}</span>, speed ×${S.hogSpeed}${st ? ' · ' + esc(st) : ''}`, '<span class="m">hog on|off|come|sleep|wake|roll|speed &lt;x&gt;|status</span>'];
