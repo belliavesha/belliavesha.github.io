@@ -350,14 +350,18 @@ details > .group { margin-top: 0.6rem; }
   pointer-events: none;
 }
 .readout {
+  /* exactly one line: hovering must never change the plate's size */
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
   font: 400 var(--s-xs) / 1.4 var(--f-mono);
   color: var(--muted);
-  min-height: 1.4em;
+  height: 1.4em;
   font-variant-numeric: tabular-nums;
 }
+.readout span { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .readout b { color: var(--ink); font-weight: 500; }
 .legend {
   display: flex;
@@ -483,6 +487,5 @@ details > .group { margin-top: 0.6rem; }
 }
 .walk select { width: auto; flex: 0 0 auto; }
 .walk input[type="range"] { flex: 1; min-width: 8rem; width: auto; }
-.walk .btn { flex: 0 0 auto; padding: 0.3rem 0.6rem; }
+.walk .btn { flex: 0 0 2.4rem; width: 2.4rem; padding: 0.3rem 0; text-align: center; }
 .walk .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
-.walk .mono { font: 400 var(--s-xs) / 1.4 var(--f-mono); }

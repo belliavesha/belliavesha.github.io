@@ -520,21 +520,24 @@ function legend(stats) {
   el.innerHTML = html;
 }
 
+// The readout under the plate is one line, never longer than the idle hint, so hovering
+// never changes the plate's size (which would trigger a re-render).
+const HOVER_HINT = 'Click to analyse · drag to pan · scroll to zoom · shift-drag for a slice';
 function hover(h) {
   const el = $('readout');
-  if (!h) { el.innerHTML = '<span>Click to analyse · drag to pan · scroll to zoom · shift-drag for a slice</span>'; return; }
-  let s = `<span><b>${escapeHtml(paramLabel(h.P))}</b></span>`;
+  if (!h) { el.innerHTML = `<span>${HOVER_HINT}</span>`; return; }
+  let s = `<span><b>${escapeHtml(paramLabel(h.P, 5))}</b></span>`;
   if (h.info && !Number.isNaN(h.info.esc)) {
     const { esc, lam, k } = h.info;
-    if (esc >= 0) s += `<span>escapes after <b>${esc.toFixed(1)}</b> steps</span>`;
+    if (esc >= 0) s += `<span>escapes after <b>${esc.toFixed(0)}</b></span>`;
     else {
-      s += `<span>λ = <b>${lam.toFixed(4)}</b></span>`;
-      if (k >= 0) s += `<span><b>${catLabel(category(esc, lam, k))}</b></span>`;
+      s += `<span>λ <b>${lam.toFixed(3)}</b></span>`;
+      if (k >= 0) s += `<span><b>${catShort(category(esc, lam, k))}</b></span>`;
     }
   }
   el.innerHTML = s;
 }
-const catLabel = (id) => (CATS.find((c) => c.id === id) || {}).label || id;
+const catShort = (id) => (CATS.find((c) => c.id === id) || {}).short || id;
 
 // ---------------------------------------------------------------- analysis
 let last = null;
@@ -979,7 +982,6 @@ function setWalk(id, t, analyse = false) {
   $('walk-path').value = id;
   $('walk-t').value = String(Math.round(t * 1000));
   const P = pointAt(path, t);
-  $('walk-label').textContent = `${paramLabel(P, 6)}`;
   if (S.tab === 'slice') replot();
   return analyse ? walkTo(P) : Promise.resolve();
 }

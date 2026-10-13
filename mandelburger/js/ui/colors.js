@@ -5,16 +5,17 @@
 // lam (fibre Lyapunov exponent), k (sheet count; 0 = no finite structure,
 // -1 = not computed).
 
+// label: legend text; short: the one-line plane readout under the plate
 export const CATS = [
-  { id: 'esc', label: 'escapes', color: '#1c2333' },
-  { id: 'k1', label: '1 smooth graph', hue: 214, sat: 0.62 },
-  { id: 'k2', label: '2 sheets', hue: 36, sat: 0.85 },
-  { id: 'k3', label: '3 sheets', hue: 150, sat: 0.55 },
-  { id: 'k4', label: '4 sheets', hue: 336, sat: 0.6 },
-  { id: 'k5', label: '≥5 sheets', hue: 268, sat: 0.5 },
-  { id: 'sna', label: 'no sheets, λ<0 (strange nonchaotic)', hue: 300, sat: 0.25 },
-  { id: 'neutral', label: 'λ ≈ 0, no sheets (neutral, quasi-periodic)', hue: 168, sat: 0.22 },
-  { id: 'chaos', label: 'λ ≥ 0 (chaotic)', hue: 8, sat: 0.8 },
+  { id: 'esc', short: 'escapes', label: 'escapes', color: '#1c2333' },
+  { id: 'k1', short: '1 graph', label: '1 smooth graph', hue: 214, sat: 0.62 },
+  { id: 'k2', short: '2 sheets', label: '2 sheets', hue: 36, sat: 0.85 },
+  { id: 'k3', short: '3 sheets', label: '3 sheets', hue: 150, sat: 0.55 },
+  { id: 'k4', short: '4 sheets', label: '4 sheets', hue: 336, sat: 0.6 },
+  { id: 'k5', short: '≥5 sheets', label: '≥5 sheets', hue: 268, sat: 0.5 },
+  { id: 'sna', short: 'SNA (no sheets, λ<0)', label: 'no sheets, λ<0 (strange nonchaotic)', hue: 300, sat: 0.25 },
+  { id: 'neutral', short: 'neutral (λ ≈ 0)', label: 'λ ≈ 0, no sheets (neutral, quasi-periodic)', hue: 168, sat: 0.22 },
+  { id: 'chaos', short: 'chaos (λ ≥ 0)', label: 'λ ≥ 0 (chaotic)', hue: 8, sat: 0.8 },
 ];
 
 export function hsl(h, s, l) {
