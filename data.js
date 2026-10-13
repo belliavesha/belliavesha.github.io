@@ -29,7 +29,6 @@ window.SITE = {
     { key: 'cygx2',   href: 'CygX2/',            title: 'Cyg X-2 spectral-state explorer', short: 'Cyg X-2',       blurb: 'Z-source? Atoll? How about a snail or a swan!' },
     { key: 'collatz', href: 'collatztree/',      title: 'Collatz tree visualizer',         short: 'Collatz tree',  blurb: 'Trees built from generalized Collatz rules.' },
     { key: 'mandelburger', href: 'mandelburger/', title: 'Mandelburger: a parameter-plane explorer', short: 'Mandelburger', blurb: 'A Mandelbrot set for f(θ + T) = F(f(θ), θ).' },
-    // { key: 'grid',    href: 'collatztree/grid/', title: 'Collatz conjecture explorer (grid)',        short: 'Collatz grid',  blurb: '10×10 grids coloured by cycle, length or height' }
   ],
 
   /* ---------- "psst — have a look": the note on the birch (and `fortune`) ---------- */
@@ -52,7 +51,6 @@ window.SITE = {
     { text: 'Trace the Z-track of Cyg X-2 with a draggable swan — or a snail. [The state explorer](CygX2/) has cygnets too.' },
     { text: 'Grow your own Collatz tree, with rules of your choosing: [the tree visualizer](collatztree/).' },
     { text: 'For which parameters does f(θ + T) = F(f(θ), θ) have a smooth solution? A Mandelbrot set for functional equations: [Mandelburger](mandelburger/).' },
-    // { text: 'A hundred Collatz-like rules on one 10×10 grid: [the grid explorer](collatztree/grid/).' },
     { text: 'Every paper, in order: [my publications on ADS](' + ADS + ').' },
     { text: 'Code, experiments and odd little tools: [my GitHub](https://github.com/belliavesha).' },
     { text: 'Turn a black hole’s spin up to 0.8 and watch its disc change: [Plate II](page:research.html#plate2).' }
