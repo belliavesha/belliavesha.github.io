@@ -348,7 +348,7 @@ CygX2/snail_math.mjs	2222
 CygX2/style.css	9104
 CygX2/swan_math.mjs	2653
 README.md	45
-about.html	24576
+about.html	24728
 assets/images/alive_2/frame01.jpg	22279
 assets/images/alive_2/frame02.jpg	30861
 assets/images/alive_2/frame03.jpg	45745
@@ -428,7 +428,7 @@ assets/pdfs/Mondragone2022Loktev.pdf	2439340
 assets/pdfs/PhDdegree.pdf	319442
 assets/pdfs/Random_variable_regular_tournaments.pdf	209292
 assets/pdfs/YKItodistus.pdf	75632
-book.css	5437
+book.css	5508
 collatztree/data/tree-10-rules-n×3+1_(n+1)÷2+1.json	26093
 collatztree/data/tree-11-rules-n×2+1_(n-1)÷3+1_n×4-1.json	17178
 collatztree/data/tree-25.json	27279
@@ -450,11 +450,32 @@ collatztree/tree.md	21892
 collatztree/tree_99_light.png	320055
 collatztree/tree_math.js	10324
 collatztree/tree_ui.js	46847
-data.js	22163
+data.js	22533
 favicon.ico	829
 google6c75a693b5d196cc.html	53
-index.html	151021
-merits.html	14561
+index.html	152208
+mandelburger/.mandelburger-publish	187
+mandelburger/css/app.css	14540
+mandelburger/index.html	17235
+mandelburger/js/core/cocycle.js	15308
+mandelburger/js/core/complex.js	3218
+mandelburger/js/core/diophantine.js	2871
+mandelburger/js/core/expr.js	39570
+mandelburger/js/core/fft.js	2026
+mandelburger/js/core/model.js	5111
+mandelburger/js/core/orbit.js	7081
+mandelburger/js/core/section.js	1163
+mandelburger/js/core/solver.js	17563
+mandelburger/js/core/structure.js	5331
+mandelburger/js/core/tasks.js	15827
+mandelburger/js/main.js	57741
+mandelburger/js/ui/colors.js	4559
+mandelburger/js/ui/paths.js	2646
+mandelburger/js/ui/plane.js	17007
+mandelburger/js/ui/plots.js	12251
+mandelburger/js/workers/compute.worker.js	532
+mandelburger/js/workers/pool.js	3476
+merits.html	14880
 old/Geisha.html	31101
 old/Geisha_old.html	23728
 old/Okiya.html	6793
@@ -483,13 +504,13 @@ old/assets/js/mandelbrot.js	3779
 old/assets/js/okiya-libs.js	4129
 old/assets/js/okiya.js	34419
 old/assets/js/recaman.js	4511
-old/assets/js/script.js	7505
-old/assets/js/secondary.js	2536
+old/assets/js/script.js	7574
+old/assets/js/secondary.js	2655
 old/favicon.ico	6164
-old/index.html	4245
-research.html	82556
+old/index.html	4520
+research.html	82781
 site.css	11710
-site.js	80689`;
+site.js	81313`;
 // the underside stays under the ice: never listed, never found, never opened from here
 const SECRET = [/^old\//, /^second\.html$/, /^Okiya\.html$/, /^Geisha(_old)?\.html$/, /okiya/i, /^assets\/html\/(Recaman|Heart|Mandelbrot|Dice)\.html$/, /^assets\/js\/(recaman|heart|mandelbrot|dice|secondary)\.js$/, /^assets\/images\/recaman\.png$/];
 const FS = { files: new Map(), dirs: new Map([['', { d: new Set(), f: new Set() }]]), hidden: 0 };
@@ -781,7 +802,7 @@ const C = {
   help: a => a[0] ? (MAN[a[0].toLowerCase()] || [`<span class="m">no extra help for ${esc(a[0])}; try it and see.</span>`]) : HELP(),
   man: a => !a[0] ? ['<span class="m">What manual page do you want? Try </span>' + cmdLink('man vlad')] : MAN[a[0].toLowerCase()] || (C[a[0].toLowerCase()] && !HIDDEN.has(a[0].toLowerCase()) ? [`<span class="m">${esc(a[0])}: it does what it says. </span>${cmdLink('help')}`] : [`<span class="r">No manual entry for ${esc(a[0])}</span>`]),
   home: () => cdOut('~'),
-  explorers: () => SITE.explorers.map(e => `  ${cmdLink('open ' + e.key, e.key.padEnd(8))} ${esc(e.title)} <span class="m">— ${esc(e.blurb)}</span>`),
+  explorers: () => SITE.explorers.map(e => `  ${cmdLink('open ' + e.key, e.key.padEnd(12))} ${esc(e.title)} <span class="m">— ${esc(e.blurb)}</span>`),
   email: () => SITE.contacts.filter(c => c.user).map(c => `${esc(c.user)} [at] ${esc(c.domain)}`).concat([`<span class="m">(and the rest: </span>${cmdLink('contact')}<span class="m">)</span>`]),
   gallery: () => ['gallery: coming soon.', '<span class="m">the photos are still drying in the sauna.</span>'],
   ixpe: () => ['the IXPE control panel is still on the launch pad.', '<span class="m">it will have simulated observations. countdown: T-minus someday.</span>'],

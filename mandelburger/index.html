@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Mandelburger</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;1,400;1,600&display=swap"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+  </head>
+  <body>
+    <header class="top">
+      <h1 class="brand">Mandelburger <a class="byline" href="https://belliavesha.github.io/">by belliavesha</a></h1>
+      <div class="eq" aria-label="equation">
+        <i>f</i>(<i>θ</i> + <i>T</i>) = <i>F</i>(<i>f</i>(<i>θ</i>), <i>θ</i>)
+        <span class="dim">&nbsp;·&nbsp; <i>f</i> 2π-periodic, <i>T</i>/2π irrational</span>
+      </div>
+      <div class="status">
+        <span>workers <b id="st-workers">–</b></span>
+        <span>plane <b id="st-plane">–</b></span>
+        <button class="theme-btn" id="theme-btn" type="button" title="Switch light / dark">Theme</button>
+      </div>
+    </header>
+
+    <main class="bench">
+      <!-- ================================================= controls -->
+      <aside class="rail">
+        <section class="group">
+          <h2>Equation</h2>
+          <div class="field">
+            <label for="preset">Preset</label>
+            <select id="preset"></select>
+          </div>
+          <div class="field">
+            <label for="expr"><i>f</i>(<i>x</i> + <i>T</i>) =</label>
+            <textarea id="expr" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
+            <p class="hint" id="expr-msg"></p>
+            <details class="fnref" id="fnref">
+              <summary>Functions and names</summary>
+              <div class="fnref-list" id="fnref-list"></div>
+            </details>
+          </div>
+          <div id="params" class="group"></div>
+          <div class="field">
+            <label for="start">Orbit starts at</label>
+            <select id="start">
+              <option value="crit">a critical point of F (∂F/∂f = 0), else z₀</option>
+              <option value="custom">z₀</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="field"><label for="z0-re">Re <i>z</i>₀</label><input type="number" step="0.01" id="z0-re" value="0" /></div>
+            <div class="field"><label for="z0-im">Im <i>z</i>₀</label><input type="number" step="0.01" id="z0-im" value="0" /></div>
+          </div>
+        </section>
+
+        <section class="group">
+          <h2>Rotation</h2>
+          <div class="row">
+            <div class="field">
+              <label for="T"><i>T</i></label>
+              <input type="text" id="T" spellcheck="false" />
+            </div>
+            <div class="field">
+              <label for="T-preset">Quick pick</label>
+              <select id="T-preset">
+                <option value="">—</option>
+                <option value="1">1</option>
+                <option value="2*pi*(sqrt(5)-1)/2">golden 2π·0.618…</option>
+                <option value="2*pi*(sqrt(2)-1)">silver 2π(√2−1)</option>
+                <option value="sqrt(2)">√2</option>
+                <option value="2*pi*355/113 - 2*pi*3">near-rational 2π·16/113</option>
+              </select>
+            </div>
+          </div>
+          <div class="cf mono" id="cf-box"></div>
+        </section>
+
+        <section class="group">
+          <h2>Parameter plane</h2>
+          <div class="row">
+            <div class="field">
+              <label for="axis-x">Horizontal axis</label>
+              <select id="axis-x"></select>
+            </div>
+            <div class="field">
+              <label for="axis-y">Vertical axis</label>
+              <select id="axis-y"></select>
+            </div>
+          </div>
+          <p class="hint err" id="axes-msg"></p>
+          <div class="field">
+            <span class="lbl">Colour by</span>
+            <div class="seg" role="group" aria-label="Colouring">
+              <button type="button" data-mode="classify" aria-pressed="true">Dynamics</button>
+              <button type="button" data-mode="lyap" aria-pressed="false">Lyapunov</button>
+              <button type="button" data-mode="escape" aria-pressed="false">Escape</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="quality">Resolution</label>
+              <select id="quality">
+                <option value="0.5">Draft ½×</option>
+                <option value="1" selected>Screen 1×</option>
+                <option value="dpr">Retina</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="kmax">Max sheets <i>k</i></label>
+              <select id="kmax">
+                <option>2</option><option>3</option><option selected>4</option><option>6</option><option>8</option>
+              </select>
+            </div>
+          </div>
+          <details>
+            <summary>Iteration settings</summary>
+            <div class="group">
+              <div class="row">
+                <div class="field"><label for="n-trans">Transient</label><input type="number" id="n-trans" min="50" step="50" /></div>
+                <div class="field"><label for="n-lyap">λ window</label><input type="number" id="n-lyap" min="100" step="100" /></div>
+              </div>
+              <div class="row">
+                <div class="field"><label for="tau">Sheet tol τ</label><input type="number" id="tau" min="0.01" max="0.9" step="0.01" /></div>
+                <div class="field"><label for="budget">Return budget</label><input type="number" id="budget" min="500" step="500" /></div>
+              </div>
+              <p class="hint">The branch counter compares z<sub>n</sub> with z<sub>n+mq</sub> for the two near-return times q shown under Rotation; the budget caps k<sub>max</sub>·q.</p>
+            </div>
+          </details>
+          <div class="btns">
+            <button class="btn primary" type="button" id="btn-render">Render plane</button>
+            <button class="btn" type="button" id="btn-reset">Reset view</button>
+          </div>
+        </section>
+
+        <section class="group">
+          <h2>Solver</h2>
+          <div class="row">
+            <div class="field">
+              <label for="grid-M">Grid per 2π</label>
+              <select id="grid-M"><option>256</option><option selected>512</option><option>1024</option><option>2048</option></select>
+            </div>
+            <div class="field">
+              <label for="orbit-len">Orbit length</label>
+              <select id="orbit-len"><option value="20000">20 k</option><option value="60000" selected>60 k</option><option value="200000">200 k</option></select>
+            </div>
+          </div>
+          <h2>Exact border</h2>
+          <div class="row">
+            <div class="field">
+              <label for="rays">Rays</label>
+              <select id="rays"><option>32</option><option selected>64</option><option>128</option><option>256</option></select>
+            </div>
+            <div class="field">
+              <label for="ray-M">Ray grid</label>
+              <select id="ray-M"><option selected>256</option><option>512</option><option>1024</option></select>
+            </div>
+          </div>
+          <div class="btns">
+            <button class="btn" type="button" id="btn-border" disabled>Trace border</button>
+            <button class="btn" type="button" id="btn-clear">Clear overlays</button>
+          </div>
+          <p class="hint" id="border-msg">Click a point inside a component first. Rays continue its invariant structure outward until λ = 0 or the graph stops being resolvable.</p>
+        </section>
+      </aside>
+
+      <!-- ================================================= plane -->
+      <section class="platecol" aria-label="Parameter plane">
+        <div class="plate-tools">
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="plate-wrap" id="plate">
+          <canvas id="plane"></canvas>
+          <canvas id="overlay" tabindex="0" aria-label="Parameter plane. Click to pick, drag to pan, scroll to zoom, shift-drag to draw a slice."></canvas>
+          <div class="plate-axes" id="axes"></div>
+          <div class="plate-progress" id="progress" style="width: 0"></div>
+        </div>
+        <div class="readout" id="readout"><span>Click to analyse · drag to pan · scroll to zoom · shift-drag for a slice</span></div>
+        <div class="walk" id="walk" hidden>
+          <label for="walk-t">Move along</label>
+          <select id="walk-path" aria-label="Path to move along"></select>
+          <button class="btn" type="button" id="walk-play" aria-pressed="false" title="Step along the path, analysing each point">▶</button>
+          <input type="range" id="walk-t" min="0" max="1000" step="1" value="0" aria-label="Position along the path" />
+          <span class="mono" id="walk-label"></span>
+        </div>
+      </section>
+
+      <!-- ================================================= analysis -->
+      <section class="analysis" aria-label="Analysis">
+        <div class="verdict">
+          <h2 id="verdict">Pick a parameter</h2>
+          <span class="param" id="verdict-param"></span>
+        </div>
+        <p class="note" id="verdict-note"></p>
+        <div class="metrics" id="metrics"></div>
+        <div class="tabs" role="tablist">
+          <button role="tab" type="button" aria-selected="true" data-tab="graph">Graph f(θ)</button>
+          <button role="tab" type="button" aria-selected="false" data-tab="phase">Attractor in ℂ</button>
+          <button role="tab" type="button" aria-selected="false" data-tab="spec">Spectrum</button>
+          <button role="tab" type="button" aria-selected="false" data-tab="slice">Slice</button>
+          <button role="tab" type="button" aria-selected="false" data-tab="struct">Structures</button>
+          <button role="tab" type="button" aria-selected="false" data-tab="cocycle">Cocycle</button>
+        </div>
+        <div class="panel" data-panel="graph">
+          <div class="seg" role="group" aria-label="Component" style="max-width: 18rem">
+            <button type="button" data-comp="re" aria-pressed="true">Re f</button>
+            <button type="button" data-comp="im" aria-pressed="false">Im f</button>
+            <button type="button" data-comp="abs" aria-pressed="false">|f|</button>
+          </div>
+          <div class="plot tall" id="plot-graph"></div>
+          <p class="note">Dots: the critical orbit (θ<sub>n</sub> mod 2π, z<sub>n</sub>). Lines: the Newton solution, one colour per sheet. Dashed: the mean of each sheet.</p>
+        </div>
+        <div class="panel" data-panel="phase" hidden>
+          <div class="plot tall" id="plot-phase"></div>
+        </div>
+        <div class="panel" data-panel="spec" hidden>
+          <div class="plot" id="plot-spec"></div>
+          <p class="note">|f̂(ω)| on a log scale. Exponential decay e<sup>−ρ|ω|</sup> means f is analytic in the strip |Im θ| &lt; ρ; ρ → 0 signals the graph breaking up (fractalization, birth of a strange nonchaotic attractor).</p>
+        </div>
+        <div class="panel" data-panel="slice" hidden>
+          <div class="row slice-row">
+            <div class="field"><label for="slice-n">Samples</label><select id="slice-n"><option>200</option><option selected>500</option><option>1000</option></select></div>
+            <div class="field"><label>&nbsp;</label><button class="btn" type="button" id="btn-slice-real">Slice along horizontal axis</button></div>
+            <div class="seg" role="group" aria-label="Component">
+              <button type="button" data-comp="re" aria-pressed="true">Re</button>
+              <button type="button" data-comp="im" aria-pressed="false">Im</button>
+              <button type="button" data-comp="abs" aria-pressed="false">|f|</button>
+            </div>
+          </div>
+          <div class="slice-sliders">
+            <div class="field">
+              <label for="slice-theta">Section angle θ* <span class="mono" id="slice-theta-val">0</span></label>
+              <input type="range" id="slice-theta" min="0" max="1000" step="1" value="0" />
+            </div>
+            <div class="field">
+              <label for="slice-spread">Spread ±w <span class="mono" id="slice-spread-val"></span></label>
+              <input type="range" id="slice-spread" min="0" max="100" step="1" value="29" />
+            </div>
+            <div class="field slice-cap"><label for="slice-cap">Points per parameter</label><select id="slice-cap"><option>12</option><option selected>50</option><option>200</option><option>1000</option></select></div>
+          </div>
+          <p class="note mono" id="slice-count"></p>
+          <div class="plot tall" id="plot-slice"></div>
+          <p class="note" id="slice-note">Shift-drag on the plane to draw a segment, or slice along the horizontal axis through the view centre.</p>
+          <details class="note slice-help">
+            <summary>What is this diagram?</summary>
+            <p>An attractor of f(x+T) = F(f(x), x) lives over the circle θ = x mod 2π, so it cannot be drawn as a single number per parameter. The slice cuts it with the vertical line θ = θ* (the shaded band in “Graph f(θ)”, the highlighted points in “Attractor in ℂ”) and plots what lies on that line, for every parameter along the segment — the analogue of the logistic bifurcation diagram.</p>
+            <p>Each dot is an orbit value z<sub>n</sub> whose angle θ<sub>n</sub> = nT mod 2π falls within ±w of θ* — the <em>spread</em>. The line under the sliders says how many of the recorded orbit points fall in the window (the angles are the same for every parameter, about N·w/π of the last N), and how many of them, newest first, are drawn. An invariant graph with k sheets meets the line in exactly k points, so the diagram shows k curves: the number of lines <em>is</em> the number of sheets. Doublings appear as a curve splitting in two; a vertical smear means the section is no longer a finite set — a strange nonchaotic attractor (λ &lt; 0) or chaos (λ &gt; 0). Moving θ* changes where the curves sit, never how many there are.</p>
+            <p>A narrow spread gives sharp curves from few points; widening it thickens each curve into a band of height ≈ |f′|·2w (at w = π every orbit point is drawn, and the column is the whole range of f). The angles inside a window are not evenly spread: when T/2π is close to p/q, the θ<sub>n</sub> stack into q columns 2π/q apart, so a window narrower than π/q may hold a single column visited many times.</p>
+            <p>Click the diagram, or drag the “Move along” slider under the plane, to analyse the parameter at that position.</p>
+          </details>
+        </div>
+        <div class="panel" data-panel="struct" hidden>
+          <p class="note">Every candidate sheet structure (c components, each a d-fold cover, shift s) is scored by fitting the orbit with a smooth function on that cover; the score is the unexplained variance fraction. The smallest k = c·d below the threshold wins and seeds Newton.</p>
+          <div class="row struct-row">
+            <div class="field"><label for="struct-k">Search up to k sheets</label><select id="struct-k"><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option><option>8</option><option>10</option><option>12</option></select></div>
+            <p class="note mono" id="struct-count"></p>
+          </div>
+          <div class="table-wrap cands-wrap" id="cands-wrap"><table class="cands" id="cands"></table></div>
+          <p class="note">This k only limits the search here and the verdict above; the plane colouring uses <i>Max sheets k</i> in the left panel.</p>
+        </div>
+        <div class="panel" data-panel="cocycle" hidden>
+          <p class="note" id="cocycle-note">For F = g(x)·f or F = f + L(x) the orbit has a closed form. Write log g = λ + iβ + L̃(θ) + iwθ and solve ψ(θ+T) − ψ(θ) = L̃(θ) in Fourier: ψₘ = L̃ₘ / (e^{imT} − 1). Then z_n = z₀·e^{(λ+iβ)n}·e^{ψ(θ_n) − ψ(0)}.</p>
+          <div class="metrics" id="cocycle-metrics"></div>
+          <div class="plot" id="plot-cocycle-spec"></div>
+          <p class="note">|L̃ₘ| (forcing), |ψₘ| (solution) and the amplification 1/|e^{imT} − 1| per frequency m. Peaks of the amplification sit at the continued-fraction denominators of T/2π.</p>
+          <div class="plot tall" id="plot-cocycle-orbit"></div>
+          <p class="note">Grey: the computed orbit. Coloured: the closed-form prediction at the same times.</p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
