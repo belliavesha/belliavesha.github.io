@@ -32,7 +32,7 @@ function updateFlipbookIndex(delta) {
 
     // Change the image
     var flipbook = document.getElementById('profile-pic');
-    flipbook.src = 'assets/images/alive_2/frame' + String(flipbookIndex).padStart(2, '0') + '.jpg';
+    flipbook.src = '../assets/images/alive_2/frame' + String(flipbookIndex).padStart(2, '0') + '.jpg';
 }
 
 

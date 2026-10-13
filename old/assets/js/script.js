@@ -15,7 +15,7 @@ function showErrorMessage(){
     errorDiv.style.minHeight = 'calc(40vw * 9 / 16)';
     errorDiv.style.maxHeight = 'calc(40vw * 9 / 16)';
     errorDiv.style.overflow = 'auto';
-    errorDiv.style.backgroundImage = 'url(assets/images/wha.png)';
+    errorDiv.style.backgroundImage = 'url(../assets/images/wha.png)';
     errorDiv.style.backgroundSize = 'cover';
 
     // Create a paragraph element for the error message text
@@ -109,14 +109,16 @@ function loadScript(jsFile) {
     document.head.appendChild(script);
 }
 
+/* the "click the portrait 6 times" trick — not needed any more
 var perseverance = 0;
 function redirectToSecondary(n) {
     perseverance = perseverance + n;
     if (perseverance > 5){
         perseverance = 0;
-        window.location.href = "second.html";
+        window.location.href = "index.html";   // second.html is old/index.html now
     }   
 }
+*/
 
 
 
@@ -180,10 +182,10 @@ window.onload = window.onhashchange = function() {
 
 function initializeTiledBackground() {
     const tiles = [
-        'assets/images/tile1.png', 
-        'assets/images/tile2.png', 
-        'assets/images/tile3.png', 
-        'assets/images/tile4.png'];
+        '../assets/images/tile1.png', 
+        '../assets/images/tile2.png', 
+        '../assets/images/tile3.png', 
+        '../assets/images/tile4.png'];
     // const tileSize = 128; // Assuming each tile is 100x100 pixels
     const tileSizeX = 127;
     const tileSizeY = 123;

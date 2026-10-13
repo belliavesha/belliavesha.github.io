@@ -1,3 +1,4 @@
+/* the spinning headshot of the old second.html — off: the secret page has the nodding portrait now (flipbook.js)
 var rotation = 0.5; 
 
 window.addEventListener('wheel', function(e) {
@@ -33,6 +34,7 @@ var styles = `
 var styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
+*/
 
 window.onload = window.onhashchange = function() {
     // Get the current hash value (without the # symbol)
@@ -51,6 +53,9 @@ window.onload = window.onhashchange = function() {
     
     // Determine what content to load based on the hash
     switch (currentHash) {
+        case 'home':
+            loadContent('assets/html/Home.html');
+            break;
         case 'recaman':
             loadContent('assets/html/Recaman.html', 'assets/js/recaman.js');
             break;
@@ -60,9 +65,9 @@ window.onload = window.onhashchange = function() {
         case 'mandelbrot':
             loadContent('assets/html/Mandelbrot.html', 'assets/js/mandelbrot.js');
             break;
-        case 'cygx3':
-            loadContent('assets/html/CygX3.html', 'assets/js/cygx3.js');
-            break;
+        // case 'cygx3':
+        //     loadContent('assets/html/CygX3.html', 'assets/js/cygx3.js');
+        //     break;
         case 'dice':    
             loadContent('assets/html/Dice.html', 'assets/js/dice.js');
             break;

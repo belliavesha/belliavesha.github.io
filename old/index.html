@@ -8,8 +8,11 @@
 
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Vladislav Loktev</title>
+    <meta name="robots" content="noindex">
     <link rel="stylesheet" type="text/css" href="assets/css/main.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/home.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
@@ -21,20 +24,31 @@
     <div id="menu">
         <div id="fixed-elements">
                 
-            <img id="profile-pic" src="assets/images/headshot.jpeg" alt="Profile Picture">
-            <!-- <img id="profile-pic" src="assets/images/tile1.png" alt="Profile Picture"> -->
+            <img id="profile-pic" src="../assets/images/alive_2/frame01.jpg" alt="Profile Picture">   <!-- nods as you scroll (flipbook.js) -->
+            <!-- <img id="profile-pic" src="../assets/images/headshot.jpeg" alt="Profile Picture"> -->
+            <!-- <img id="profile-pic" src="../assets/images/tile1.png" alt="Profile Picture"> -->
             <h1 id="name">Vladislav Loktev</h1>
             <h2 id="job-title">Dilettante</h2>
-            <img id="institute-logo" src="assets/images/logos/monero-xmr-logo.png" alt="Institute Logo">
+            <img id="institute-logo" src="../assets/images/logos/monero-xmr-logo.png" alt="Institute Logo">
             <ul>
-                <li><a href="index.html">Home</a></li>
+                <li><a href="#home" onclick="loadContent('assets/html/Home.html')">Old Home</a></li>
+                <!-- on the new site now:
+                <li><a href="#projects" onclick="loadContent('assets/html/Projects.html')">Publications</a></li>
+                <li><a href="#talks" onclick="loadContent('assets/html/Talks.html')">Presentations</a></li>
+                <li><a href="#merits" onclick="loadContent('assets/html/Merits.html')">Certifications</a></li>
+                <li><a href="../CygX2/">Cygnus X-2 State Explorer</a></li>
+                <li><a href="../collatztree/">Collatz Explorer</a></li>
+                -->
                 <li><a href="#recaman" onclick="loadContent('assets/html/Recaman.html', 'assets/js/recaman.js')">Recamán sequence</a></li>  
                 <li><a href="#heart" onclick="loadContent('assets/html/Heart.html', 'assets/js/heart.js')">My heart</a></li>  
                 <li><a href="#mandelbrot" onclick="loadContent('assets/html/Mandelbrot.html', 'assets/js/mandelbrot.js')">Mandelbrot</a></li>  
-                <li><a href="#cygx3" onclick="loadContent('assets/html/CygX3.html', 'assets/js/cygx3.js')">CygX-3</a></li>  
+                <!-- <li><a href="#cygx3" onclick="loadContent('assets/html/CygX3.html', 'assets/js/cygx3.js')">CygX-3</a></li> -->
                 <li><a href="#dice" onclick="loadContent('assets/html/Dice.html', 'assets/js/dice.js')">Intransitive Dice</a></li>
-                <!-- <li><a href="Geisha.html">Geisha</a></li> -->
+                <li><a onclick="showErrorMessage()">Get $50</a></li>
                 <li><a href="Okiya.html">Okiya</a></li>
+                <li><a href="Geisha.html">Geisha</a></li>
+                <li><a href="../collatztree/grid/">Collatz grid</a></li>
+                <li><a href="../">Back to the lake</a></li>
             </ul>
             
         </div>
@@ -54,7 +68,9 @@
     <script src="assets/js/script.js"></script>
     <script src="assets/js/secondary.js"></script>
     <script src="assets/js/classes.js"></script>
-    <script src="/assets/js/hog.js"></script>
+    <script src="assets/js/flipbook.js"></script>
+    <script>updateFlipbookIndex(0);</script>
+    <script src="assets/js/hog.js"></script>
 </body>
 </html>
  

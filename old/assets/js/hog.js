@@ -10,8 +10,8 @@
     coastRollFrames: 3,           // move this many roll frames before stopping ("momentum")
     fpsWalk: 8,                       // walking animation speed
     fpsRoll: 8,                      // roll-up animation speed
-    spriteSheetPath: 'assets/images/hog_sprite.png',    // preferred
-    framePath: (i) => `assets/images/hog_frames/hog_${String(i).padStart(4,'0')}.png`, // 1..8
+    spriteSheetPath: '../assets/images/hog_sprite.png',    // preferred
+    framePath: (i) => `../assets/images/hog_frames/hog_${String(i).padStart(4,'0')}.png`, // 1..8
     proximity: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hog-proximity')) || 120,
     safeDelay: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hog-safe-delay-ms')) || 5000,
     speedMin: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hog-speed-min')) || 110,

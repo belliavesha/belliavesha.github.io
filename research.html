@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="en">
+<!-- revontuli · research: an almanac of interests, papers and talks, each chapter with its engraved plate, under a polarizing filter -->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Research — Vlad Loktev</title>
+<meta name="description" content="Research of Dr. Vladislav Loktev: X-ray polarimetry of X-ray binaries and pulsars, radiative transfer, relativistic plasma. Selected papers, talks and figures.">
+<link rel="icon" href="assets/images/favicon/hedgehog.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" href="assets/images/favicon/hedgehog-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/images/favicon/hedgehog-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Cormorant+SC:wght@500;600;700&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="book.css">
+<style>
+/* ===== running head: sticky, thin; chapter links + the polarizing filter ===== */
+.an-mini{flex:none;display:flex;align-items:center;gap:8px}
+.an-mini .dial{width:36px;height:36px;touch-action:none;cursor:grab;display:block;border-radius:50%}
+.an-mini .dial:active{cursor:grabbing}
+.an-lab{font-family:var(--sc);font-weight:600;font-size:13px;letter-spacing:.1em;color:var(--ink-2);cursor:pointer;user-select:none;white-space:nowrap}
+.an-read{font-family:"DM Mono",ui-monospace,monospace;font-size:12px;color:var(--ink-2);width:4.3em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.an-btn{border:1px solid var(--hair);background:none;border-radius:999px;padding:3px 11px 4px;font-family:var(--sc);font-weight:600;font-size:13px;letter-spacing:.1em;cursor:pointer;white-space:nowrap;color:var(--ink)}
+.an-btn:hover{border-color:var(--rubric);color:var(--rubric)}
+.an-btn[aria-pressed="true"]{background:var(--ink);color:var(--plate);border-color:var(--ink)}
+.an-btn .ic{display:none;width:14px;height:14px;vertical-align:-2px}
+@media (max-width:760px){.an-read{display:none}}
+@media (max-width:520px){.an-btn.turn{padding:4px 7px}.an-btn.turn .tx{display:none}.an-btn.turn .ic{display:inline-block}}
+
+/* ===== page ===== */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,540px);gap:48px;align-items:start}
+@media (max-width:1040px){.two{grid-template-columns:1fr;gap:28px}}
+.prose p{margin:0 0 .8em;max-width:36em}
+.prose .lede::first-letter{float:left;font-size:3.6em;line-height:.82;padding:.06em .08em 0 0;color:var(--rubric);font-weight:600}
+.pillars{list-style:none;margin:1em 0 1.2em;padding:0;max-width:36em;counter-reset:p}
+.pillars li{display:grid;grid-template-columns:2.2em 1fr;gap:6px;padding:10px 0;border-top:1px solid var(--faint);counter-increment:p}
+.pillars li::before{content:counter(p,upper-roman) ".";font-family:var(--sc);color:var(--rubric);font-weight:700;font-size:.92em;padding-top:.08em}
+.pillars b{font-weight:600}
+.pillars span{color:var(--ink-2);font-style:italic}
+.note{font-size:.9em;color:var(--ink-2)}
+
+/* papers */
+.papers{list-style:none;margin:0;padding:0}
+.papers li{display:grid;grid-template-columns:4.2em minmax(0,1fr);gap:4px 14px;padding:14px 0;border-top:1px solid var(--faint)}
+.papers li:first-child{border-top:0;padding-top:0}
+.papers .yr{font-size:24px;line-height:1.2;color:var(--ink-2);font-style:italic}
+.papers .t{font-size:21px;line-height:1.3;font-weight:600}
+.papers .t a{text-decoration-color:rgba(30,26,21,.22)}
+.papers .au{margin:.2em 0 0;font-size:17.5px;color:var(--ink-2)}
+.papers .au b{color:var(--ink);font-weight:700}
+.papers .j{font-style:italic}
+.mat{margin-top:.3em;display:flex;gap:6px 14px;flex-wrap:wrap;align-items:baseline}
+.mat a{font-family:var(--sc);letter-spacing:.08em;font-size:14.5px;text-decoration:none;border-bottom:1px solid rgba(30,26,21,.34)}
+.mat a:hover{border-color:var(--rubric)}
+.mat .xref{font-family:var(--serif);font-style:italic;letter-spacing:0;font-size:16px;color:var(--ink-2);border:0;text-decoration:underline;text-decoration-color:rgba(30,26,21,.25)}
+.after{margin:.9em 0 0;font-size:17.5px;color:var(--ink-2)}
+@media (max-width:560px){.papers li{grid-template-columns:1fr}.papers .yr{font-size:19px}}
+
+/* talks */
+.talks{list-style:none;margin:0;padding:0}
+.talk{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:0 14px;padding:12px 0;border-top:1px solid var(--faint)}
+.talk:first-child{border-top:0;padding-top:0}
+.talk .d{font-style:italic;color:var(--ink-2);font-size:17px;line-height:1.35;padding-top:.15em}
+.talk .tt{font-weight:600;line-height:1.3}
+.talk .oc{font-size:17px;color:var(--ink-2);line-height:1.4;margin-top:.15em}
+.talk .kind{font-family:var(--sc);font-size:14px;letter-spacing:.08em;color:var(--ink)}
+.talk .award{font-style:italic;color:var(--rubric);font-size:16px}
+@media (max-width:560px){.talk{grid-template-columns:1fr}.talk .d{padding:0}}
+
+/* path */
+.path{width:100%;border-collapse:collapse;font-size:19px}
+.path td{padding:10px 0;border-top:1px solid var(--faint);vertical-align:top}
+.path td.y{width:7.4em;font-style:italic;color:var(--ink-2);white-space:nowrap;padding-right:16px}
+.path td.w b{font-weight:600}
+.path td.w span{display:block;color:var(--ink-2);font-size:17.5px;line-height:1.4}
+.path tr.now td{border-top:1.5px solid var(--rubric)}
+.path tr.now .y{color:var(--rubric)}
+@media (max-width:560px){.path td.y{width:auto;display:block;padding-bottom:0;border:0}.path td{display:block}.path tr{display:block;border-top:1px solid var(--faint);padding:6px 0}.path td.w{border:0;padding-top:0}.path tr.now{border-top:1.5px solid var(--rubric)}.path tr.now td{border:0}}
+
+/* ===== plates ===== */
+.plate{position:relative;margin:0;background:var(--plate) var(--laid);padding:18px 18px 14px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 16px 34px -26px rgba(40,28,10,.6);scroll-margin-top:calc(var(--rh) + 18px)}
+.plate::before{content:"";position:absolute;inset:8px;border:1px solid var(--hair);outline:.5px solid var(--hair);outline-offset:-4px;pointer-events:none}
+.plate-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:4px 6px 10px;position:relative}
+.plate-h .pl{font-family:var(--sc);font-weight:700;letter-spacing:.2em;font-size:15px;white-space:nowrap}
+.plate-h .ti{font-style:italic;color:var(--ink-2);font-size:17px;text-align:right}
+.fig{position:relative;margin:0 4px}
+.fig canvas{display:block;width:100%;height:100%;position:absolute;inset:0}
+.fig .lbl{position:absolute;font-style:italic;font-weight:600;font-size:16px;line-height:1;transform:translate(-50%,-50%);color:var(--ink);
+  text-shadow:0 0 3px var(--plate),0 0 3px var(--plate),0 0 6px var(--plate);pointer-events:none;white-space:nowrap}
+.fig .val{position:absolute;left:10px;top:8px;font-style:italic;font-size:15px;color:var(--ink-2);text-shadow:0 0 3px var(--plate),0 0 3px var(--plate);pointer-events:none}
+.figcap{margin:8px 6px 0;font-size:16.5px;line-height:1.4;color:var(--ink-2);position:relative}
+.figcap .sc{color:var(--ink);font-size:14px;letter-spacing:.1em}
+.figcap + .figcap{margin-top:6px}
+.f-bin{aspect-ratio:1.42}
+.f-disc{aspect-ratio:1.5}
+.f-psr{aspect-ratio:1.08}
+.f-rvm{aspect-ratio:1.9}
+.f-rvm .mk-l,.f-rvm .mk-d{position:absolute;left:0;top:0;pointer-events:none;will-change:transform}
+.f-rvm .mk-l{width:1px;background:rgba(161,41,28,.35)}
+.f-rvm .mk-d{width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--rubric)}
+.ctl{display:grid;gap:2px;margin:12px 6px 0;font-size:16.5px;position:relative}
+.ctl label{display:grid;grid-template-columns:6.4em minmax(0,1fr) 3.6em;align-items:center;gap:10px;white-space:nowrap}
+.ctl .k{color:var(--ink)}
+.ctl .note{font-size:15px;font-style:italic;color:var(--ink-2)}
+.ctl .v{font-family:"DM Mono",ui-monospace,monospace;font-size:12.5px;color:var(--ink-2);text-align:right}
+.ctl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;min-width:70px;height:22px;background:transparent;cursor:pointer;margin:0}
+.ctl input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--hair)}
+.ctl input[type=range]::-moz-range-track{height:1px;background:var(--hair)}
+.ctl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--plate);border:1.5px solid var(--ink);margin-top:-6px}
+.ctl input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:var(--plate);border:1.5px solid var(--ink)}
+.ctl input[type=range]:hover::-webkit-slider-thumb,.ctl input[type=range]:focus-visible::-webkit-slider-thumb{border-color:var(--rubric)}
+.ctl input[type=range]:focus-visible{outline:none}
+.ctl input[type=range]:focus-visible::-webkit-slider-runnable-track{background:var(--rubric)}
+.play{justify-self:start;border:1px solid var(--hair);background:none;border-radius:999px;padding:2px 12px 3px;cursor:pointer;font-style:italic;font-size:16px}
+.play:hover{border-color:var(--rubric);color:var(--rubric)}
+.stroke{display:inline-block;width:18px;height:0;border-top:2px solid var(--rubric);vertical-align:middle;margin-right:4px}
+.tick{display:inline-block;width:14px;height:0;border-top:1.2px solid var(--ink-2);vertical-align:middle;margin-right:4px}
+.drafting canvas{image-rendering:auto}
+
+/* ===== Plate IV: the views along the path — photographs re-engraved in the About page's two inks, peach and ink-blue ===== */
+.views{--vink:#2B3142;--vink-2:#555C6E;--vpeach:#E7C4A6;--vpeach-3:#F3DDC9;background:var(--vpeach-3);color:var(--vink);margin:0 0 22px}
+.views::before{border-color:rgba(43,49,66,.5);outline-color:rgba(43,49,66,.5)}
+.views .plate-h .pl{color:var(--vink)}
+.views .plate-h .ti{color:var(--vink-2)}
+.vgrid{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 4px;align-items:start}
+.vcol{display:grid;gap:14px}
+.view{margin:0;cursor:default}
+.view .vimg{position:relative;background:var(--vpeach);overflow:hidden}
+.view canvas,.view img{display:block;width:100%;height:100%;position:absolute;inset:0}
+.view img{object-fit:cover;filter:grayscale(1) sepia(.3) hue-rotate(180deg) contrast(.95)}
+.view figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:6px;line-height:1.2}
+.view figcaption b{font-family:var(--sc);font-weight:700;font-size:14.5px;letter-spacing:.1em;color:var(--vink)}
+.view figcaption span{font-style:italic;font-size:15px;color:var(--vink-2);white-space:nowrap}
+.view .vimg::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 0 var(--vink);transition:box-shadow .25s;pointer-events:none}
+.view.lit .vimg::after{box-shadow:inset 0 0 0 2px var(--vink)}
+.views .figcap{color:var(--vink-2);margin-top:12px}
+.views .figcap .sc{color:var(--vink)}
+.path tr td{transition:background-color .25s}
+.path tr.lit td{background:rgba(231,196,166,.38)}
+.path tr.lit td.y{box-shadow:inset 3px 0 0 #D8A984}
+@media (max-width:1040px){.views{max-width:620px}}
+@media (max-width:480px){.vgrid,.vcol{gap:10px}.view figcaption{flex-direction:column;gap:0}}
+
+/* ===== epigraphs: printed in polarized ink — legible only through the filter at their own angle ===== */
+.epi{--v:0;position:relative;max-width:34em;margin:46px auto 0;padding:10px 0 0;text-align:center}
+.epi p{margin:0;font-style:italic;font-size:clamp(19px,1.8vw,23px);line-height:1.45;color:var(--ink);
+  opacity:calc(.08 + .92 * var(--v));filter:blur(calc((1 - var(--v)) * 3.4px));transition:opacity .15s linear,filter .15s linear}
+.epi .pol{display:block;margin:0 auto 10px;overflow:visible;opacity:var(--pv,.55);transition:opacity .15s linear}
+.epi .pol line{stroke:var(--rubric);stroke-width:1.4;stroke-linecap:round}
+</style>
+</head>
+<body data-page="research">
+<a class="rv-skip" href="#interests">Skip to content</a>
+<div class="rh" role="navigation" aria-label="Sections of this page">
+  <div class="rh-bar">
+    <a class="rh-t" href="#top">Loktev · Research</a>
+    <nav class="rh-nav" id="rhNav">
+      <a href="#interests"><span class="n">i</span>Interests</a>
+      <a href="#papers"><span class="n">ii</span>Papers</a>
+      <a href="#talks"><span class="n">iii</span>Talks</a>
+      <a href="#path"><span class="n">iv</span>Path</a>
+    </nav>
+    <div class="an-mini" id="anMini">
+      <span class="an-lab" id="anLab" aria-hidden="true">filter:</span>
+      <canvas class="dial" id="dial" width="36" height="36" role="slider" tabindex="0" aria-label="The polarizing filter: drag to turn it, or use the arrow keys; Enter slides it in or out" aria-valuemin="0" aria-valuemax="180" aria-valuenow="0"></canvas>
+      <span class="an-read" id="anRead" aria-hidden="true">θ 0°</span>
+      <button class="an-btn turn" type="button" id="anTurn" aria-pressed="false" aria-label="Let the filter turn slowly"><span class="tx">auto</span><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.6-3.7M13 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="top">
+  <header class="tp">
+    <div>
+      <p class="tp-k">Dr. Vladislav Loktev · astrophysicist</p>
+      <h1>Research <i>&amp; plates</i></h1>
+      <p class="tp-sub">The short version, and how to reach me, is on the <a href="about.html">about page</a>; 
+        <!-- the framed certificates hang in <a href="merits.html">the cabin</a>.  -->
+        The longer version is in the <a href="assets/pdfs/CV_Loktev.pdf">CV</a>.</p>
+      <!-- <p class="note">X-ray polarimetry of black holes and neutron stars — what the angle of the light tells us about the matter and the plasma around them.</p> -->
+    </div>
+    <ol class="toc" aria-label="Contents">
+      <li><a href="#interests"><span class="n">I.</span><span class="t">Interests</span><span class="ld"></span><span class="p">Plate I</span></a></li>
+      <li><a href="#papers"><span class="n">II.</span><span class="t">Selected papers</span><span class="ld"></span><span class="p">Plate II</span></a></li>
+      <li><a href="#talks"><span class="n">III.</span><span class="t">Talks &amp; posters</span><span class="ld"></span><span class="p">Plate III</span></a></li>
+      <li><a href="#path"><span class="n">IV.</span><span class="t">Career pah</span><span class="ld"></span><span class="p" id="tocPath"></span></a></li>
+    </ol>
+  </header>
+
+  <section class="ch" id="interests" aria-labelledby="h-int">
+    <div class="ch-h"><span class="num">I.</span><h2 id="h-int">Interests</h2></div>
+    <div class="two">
+      <div class="prose">
+        <p class="lede" id="intLede"></p>
+        <ol class="pillars" id="intPillars"></ol>
+        <p id="intNow"></p>
+        <p class="note">The plates on this page are drawn by your browser, line by line, from the equations they illustrate, and each answers to its sliders. Their red strokes are polarized ink: slide the filter in (top right) and turn it — and some lines on this page are printed in polarized ink, too.</p>
+      </div>
+      <figure class="plate" id="plate1" aria-labelledby="cap1">
+        <div class="plate-h"><span class="pl">Plate I.</span><span class="ti">A close binary</span></div>
+        <div class="fig f-bin" id="figBin"><canvas role="img" aria-label="Engraving of a low-mass X-ray binary: a teardrop-shaped companion star filling its Roche lobe, a stream of gas from the inner Lagrangian point curving onto an accretion disc around a compact object; red strokes mark the polarization of X-rays scattered by the star, the stream and the disc."></canvas></div>
+        <div class="ctl" id="binCtl">
+          <label><span class="k">phase <i>φ</i></span><input type="range" id="binPh" min="0" max="100" value="0" aria-label="Orbital phase"><span class="v" id="binPhV"></span></label>
+          <label><span class="k">incl. <i>i</i></span><input type="range" id="binI" min="15" max="82" value="62" aria-label="Inclination of the orbit"><span class="v" id="binIV"></span></label>
+          <label><span class="k">ratio <i>q</i></span><input type="range" id="binQ" min="5" max="105" value="42" aria-label="Mass ratio, companion to compact object"><span class="v" id="binQV"></span></label>
+        </div>
+        <p class="figcap" id="cap1"><span class="sc">Fig. 1.</span> <i>A low-mass X-ray binary</i>, ray-marched through the Roche potential: the companion fills its lobe, gas pours through L₁ and is swung by the Coriolis force onto the disc. X-rays from the compact object are scattered by the star — its lit face is a mirror — and by the stream and the disc, and come out polarized <b>perpendicular to the plane of scattering</b>: the red strokes circle the compact object. Turn the orbit with <i>φ</i>, tilt it with <i>i</i>, weigh the companion with <i>q</i>.</p>
+      </figure>
+    </div>
+  </section>
+
+  <section class="ch" id="papers" aria-labelledby="h-pap">
+    <div class="ch-h"><span class="num">II.</span><h2 id="h-pap">Selected papers</h2></div>
+    <div class="two">
+      <div>
+        <ol class="papers" id="paperList"></ol>
+        <p class="after">Everything else, in order: <a href="https://ui.adsabs.harvard.edu/search/q=orcid%3A0000-0001-6894-871X&amp;sort=date%20desc%2C%20bibcode%20desc&amp;p_=0">all publications on ADS</a> · ORCID <a href="https://orcid.org/0000-0001-6894-871X">0000-0001-6894-871X</a> · <a href="assets/pdfs/CV_Loktev.pdf">CV</a></p>
+      </div>
+      <figure class="plate" id="plate2" aria-labelledby="cap2">
+        <div class="plate-h"><span class="pl">Plate II.</span><span class="ti">A black hole’s disc, traced analytically</span></div>
+        <div class="fig f-disc" id="figDisc"><canvas role="img" aria-label="Engraved image of a thin accretion disc around a spinning black hole; the far side of the disc is lifted over the black shadow by the bending of light, the approaching side is brighter; short red strokes mark the plane of polarization."></canvas></div>
+        <div class="ctl" id="discCtl">
+          <label><span class="k">spin <i>a</i></span><input type="range" id="discA" min="0" max="79" value="50" aria-label="Black hole spin, from 0 to 0.79"><span class="v" id="discAV"></span></label>
+          <label><span class="k">incl. <i>i</i></span><input type="range" id="discI" min="8" max="84" value="70" aria-label="Inclination of the disc"><span class="v" id="discIV"></span></label>
+          <span class="note" id="discVal" aria-live="polite"></span>
+        </div>
+        <p class="figcap" id="cap2"><span class="sc">Fig. 2.</span> <i>The inner disc around a Kerr black hole</i>, by analytical ray-tracing as in the Schwarzschild paper and <span class="sc" style="font-size:.9em">artpol</span>: light bending (Beloborodov’s approximation) lifts the far side over the shadow; the spin moves the disc’s inner edge (the ISCO) inwards and drags the orbits, so the approaching side brightens. Red strokes: the plane of polarization of an electron-scattering atmosphere, their length the degree, parallel-transported to us. Through the filter the brightness is modulated by 1 + <i>p</i> cos 2(χ − θ), exaggerated ×4.</p>
+      </figure>
+    </div>
+  </section>
+
+  <section class="ch" id="talks" aria-labelledby="h-talks">
+    <div class="ch-h"><span class="num">III.</span><h2 id="h-talks">Talks &amp; posters</h2></div>
+    <div class="two">
+      <ul class="talks" id="talkList"></ul>
+      <figure class="plate" id="plate3" aria-labelledby="cap3">
+        <div class="plate-h"><span class="pl">Plate III.</span><span class="ti">An accreting pulsar, and the rotating vector</span></div>
+        <div class="fig f-psr" id="figPsr"><canvas role="img" aria-label="An accreting pulsar seen from Earth: a neutron star, its spin axis, dipole field lines that rotate with the star, and a dashed circle marking the polarization-limiting radius with small ticks showing the field direction there; red strokes show the resulting polarization."></canvas></div>
+        <p class="figcap"><span class="sc">Fig. 3.</span> <i>The pulsar as seen from Earth.</i> Grey ticks: the magnetic field on the sphere of the adiabatic radius <i>r</i><sub>pl</sub> (dashed; really tens of stellar radii). On the way out a photon’s polarization follows the field — the magnetized vacuum is birefringent — and freezes at <i>r</i><sub>pl</sub>, where every ray sees the same dipole: so the red strokes (the X-mode, ⟂ field) all agree.</p>
+        <div class="fig f-rvm" id="figRvm"><canvas role="img" aria-label="Graph of polarization angle against rotational phase: the S-shaped swing of the rotating-vector model, with a marker at the current phase, and — when the filter is in — the flux passing through the filter."></canvas></div>
+        <div class="ctl">
+          <label><span class="k">incl. <i>i</i></span><input type="range" id="inI" min="5" max="90" value="40" aria-label="Inclination of the spin axis to the line of sight"><span class="v" id="vI">40°</span></label>
+          <label><span class="k">obliquity <i>θ</i></span><input type="range" id="inT" min="5" max="85" value="30" aria-label="Angle between spin and magnetic axes"><span class="v" id="vT">30°</span></label>
+          <span><button type="button" class="play" id="play" aria-pressed="true">pause</button></span>
+        </div>
+        <p class="figcap" id="cap3"><span class="sc">Fig. 4.</span> <i>Polarization angle against phase</i> — the rotating-vector model, tan χ = sin θ sin φ / (sin <i>i</i> cos θ − cos <i>i</i> sin θ cos φ), plus 90° for the X-mode; fitting it to IXPE data is how <a href="assets/pdfs/2025_AA_Loktev_4U1538.pdf">the 4U 1538-52 paper</a> weighs the geometry. Drag across the graph to turn the star by hand; with the filter in, the lower strip is the flux it lets through.</p>
+        <p class="figcap"><i>To include the effects of non-adiabatic pockets and accretion-flow birefringence, see <a href="https://arxiv.org/abs/2608.27699">Mushtukov et al. (2026)</a>.</i></p>
+      </figure>
+    </div>
+  </section>
+
+  <section class="ch" id="path" aria-labelledby="h-path">
+    <div class="ch-h"><span class="num">IV.</span><h2 id="h-path">Career path</h2></div>
+    <div class="two">
+      <table class="path"><tbody id="pathRows"></tbody></table>
+      <div>
+        <figure class="plate views" id="plate4" aria-labelledby="cap5">
+          <div class="plate-h"><span class="pl">Plate IV.</span><span class="ti">Silhouettes of the path</span></div>
+          <div class="vgrid" id="views"></div>
+          <p class="figcap" id="cap5"><span class="sc">Fig. 5.</span> Maybe the <i>real</i> landmarks are the friends we've made along the way.</p>
+        </figure>
+      <!-- <div class="prose">
+        <p class="note">The short version, and how to reach me, is on the <a href="about.html">about page</a>; the framed certificates hang in <a href="merits.html">the cabin</a>. A full list of everything is in the <a href="assets/pdfs/CV_Loktev.pdf">CV</a>.</p>
+      </div> -->
+      </div>
+    </div>
+  </section>
+  <footer class="colo"><span class="orn" aria-hidden="true">❦</span>
+    <!-- Plates engraved in your browser from their equations · type <b style="font-style:normal">analyzer 45</b> in the command line below -->
+  </footer>
+</main>
+
+<noscript><p style="text-align:center"><a href="index.html">Home</a> · <a href="about.html">About</a> · <a href="merits.html">Merits</a></p></noscript>
+<script src="data.js"></script>
+<script src="site.js"></script>
+<script>
+/* revontuli · research. Chapters rendered from data.js; plates engraved with the dusty-almanac burin
+   (field sampled once, re-inked through the filter — after pikeperch); the pulsar after cabin-fever;
+   the analyzer after crossed-polarizers. */
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const RM = () => RV.reduced();
+const INK = [30, 26, 21], RUB = '#A1291C';
+const esc = RV.esc, md = SITE.md;
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const idle = f => (window.requestIdleCallback || (g => setTimeout(g, 30)))(f, { timeout: 600 });
+const wrap180 = a => ((a % 180) + 180) % 180;
+
+/* ================= the chapters, from data.js ================= */
+const I = SITE.interests;
+$('#intLede').textContent = I.lede;
+$('#intPillars').innerHTML = I.pillars.map(p => `<li><div><b>${p.title}</b> <span>${p.text}</span></div></li>`).join('');
+$('#intNow').innerHTML = md(I.now);
+const PLATE_ID = { I: 'plate1', II: 'plate2', III: 'plate3' };
+$('#paperList').innerHTML = SITE.papers.map(p => {
+  const pdf = p.pdf ? SITE.PDF + p.pdf : null, au = esc(p.authors).replace('V. Loktev', '<b>V. Loktev</b>');
+  return `<li><span class="yr">${p.year}</span><div><div class="t">${pdf ? `<a href="${pdf}">${p.title}</a>` : p.title}</div><p class="au">${au} · <span class="j">${esc(p.venue)}</span></p>` +
+    `<div class="mat">${pdf ? `<a href="${pdf}">pdf</a>` : ''}${p.ads ? `<a href="${p.ads}">ads</a>` : ''}${p.link ? `<a href="${p.link}">link</a>` : ''}${p.plate ? `<a class="xref" href="#${PLATE_ID[p.plate] || ''}">see Plate ${p.plate}</a>` : ''}</div>${p.note ? `<p class="au">${md(p.note)}</p>` : ''}</div></li>`;
+}).join('');
+$('#talkList').innerHTML = SITE.talks.map(t => {
+  const m = t.material ? `<a href="${SITE.url(t.material.url)}">${esc(t.material.label)}</a>` : '';
+  return `<li class="talk"><span class="d">${esc(t.date)}</span><div><div class="tt">${t.title}</div><div class="oc">${t.kind ? `<span class="kind">${esc(t.kind)}</span> · ` : ''}${esc(t.venue)}${t.summary ? ' — ' + md(t.summary) : ''}</div>` +
+    `${m || t.award ? `<div class="mat">${m}${t.award ? `<span class="award">${esc(t.award)}</span>` : ''}</div>` : ''}</div></li>`;
+}).join('');
+$('#pathRows').innerHTML = SITE.path.map((p, i) => `<tr data-i="${i}"${p.now ? ' class="now"' : ''}><td class="y">${esc(p.when)}</td><td class="w"><b>${esc(p.place)}</b><span>${md(p.text)}</span></td></tr>`).join('');
+$('#tocPath').textContent = SITE.path.length + ' stops';
+
+/* ================= Plate IV: views along the path ================= 
+   Each photo is re-engraved like the About portrait: wavy lines bent by the tone, cross-hatched in the shadows,
+   ink-blue on peach. The photo is sampled once per size; drawn only when the plate comes near the screen. */
+{
+  const VINK = [43, 49, 66], VBG = [231, 196, 166];
+  const views = (SITE.views || []).map((v, k) => ({ ...v, k, row: SITE.path.findIndex(p => p.city === v.city) }));
+  const col = c => views.filter(v => v.col === c).map(v => `<figure class="view" data-k="${v.k}"><div class="vimg" style="aspect-ratio:${v.ar}"><canvas role="img" aria-label="${esc(v.alt)}"></canvas></div><figcaption><b>${esc(v.name)}</b><span>${esc(v.year)}</span></figcaption></figure>`).join('');
+  const grid = $('#views');
+  grid.innerHTML = `<div class="vcol">${col(0)}</div><div class="vcol">${col(1)}</div>`;
+  const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+  function tones(v, w, h) {                                     // the photo, cover-cropped around its focus, as stretched luminance at w×h
+    const im = v.img, iw = im.naturalWidth, ih = im.naturalHeight, ar = w / h;
+    let sw = iw, sh = iw / ar; if (sh > ih) { sh = ih; sw = ih * ar; }
+    const sx = clamp((iw - sw) * (v.fx ?? 0.5), 0, iw - sw), sy = clamp((ih - sh) * (v.fy ?? 0.5), 0, ih - sh);
+    const tc = document.createElement('canvas'); tc.width = w; tc.height = h;
+    const x = tc.getContext('2d', { willReadFrequently: true }); x.imageSmoothingQuality = 'high'; x.drawImage(im, sx, sy, sw, sh, 0, 0, w, h);
+    const px = x.getImageData(0, 0, w, h).data, L = new Float32Array(w * h), hist = new Uint32Array(256);
+    for (let i = 0, k = 0; i < px.length; i += 4, k++) { const l = .299 * px[i] + .587 * px[i + 1] + .114 * px[i + 2]; L[k] = l / 255; hist[l | 0]++; }
+    let acc = 0, lo = 0, hi = 255; for (let q = 0; q < 256; q++) { acc += hist[q]; if (acc < w * h * .02) lo = q; if (acc < w * h * .94) hi = q; }
+    const g = 0.9 * (v.tone || 1);
+    for (let k = 0; k < L.length; k++) L[k] = Math.pow(clamp((L[k] - lo / 255) / Math.max(.1, (hi - lo) / 255)), g);
+    return L;
+  }
+  function engrave(v) {
+    if (!v.img) return;
+    const cv = v.cv, r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    if (w < 20 || (v.done === w + 'x' + h)) return; v.done = w + 'x' + h;
+    const L = tones(v, w, h);
+    cv.width = w; cv.height = h;
+    const c = cv.getContext('2d'), img = c.createImageData(w, h), d = img.data, P = 2.4 * dpr, aa = P / 2.1;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const k = y * w + x, l = L[k], dk = 1 - l, i = k * 4;
+      const p = (y + 4 * dpr * Math.sin(x / (34 * dpr) + v.k) + 6 * dpr * l) / P, q = (x * 0.72 + y * 0.7) / P;
+      let a = 0;
+      if (dk > 0.03) {
+        const wid = Math.min(1, Math.pow(dk, 0.92) * 1.06), t1 = Math.abs(p - Math.floor(p) - 0.5) * 2;
+        let c2 = 0; if (dk > 0.6) { const w2 = Math.min(0.85, (dk - 0.6) / 0.4 * 0.9); c2 = clamp((w2 - Math.abs(q - Math.floor(q) - 0.5) * 2) * aa + 0.5); }
+        a = Math.max(clamp((wid - t1) * aa + 0.5), c2);
+      }
+      d[i] = VBG[0] + (VINK[0] - VBG[0]) * a; d[i + 1] = VBG[1] + (VINK[1] - VBG[1]) * a; d[i + 2] = VBG[2] + (VINK[2] - VBG[2]) * a; d[i + 3] = 255;
+    }
+    c.putImageData(img, 0, 0);
+  }
+  for (const v of views) v.cv = grid.querySelector(`.view[data-k="${v.k}"] canvas`);
+  let started = false;
+  const start = () => { if (started) return; started = true;
+    for (const v of views) loadImg(v.src).then(im => { v.img = im; engrave(v); }).catch(() => { const im = document.createElement('img'); im.src = v.src; im.alt = v.alt; v.cv.replaceWith(im); }); };
+  const vio = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { start(); vio.disconnect(); } }, { rootMargin: '600px 0px' });
+  vio.observe(grid);
+  let vt = 0; addEventListener('resize', () => { clearTimeout(vt); vt = setTimeout(() => views.forEach(engrave), 200); });
+  // a view and its row in the table light up together
+  const rows = $$('#pathRows tr');
+  const lite = (k, on) => { const v = views[k]; if (!v) return; grid.querySelector(`.view[data-k="${k}"]`).classList.toggle('lit', on); if (rows[v.row]) rows[v.row].classList.toggle('lit', on); };
+  $$('.view', grid).forEach(f => { const k = +f.dataset.k; f.addEventListener('pointerenter', () => lite(k, true)); f.addEventListener('pointerleave', () => lite(k, false)); });
+  rows.forEach((tr, i) => { const k = views.findIndex(v => v.row === i); if (k < 0) return; tr.addEventListener('pointerenter', () => lite(k, true)); tr.addEventListener('pointerleave', () => lite(k, false)); });
+}
+// epigraphs: quiet lines before their chapters. Above each, a row of red strokes like the plates' — drawn along
+// the plane of polarization of the ink below, so the dial should be turned to match them
+function polRow(ang) {
+  const n = 11, gap = 8, L = 8.5, a = ang * D2R, dx = Math.cos(a) * L / 2, dy = -Math.sin(a) * L / 2;
+  let s = '';
+  for (let k = 0; k < n; k++) { const x = 6 + k * gap, y = 7, o = Math.pow(Math.sin(Math.PI * (k + 0.5) / n), 0.8); s += `<line x1="${(x - dx).toFixed(2)}" y1="${(y - dy).toFixed(2)}" x2="${(x + dx).toFixed(2)}" y2="${(y + dy).toFixed(2)}" stroke-opacity="${o.toFixed(2)}"/>`; }
+  return `<svg class="pol" viewBox="0 0 92 14" width="92" height="14" aria-hidden="true">${s}</svg>`;
+}
+const EPI = SITE.epigraphs.map(e => {
+  const sec = document.getElementById(e.before); if (!sec) return null;
+  const el = document.createElement('aside'); el.className = 'epi'; el.setAttribute('aria-label', 'Epigraph');
+  el.innerHTML = polRow(e.revealAngle) + `<p>${esc(e.text)}</p>`; sec.parentNode.insertBefore(el, sec); return { el, ang: e.revealAngle };
+}).filter(Boolean);
+
+/* ================= the analyzer: one filter, one angle θ for the page (0° = horizontal, counter-clockwise) ================= */
+const AN = { th: 0, on: false, spin: false };
+const subs = [];
+function setAn(th, on) {
+  if (th != null) AN.th = ((th % 180) + 180) % 180;
+  if (on != null) AN.on = on;
+  const d = $('#dial'); d.setAttribute('aria-valuenow', Math.round(AN.th)); d.setAttribute('aria-valuetext', `${Math.round(AN.th)} degrees${AN.on ? '' : ', filter out'}`);
+  $('#anRead').textContent = `θ ${AN.th.toFixed(0)}°`;
+  $('#anTurn').setAttribute('aria-pressed', AN.spin);
+  drawDial();
+  // epigraphs: Malus's law — the ink passes cos²(θ − χ) of its light, half of it at ±45°, none when crossed.
+  // Their strokes dim with it, like the plates' red strokes (0.1 + 0.9 cos²); with the filter out they just sit there
+  for (const e of EPI) { const c = Math.cos((AN.th - e.ang) * D2R), v = AN.on ? c * c : 0; e.el.style.setProperty('--v', v.toFixed(3)); e.el.style.setProperty('--pv', AN.on ? (0.1 + 0.9 * v).toFixed(3) : '.55'); }
+  for (const f of subs) f();
+  try { sessionStorage.setItem('rv.an', JSON.stringify([AN.th, AN.on])); } catch (e) {}
+}
+const dialEl = $('#dial'), dctx = dialEl.getContext('2d'), DS = 36;
+{ const dpr = Math.min(2, devicePixelRatio || 1); dialEl.width = DS * dpr; dialEl.height = DS * dpr; dialEl.style.width = dialEl.style.height = DS + 'px'; dialEl._dpr = dpr; }
+function drawDial() {
+  const c = dctx, s = DS, r = s / 2 - 1.5, on = AN.on;
+  c.setTransform(dialEl._dpr, 0, 0, dialEl._dpr, 0, 0); c.clearRect(0, 0, s, s);
+  c.save(); c.translate(s / 2, s / 2);
+  c.beginPath(); c.arc(0, 0, r * .8, 0, 7); c.fillStyle = on ? 'rgba(52,56,58,.22)' : 'rgba(247,242,230,.9)'; c.fill();
+  c.strokeStyle = '#1E1A15'; c.lineWidth = 1; c.beginPath(); c.arc(0, 0, r, 0, 7); c.stroke(); c.beginPath(); c.arc(0, 0, r * .8, 0, 7); c.stroke();
+  for (let k = 0; k < 24; k++) { const a = k * 15 * D2R + AN.th * D2R, l = k % 2 ? r * .08 : r * .15; c.beginPath(); c.moveTo(Math.cos(a) * r, -Math.sin(a) * r); c.lineTo(Math.cos(a) * (r - l), -Math.sin(a) * (r - l)); c.lineWidth = .7; c.stroke(); }
+  // two faint calibration nicks on the fixed bezel … for whoever looks closely
+  c.fillStyle = 'rgba(161,41,28,.55)';
+  for (const e of EPI) for (const k of [0, 180]) { const a = (e.ang + k) * D2R; c.beginPath(); c.arc(Math.cos(a) * (r + .2), -Math.sin(a) * (r + .2), .9, 0, 7); c.fill(); }
+  const a = AN.th * D2R, L = r * .74;
+  c.strokeStyle = on ? RUB : 'rgba(30,26,21,.55)'; c.lineWidth = 1.4;
+  c.beginPath(); c.moveTo(-Math.cos(a) * L, Math.sin(a) * L); c.lineTo(Math.cos(a) * L, -Math.sin(a) * L); c.stroke();
+  c.fillStyle = on ? RUB : '#1E1A15'; c.beginPath(); c.arc(Math.cos(a) * r, -Math.sin(a) * r, 2.2, 0, 7); c.fill();
+  c.restore();
+}
+{ // the dial: drag to turn (angularly), wheel, arrow keys; a tap slides the filter in or out
+  let drag = null;
+  const ang = e => { const r = dialEl.getBoundingClientRect(); return Math.atan2(-(e.clientY - r.top - r.height / 2), e.clientX - r.left - r.width / 2) * R2D; };
+  dialEl.addEventListener('pointerdown', e => { e.preventDefault(); dialEl.setPointerCapture(e.pointerId); drag = { a0: ang(e), t0: AN.th, moved: false, x: e.clientX, y: e.clientY }; stopSpin(); });
+  dialEl.addEventListener('pointermove', e => { if (!drag) return; if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 3) drag.moved = true; if (drag.moved) setAn(drag.t0 + ang(e) - drag.a0, true); });
+  const end = () => { if (drag && !drag.moved) { if (AN.on) stopSpin(); setAn(null, !AN.on); } drag = null; };
+  dialEl.addEventListener('pointerup', end); dialEl.addEventListener('pointercancel', () => { drag = null; });
+  dialEl.addEventListener('wheel', e => { e.preventDefault(); stopSpin(); setAn(AN.th - Math.sign(e.deltaY) * 2, true); }, { passive: false });
+  dialEl.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 10 : 1, k = { ArrowLeft: step, ArrowUp: step, ArrowRight: -step, ArrowDown: -step, PageUp: 15, PageDown: -15 }[e.key];
+    if (k !== undefined) { e.preventDefault(); stopSpin(); setAn(AN.th + k, true); }
+    else if (e.key === 'Home') { e.preventDefault(); setAn(0, true); }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (AN.on) stopSpin(); setAn(null, !AN.on); }
+  });
+}
+$('#anLab').addEventListener('click', () => { if (AN.on) stopSpin(); setAn(null, !AN.on); });   // the word "filter:" works like a tap on the dial
+let spinLast = 0;
+function stopSpin() { if (!AN.spin) return; AN.spin = false; setAn(null, null); }
+function spinLoop(t) { if (!AN.spin) return; if (spinLast) setAn(AN.th + (t - spinLast) * 0.006, null); spinLast = t; requestAnimationFrame(spinLoop); }     // 6° a second
+function startSpin() { AN.spin = true; spinLast = 0; setAn(null, true); requestAnimationFrame(spinLoop); }
+$('#anTurn').addEventListener('click', () => AN.spin ? stopSpin() : startSpin());
+const malus = chi => { const c = Math.cos(chi - AN.th * D2R); return c * c; };        // χ in radians, same convention as θ
+
+/* ================= the automatic burin: line engraving from a luminance field =================
+   A field is sampled once into arrays (luminance, two hatch phases, polarization Stokes q/u);
+   turning the filter only re-inks from those arrays. */
+const WLUT = new Float32Array(1025); for (let i = 0; i <= 1024; i++) WLUT[i] = Math.min(1, Math.pow(i / 1024, 0.92) * 1.06);
+function sampleField(w, h, field) {
+  const n = w * h, L = new Float32Array(n), Pp = new Float32Array(n), Qq = new Float32Array(n), C2 = new Float32Array(n), S2 = new Float32Array(n), o = { l: 1, p: 0, q: 0, pd: 0, chi: 0 };
+  for (let y = 0, i = 0; y < h; y++) for (let x = 0; x < w; x++, i++) {
+    o.pd = 0; field(x, y, o); L[i] = o.l; Pp[i] = o.p; Qq[i] = o.q;
+    if (o.pd > 0) { C2[i] = o.pd * Math.cos(2 * o.chi); S2[i] = o.pd * Math.sin(2 * o.chi); }
+  }
+  return { w, h, L, Pp, Qq, C2, S2 };
+}
+function ink(ctx, F, P, gain) {
+  const { w, h, L, Pp, Qq, C2, S2 } = F, n = w * h;
+  if (!F.img || F.img.width !== w) F.img = ctx.createImageData(w, h);
+  const d = F.img.data, aa = P / 2.1, on = AN.on && gain > 0, c2 = Math.cos(2 * AN.th * D2R) * gain, s2 = Math.sin(2 * AN.th * D2R) * gain;
+  for (let i = 0, j = 0; i < n; i++, j += 4) {
+    let l = L[i];
+    if (on) { const m = C2[i] * c2 + S2[i] * s2; if (m !== 0) { l = l * (1 + m); l = l < 0 ? 0 : l > 1 ? 1 : l; } }
+    const dk = 1 - l; let a = 0;
+    if (dk > 0.015) {
+      const wid = WLUT[(dk * 1024) | 0], p = Pp[i], f1 = p - Math.floor(p), t1 = Math.abs(f1 - 0.5) * 2;
+      let c1 = (wid - t1) * aa + 0.5; c1 = c1 < 0 ? 0 : c1 > 1 ? 1 : c1;
+      let cc = 0;
+      if (dk > 0.56) { const w2 = Math.min(0.85, (dk - 0.56) / 0.44 * 0.9), q = Qq[i], f2 = q - Math.floor(q), t2 = Math.abs(f2 - 0.5) * 2; cc = (w2 - t2) * aa + 0.5; cc = cc < 0 ? 0 : cc > 1 ? 1 : cc; }
+      a = (c1 > cc ? c1 : cc) * 255;
+    }
+    d[j] = INK[0]; d[j + 1] = INK[1]; d[j + 2] = INK[2]; d[j + 3] = a;
+  }
+  ctx.putImageData(F.img, 0, 0);
+}
+function strokes(ctx, list, dpr, maxL) {
+  ctx.lineCap = 'round'; ctx.strokeStyle = RUB; ctx.lineWidth = 1.5 * dpr;
+  for (const s of list) {
+    ctx.globalAlpha = AN.on ? 0.1 + 0.9 * malus(s.chi) : 1;
+    const L = maxL * s.len / 2;
+    ctx.beginPath(); ctx.moveTo(s.x - L * Math.cos(s.chi), s.y + L * Math.sin(s.chi)); ctx.lineTo(s.x + L * Math.cos(s.chi), s.y - L * Math.sin(s.chi)); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+function measureCanvas(cv, draft) {
+  const r = cv.parentElement.getBoundingClientRect(), dpr = Math.min(1.5, window.devicePixelRatio || 1) * (draft ? 0.5 : 1);
+  const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+  return w < 10 || h < 10 ? null : { w, h, dpr, cw: r.width, ch: r.height };
+}
+function sizeCanvas(cv, draft) { const Z = measureCanvas(cv, draft); if (Z) { cv.width = Z.w; cv.height = Z.h; } return Z; }
+let wkSeq = 0;         // every build request gets a number; a result from the worker only lands if it is still the latest
+function label(wrap, txt, x, y) { const s = document.createElement('span'); s.className = 'lbl'; s.textContent = txt; s.style.left = x + 'px'; s.style.top = y + 'px'; wrap.appendChild(s); }
+
+/* ================= Plate I: a close binary, ray-marched through the Roche potential =================
+   Units: separation = 1, compact object at the origin, companion at x = 1, orbit in the xy-plane.
+   The observer looks along n = (sin i sin φ, −sin i cos φ, cos i); the sky basis is e1 = (cos φ, sin φ, 0), e2 = n × e1. */
+const BIN = { ph: 0, i: 62, q: 0.42 };
+function binCompute(w, h, dpr, B) {        // pure: runs on the page (quick drafts) or in the worker (full engravings)
+    const q = B.q, xcm = q / (1 + q), inc = B.i * D2R, si = Math.sin(inc), ci = Math.cos(inc), ph = B.ph * 2 * Math.PI;
+    const n = [si * Math.sin(ph), -si * Math.cos(ph), ci], e1 = [Math.cos(ph), Math.sin(ph), 0];
+    const e2 = [n[1] * e1[2] - n[2] * e1[1], n[2] * e1[0] - n[0] * e1[2], n[0] * e1[1] - n[1] * e1[0]];
+    const Phi = (x, y, z) => -1 / Math.sqrt(x * x + y * y + z * z) - q / Math.sqrt((x - 1) * (x - 1) + y * y + z * z) - 0.5 * (1 + q) * ((x - xcm) * (x - xcm) + y * y);
+    const dPx = x => (Phi(x + 1e-6, 0, 0) - Phi(x - 1e-6, 0, 0));
+    let a = 0.2, b = 0.97; for (let k = 0; k < 60; k++) { const m = (a + b) / 2; if (dPx(a) * dPx(m) <= 0) b = m; else a = m; }
+    const xL1 = (a + b) / 2, PL = Phi(xL1, 0, 0) - 2e-4;
+    const rot = -40 * D2R, cr = Math.cos(rot), sr = Math.sin(rot);
+    const scale = Math.min(w / 1.9, h / 1.42), cx = w * 0.5, cy = h * 0.5;
+    const sc0 = [e1[0], e2[0]], X0 = 0.52 * sc0[0], Y0 = 0.52 * sc0[1] + 0.02;
+    const toSky = (px, py) => { const u = (px - cx) / scale, v = (cy - py) / scale; return [X0 + u * cr + v * sr, Y0 - u * sr + v * cr]; };
+    const toPx = (X, Y) => { const u = (X - X0) * cr - (Y - Y0) * sr, v = (X - X0) * sr + (Y - Y0) * cr; return [cx + u * scale, cy - v * scale]; };
+    const dot = (A, B) => A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
+    const proj = (x, y, z) => { const P = [x, y, z]; return [dot(P, e1), dot(P, e2), dot(P, n)]; };
+    const at = (X, Y, s) => [X * e1[0] + Y * e2[0] + s * n[0], X * e1[1] + Y * e2[1] + s * n[1], X * e1[2] + Y * e2[2] + s * n[2]];
+    // the disc: 80% of the compact object's Roche lobe (Eggleton)
+    const qq = 1 / q, q3 = Math.cbrt(qq), RL1 = 0.49 * q3 * q3 / (0.6 * q3 * q3 + Math.log(1 + q3));
+    const Rd = 0.8 * RL1, rin = 0.018, thI = 38 * D2R;
+    const S = [], sN = 48, P0 = [xL1, 0], P1 = [xL1 - 0.16, 0.2], P2 = [Rd * Math.cos(thI), Rd * Math.sin(thI)];
+    for (let k = 0; k <= sN; k++) { const t = k / sN, x = (1 - t) * (1 - t) * P0[0] + 2 * t * (1 - t) * P1[0] + t * t * P2[0], y = (1 - t) * (1 - t) * P0[1] + 2 * t * (1 - t) * P1[1] + t * t * P2[1]; const p = proj(x, y, 0); S.push({ X: p[0], Y: p[1], s: p[2], r: 0.024 - 0.012 * t, x, y }); }
+    const P = 3.1 * dpr, pU = P / scale;
+    const sparks = []; { const rn = rng(11); for (let k = 0; k < 70; k++) sparks.push([rn() * w, rn() * h, 0.6 + rn() * 1.3]); }
+    let gPole; { let lo = 0.05, hi = 0.6; for (let k = 0; k < 50; k++) { const m = (lo + hi) / 2; if (Phi(1, 0, m) < PL) lo = m; else hi = m; } const z = lo, r1 = Math.hypot(1, z), r2 = z; gPole = Math.hypot((1 / r1 ** 3) - (1 + q) * (1 - xcm), (1 / r1 ** 3) * z + q * z / r2 ** 3); }
+    const lv = [-0.35, 0.41, 0.84], lk = at(lv[0], lv[1], lv[2]); { const m = Math.hypot(...lk); lk[0] /= m; lk[1] /= m; lk[2] /= m; }   // a key light fixed to the view
+    const scat = (x, y, z) => { const r = Math.hypot(x, y, z) || 1, c = dot([x, y, z], n) / r; return (1 - c * c) / (1 + c * c); };
+    const chiAt = (X, Y) => Math.atan2(Y, X) + Math.PI / 2 + rot;
+    const star = [e1[0], e2[0]], sc = n[0];     // the companion's centre on the sky, and its depth along the line of sight
+    // the Roche potential's centrifugal term (-0.5(1+q)((x-xcm)^2+y^2)) doesn't depend on z at all, so
+    // far enough from the rotation axis the WHOLE line in z satisfies "Phi < PL" — a second, unbounded
+    // region with nothing to do with the star. The star's real surface is instead the boundary of the
+    // connected piece of {Phi<PL} that actually contains the companion: walking radially outward from
+    // the companion in any direction, the first place that walk leaves {Phi<PL} is the true surface in
+    // that direction, however the shape bends (a tidally-pointed teardrop, not a sphere — this also
+    // reproduces the L1 cusp exactly, walking toward the primary stops right at xL1). Tabulate that
+    // radius over a grid of directions once per frame (cheap: ~800 short walks, not per pixel), then
+    // look it up (bilinearly interpolated) for each candidate point in the march below.
+    const nTh = 22, nPh = 28;
+    const boundR = (th, ph) => {
+      const cx = Math.cos(th), sn = Math.sin(th), cy = sn * Math.cos(ph), cz = sn * Math.sin(ph);
+      let lo = 0, hi = null;
+      for (let r = 0.015; r < 1.3; r += 0.015) { if (!(Phi(1 + r * cx, r * cy, r * cz) < PL)) { hi = r; break; } lo = r; }
+      if (hi === null) return 1.3;
+      for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; if (Phi(1 + m * cx, m * cy, m * cz) < PL) lo = m; else hi = m; }
+      return (lo + hi) / 2;
+    };
+    const rTable = []; for (let i = 0; i <= nTh; i++) { const th = Math.PI * i / nTh, row = []; for (let j = 0; j < nPh; j++) row.push(boundR(th, 2 * Math.PI * j / nPh)); rTable.push(row); }
+    const rAt = (th, ph) => {
+      let ti = th / Math.PI * nTh; ti = ti < 0 ? 0 : ti > nTh ? nTh : ti;
+      const i0 = Math.floor(ti), i1 = Math.min(nTh, i0 + 1), ft = ti - i0;
+      let pj = (((ph % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) / (2 * Math.PI) * nPh;
+      const j0 = Math.floor(pj) % nPh, j1 = (j0 + 1) % nPh, fp = pj - Math.floor(pj);
+      const r00 = rTable[i0][j0], r01 = rTable[i0][j1], r10 = rTable[i1][j0], r11 = rTable[i1][j1];
+      return (r00 * (1 - fp) + r01 * fp) * (1 - ft) + (r10 * (1 - fp) + r11 * fp) * ft;
+    };
+    const comp = new Uint8Array(w * h);        // which body each pixel shows: 1 disc, 2 stream, 3 star
+    // (speed) the sparks, stamped into a mask once rather than tested at every pixel; the stream's bounding box,
+    // so pixels far from it skip the 48 segment tests; the star's bounding sphere (the largest radius in the
+    // lobe table), so the march only walks the stretch of each ray that can touch the star
+    const sparkM = new Uint8Array(w * h);
+    for (const s of sparks) { const R2 = s[2] * s[2] * dpr * dpr, rr = Math.ceil(s[2] * dpr) + 1;
+      for (let y = Math.max(0, Math.floor(s[1] - rr)); y <= Math.min(h - 1, Math.ceil(s[1] + rr)); y++) for (let x = Math.max(0, Math.floor(s[0] - rr)); x <= Math.min(w - 1, Math.ceil(s[0] + rr)); x++) { const dx = x - s[0], dy = y - s[1]; if (dx * dx + dy * dy < R2) sparkM[y * w + x] = 1; } }
+    let sbx0 = Infinity, sbx1 = -Infinity, sby0 = Infinity, sby1 = -Infinity;
+    for (const A of S) { sbx0 = Math.min(sbx0, A.X - A.r); sbx1 = Math.max(sbx1, A.X + A.r); sby0 = Math.min(sby0, A.Y - A.r); sby1 = Math.max(sby1, A.Y + A.r); }
+    let Rm = 0; for (const row of rTable) for (const v of row) if (v > Rm) Rm = v;
+    Rm += 0.03; const Rm2 = Rm * Rm;
+    const F = sampleField(w, h, (px, py, o) => {
+      const [X, Y] = toSky(px, py);
+      let best = -1e9, cid = 0; o.l = 0.6; o.p = py / P; o.q = px / P + py / P * 0.3;
+      if (sparkM[py * w + px]) o.l = 1;
+      { const s = -Y * e2[2] / ci, D = at(X, Y, s), rr = Math.hypot(D[0], D[1]);
+        if (rr > rin && rr < Rd && s > best) { best = s; cid = 1; const ang = Math.atan2(D[1], D[0]); let l = 0.97 - 0.5 * Math.pow(rr / Rd, 0.85); const dh = Math.hypot(D[0] - P2[0], D[1] - P2[1]); l += 0.35 * Math.exp(-dh * dh / 0.0025); if (rr > Rd - 0.012) l = 0.3; o.l = clamp(l); o.p = rr / (pU * 0.95); o.q = ang * 20; o.pd = 0.55 * scat(D[0], D[1], 0); o.chi = chiAt(X, Y); } }
+      if (X > sbx0 && X < sbx1 && Y > sby0 && Y < sby1) for (let k = 0; k < sN; k++) { const A1 = S[k], B1 = S[k + 1], vx = B1.X - A1.X, vy = B1.Y - A1.Y, L2 = vx * vx + vy * vy; let t = ((X - A1.X) * vx + (Y - A1.Y) * vy) / L2; t = clamp(t); const qx = A1.X + t * vx - X, qy = A1.Y + t * vy - Y, dd = Math.sqrt(qx * qx + qy * qy), rad = A1.r + (B1.r - A1.r) * t; if (dd < rad) { const s = A1.s + (B1.s - A1.s) * t + 0.02; if (s > best) { best = s; cid = 2; const sgn = (vx * qy - vy * qx) > 0 ? 1 : -1; o.l = 0.9 - 0.35 * (dd / rad); o.p = sgn * dd / (pU * 0.8); o.q = 0; o.pd = 0.55 * scat(A1.x, A1.y, 0); o.chi = chiAt(X, Y); } break; } }
+      { const d0 = Math.hypot(X, Y); if (d0 < 0.02 && 0.03 > best) { best = 0.03; cid = 1; o.l = 0.02; o.p = 0; o.q = 0.5; o.pd = 0; } }
+      const dX = X - star[0], dY = Y - star[1], d2 = dX * dX + dY * dY; if (d2 < 0.3 && d2 < Rm2) {
+        const half = Math.sqrt(Rm2 - d2), sTop = sc + half, sBot = sc - half;             // where this ray is inside the bounding sphere
+        const bx = X * e1[0] + Y * e2[0], by = X * e1[1] + Y * e2[1], bz = X * e1[2] + Y * e2[2];
+        let prev = null; for (let s = sc + 0.78; s > sc - 0.78; s -= 0.012) {       // march from in front of the star to behind it
+          if (s > sTop) { prev = s; continue; }                                       // not there yet
+          if (s < sBot) break;                                                        // past it: nothing more to find
+          const Qx = bx + s * n[0], Qy = by + s * n[1], Qz = bz + s * n[2];
+          if (Qx < xL1 || !(Phi(Qx, Qy, Qz) < PL)) { prev = s; continue; }            // the cheap test first …
+          const dcx = Qx - 1, rC = Math.hypot(dcx, Qy, Qz);                            // … then: is it the star's own lobe?
+          if (rC > 1e-6 && rC >= rAt(Math.acos(Math.max(-1, Math.min(1, dcx / rC))), Math.atan2(Qz, Qy))) { prev = s; continue; }
+          {
+            let lo = s, hi = prev === null ? s + 0.012 : prev; for (let k = 0; k < 14; k++) { const m = (lo + hi) / 2, M = at(X, Y, m); if (Phi(M[0], M[1], M[2]) < PL) lo = m; else hi = m; }
+            const sh = (lo + hi) / 2; if (sh > best) {
+              best = sh; cid = 3; const [x, yy, zz] = at(X, Y, sh);
+              const r1 = Math.sqrt(x * x + yy * yy + zz * zz), r2 = Math.sqrt((x - 1) ** 2 + yy * yy + zz * zz);
+              let gx = x / r1 ** 3 + q * (x - 1) / r2 ** 3 - (1 + q) * (x - xcm), gy = yy / r1 ** 3 + q * yy / r2 ** 3 - (1 + q) * yy, gz = zz / r1 ** 3 + q * zz / r2 ** 3;
+              const g = Math.hypot(gx, gy, gz); gx /= g; gy /= g; gz /= g;
+              const mu = Math.max(0, gx * n[0] + gy * n[1] + gz * n[2]), lam = Math.max(0, gx * lk[0] + gy * lk[1] + gz * lk[2]);
+              const irr = Math.max(0, -(gx * x + gy * yy + gz * zz) / r1) / (r1 * r1) * 0.22;      // X-rays from the compact object: the lit face
+              const gd = Math.pow(clamp(g / gPole, 0, 1.2), 0.3);
+              o.l = clamp((0.08 + 0.62 * lam + irr) * (0.45 + 0.55 * gd) * (0.62 + 0.38 * mu));
+              o.p = zz / (pU * 1.05); o.q = (x - 1) / (pU * 1.1) + yy / (pU * 1.1) * 0.3;
+              o.pd = 0.9 * (irr / (irr + 0.05)) * scat(x, yy, zz); o.chi = chiAt(X, Y);
+            }
+            break;
+          }
+          prev = s;
+        }
+      }
+      comp[py * w + px] = cid;
+    });
+    const st = [], step = Math.round(24 * dpr);
+    for (let y = step / 2 | 0; y < h; y += step) for (let x = step / 2 | 0; x < w; x += step) {
+      const k = y * w + x, pd = Math.hypot(F.C2[k], F.S2[k]); if (pd < 0.06 || F.L[k] > 0.985) continue;
+      st.push({ x, y, chi: Math.atan2(F.S2[k], F.C2[k]) / 2, len: clamp(pd / 0.5, 0.3, 1) });
+    }
+    const lab = (x, y, z) => { const p = proj(x, y, z); const [ppx, ppy] = toPx(p[0], p[1]); return [ppx / dpr, ppy / dpr]; };
+    // a label only where its body is actually in sight (not hidden behind another)
+    const seen = (x, y, z, ids) => { const p = proj(x, y, z), [ppx, ppy] = toPx(p[0], p[1]), k = Math.round(ppy) * w + Math.round(ppx); return ppx >= 0 && ppy >= 0 && ppx < w && ppy < h && ids.includes(comp[k]); };
+    const labels = [], put = (t, pt, ids, dx, dy) => { if (seen(...pt, ids)) { const L = lab(...pt); labels.push([t, L[0] + dx, L[1] + dy]); } };
+    put('star', [1.12, 0, 0.36], [3], 26, -10); put('L₁', [xL1 + 0.01, 0, 0], [2, 3], 8, -14); put('stream', [0.5 * (P1[0] + xL1) - 0.02, 0.16, 0], [2], -12, -16); put('disc', [0.02, -Rd * 0.9, 0], [1], -22, 14);
+    return { F, st, P, labels };
+}
+const Bin = {
+  cv: $('#figBin canvas'), kind: 'bin',
+  params: () => ({ q: BIN.q, i: BIN.i, ph: BIN.ph }),
+  build(draft) { const Z = sizeCanvas(this.cv, draft); if (!Z) return false; this.Z = Z; this.req = ++wkSeq; this.apply(binCompute(Z.w, Z.h, Z.dpr, this.params())); return true; },
+  apply(R) { this.F = R.F; this.st = R.st; this.P = R.P; const wrap = this.cv.parentElement; $$('.lbl', wrap).forEach(e => e.remove()); for (const [t, x, y] of R.labels) label(wrap, t, x, y); },
+  draw() { const c = this.cv.getContext('2d'); ink(c, this.F, this.P, 1); strokes(c, this.st, this.Z.dpr, 15 * this.Z.dpr); }
+};
+
+/* ================= Plate II: a disc around a Kerr black hole, by analytical ray-tracing =================
+   Light bending: Beloborodov (2002), 1 − cos α = (1 − cos ψ)(1 − r_s/r), b = r sin α / √(1 − r_s/r); units r_s = 1 (= 2M).
+   Spin (ARTPOL-like): the disc ends at the Kerr ISCO; Keplerian Ω = 1/(r^{3/2} + a), and the redshift of a ray with
+   angular momentum λ is g = 1 / [u^t (1 − Ω λ)], u^t = (r^{3/2} + a) / (r^{3/4} √(r^{3/2} − 3 r^{1/2} + 2a)) (r in M).
+   The shadow's outline is drawn shifted by the spin (an approximation). Polarization: Chandrasekhar's electron-scattering
+   atmosphere, parallel-transported in the ray's plane. */
+const DISC = { a: 0.5, i: 70 };
+const iscoM = a => { const z1 = 1 + Math.cbrt(1 - a * a) * (Math.cbrt(1 + a) + Math.cbrt(1 - a)), z2 = Math.sqrt(3 * a * a + z1 * z1); return 3 + z2 - Math.sqrt((3 - z1) * (3 + z1 + 2 * z2)); };
+function discCompute(w, h, dpr, D) {       // pure, like binCompute
+    const spin = D.a;
+    const inc = D.i * D2R, si = Math.sin(inc), ci = Math.cos(inc), nz = 1;
+    const o = [0, -si, ci], e2 = [0, ci, si];
+    const ri = iscoM(spin) / 2, ro = 13, bc = 2.598 * (1 - 0.08 * spin * spin), bx = 0.85 * spin * si;
+    const scale = Math.min(w / (2 * ro * 1.06), h / (ro * (Math.abs(ci) + 0.62) * 1.25));
+    const cx = w / 2, cy = h / 2 + scale * ro * (0.27 * (1 - Math.abs(ci)) + 0.05) - scale * 0.4;
+    const map = (rr, ph) => {
+      const px = Math.cos(ph), py = Math.sin(ph), cpsi = px * o[0] + py * o[1], u = 1 / rr;
+      const cosA = 1 - (1 - cpsi) * (1 - u), sinA = Math.sqrt(Math.max(0, 1 - cosA * cosA)), bb = rr * sinA / Math.sqrt(1 - u);
+      const dx = px - cpsi * o[0], dy = py - cpsi * o[1], dz = -cpsi * o[2], dn = Math.hypot(dx, dy, dz) || 1e-9;
+      return { X: bb * dx / dn, Y: bb * (dy * e2[1] + dz * e2[2]) / dn, cpsi, cosA, sinA, px, py };
+    };
+    const pol = m => {
+      const p = [m.px, m.py, 0], spsi = Math.sqrt(Math.max(1e-9, 1 - m.cpsi * m.cpsi));
+      const t = [(o[0] - m.cpsi * p[0]) / spsi, (o[1] - m.cpsi * p[1]) / spsi, o[2] / spsi];
+      const kk = [m.cosA * p[0] + m.sinA * t[0], m.cosA * p[1] + m.sinA * t[1], m.sinA * t[2]];
+      const mu = clamp(kk[2] * nz, 0, 1), PD = (1 - mu) / (1 + 3.582 * mu);
+      let f = [kk[1] * nz, -kk[0] * nz, 0]; const fn = Math.hypot(...f) || 1; f = f.map(v => v / fn);
+      let ep = [p[1] * o[2] - p[2] * o[1], p[2] * o[0] - p[0] * o[2], p[0] * o[1] - p[1] * o[0]]; const en = Math.hypot(...ep) || 1; ep = ep.map(v => v / en);
+      const kxe = [kk[1] * ep[2] - kk[2] * ep[1], kk[2] * ep[0] - kk[0] * ep[2], kk[0] * ep[1] - kk[1] * ep[0]];
+      const A = f[0] * ep[0] + f[1] * ep[1] + f[2] * ep[2], B = f[0] * kxe[0] + f[1] * kxe[1] + f[2] * kxe[2];
+      const oxe = [o[1] * ep[2] - o[2] * ep[1], o[2] * ep[0] - o[0] * ep[2], o[0] * ep[1] - o[1] * ep[0]];
+      const F = [A * ep[0] + B * oxe[0], A * ep[1] + B * oxe[1], A * ep[2] + B * oxe[2]];
+      return { pa: Math.atan2(F[1] * e2[1] + F[2] * e2[2], F[0]), PD };
+    };
+    const redshift = (rr, X) => { const r = 2 * rr, r15 = Math.pow(r, 1.5), Om = 1 / (r15 + spin), ut = (r15 + spin) / (Math.pow(r, 0.75) * Math.sqrt(Math.max(1e-6, r15 - 3 * Math.sqrt(r) + 2 * spin))), lam = -2 * X * si; return 1 / (ut * (1 - Om * lam)); };
+    const nPix = w * h, RB = new Float32Array(nPix), IB = new Float32Array(nPix), CB = new Float32Array(nPix), SB = new Float32Array(nPix);
+    const nR = Math.ceil((ro - ri) * scale * 1.6), nP = Math.ceil(2 * Math.PI * ro * scale * 1.9);
+    let Imax = 0;
+    // (speed) the same splatting as map()/pol()/redshift() below, with everything that depends only on the angle
+    // (per k) or only on the radius (per ring) worked out once, and no objects made per sample. Same arithmetic, same result.
+    const aci = Math.abs(ci), KPX = new Float64Array(nP), KPY = new Float64Array(nP), KC = new Float64Array(nP), KDX = new Float64Array(nP), KDYZ = new Float64Array(nP), KDN = new Float64Array(nP), KSP = new Float64Array(nP),
+      KT0 = new Float64Array(nP), KT1 = new Float64Array(nP), KT2 = new Float64Array(nP), KE0 = new Float64Array(nP), KE1 = new Float64Array(nP), KE2 = new Float64Array(nP), KO0 = new Float64Array(nP), KO1 = new Float64Array(nP), KO2 = new Float64Array(nP);
+    for (let k = 0; k < nP; k++) {
+      const ph = 2 * Math.PI * k / nP, px = Math.cos(ph), py = Math.sin(ph), cpsi = px * o[0] + py * o[1];
+      const dx = px - cpsi * o[0], dy = py - cpsi * o[1], dz = -cpsi * o[2];
+      KPX[k] = px; KPY[k] = py; KC[k] = cpsi; KDX[k] = dx; KDYZ[k] = dy * e2[1] + dz * e2[2]; KDN[k] = Math.hypot(dx, dy, dz) || 1e-9;
+      KSP[k] = Math.sqrt(Math.max(1e-12, 1 - cpsi * cpsi));
+      const sp = Math.sqrt(Math.max(1e-9, 1 - cpsi * cpsi)), p2 = 0;
+      KT0[k] = (o[0] - cpsi * px) / sp; KT1[k] = (o[1] - cpsi * py) / sp; KT2[k] = o[2] / sp;
+      let ep0 = py * o[2] - p2 * o[1], ep1 = p2 * o[0] - px * o[2], ep2 = px * o[1] - py * o[0]; const en = Math.hypot(ep0, ep1, ep2) || 1; ep0 /= en; ep1 /= en; ep2 /= en;
+      KE0[k] = ep0; KE1[k] = ep1; KE2[k] = ep2; KO0[k] = o[1] * ep2 - o[2] * ep1; KO1[k] = o[2] * ep0 - o[0] * ep2; KO2[k] = o[0] * ep1 - o[1] * ep0;
+    }
+    for (let a = 0; a <= nR; a++) {
+      const rr = ri + (ro - ri) * a / nR, Fl = Math.pow(rr, -3) * (1 - Math.sqrt(ri / rr));
+      const u = 1 / rr, su = Math.sqrt(1 - u), r = 2 * rr, r15 = Math.pow(r, 1.5), Om = 1 / (r15 + spin), ut = (r15 + spin) / (Math.pow(r, 0.75) * Math.sqrt(Math.max(1e-6, r15 - 3 * Math.sqrt(r) + 2 * spin)));
+      for (let k = 0; k < nP; k++) {
+        const cpsi = KC[k], cosA = 1 - (1 - cpsi) * (1 - u), sinA = Math.sqrt(Math.max(0, 1 - cosA * cosA)), bb = rr * sinA / su;
+        const mX = bb * KDX[k] / KDN[k], mY = bb * KDYZ[k] / KDN[k];
+        const px = Math.round(cx + mX * scale), py = Math.round(cy - mY * scale); if (px < 0 || py < 0 || px >= w || py >= h) continue;
+        const mu = clamp(sinA * aci / KSP[k]);
+        const g = 1 / (ut * (1 - Om * (-2 * mX * si))), I = g * g * g * g * Fl * (1 + 2.06 * mu);
+        const i = py * w + px;
+        if ((k & 3) === 0 || !CB[i]) {                     // pol(m), unrolled
+          const k0 = cosA * KPX[k] + sinA * KT0[k], k1 = cosA * KPY[k] + sinA * KT1[k], k2 = sinA * KT2[k];
+          const mu2 = clamp(k2 * nz, 0, 1), PD = (1 - mu2) / (1 + 3.582 * mu2);
+          let f0 = k1 * nz, f1 = -k0 * nz, f2 = 0; const fn = Math.hypot(f0, f1, f2) || 1; f0 /= fn; f1 /= fn; f2 /= fn;
+          const ep0 = KE0[k], ep1 = KE1[k], ep2 = KE2[k];
+          const x0 = k1 * ep2 - k2 * ep1, x1 = k2 * ep0 - k0 * ep2, x2 = k0 * ep1 - k1 * ep0;
+          const A = f0 * ep0 + f1 * ep1 + f2 * ep2, B = f0 * x0 + f1 * x1 + f2 * x2;
+          const F0 = A * ep0 + B * KO0[k], F1 = A * ep1 + B * KO1[k], F2 = A * ep2 + B * KO2[k];
+          const pa = Math.atan2(F1 * e2[1] + F2 * e2[2], F0);
+          RB[i] = rr; IB[i] = I; CB[i] = PD * Math.cos(2 * pa); SB[i] = PD * Math.sin(2 * pa);
+        } else { RB[i] = rr; IB[i] = I; }
+        if (I > Imax && rr > ri * 1.15) Imax = I;
+        if (px + 1 < w && !RB[i + 1]) { RB[i + 1] = rr; IB[i + 1] = I; CB[i + 1] = CB[i]; SB[i + 1] = SB[i]; }
+        if (py + 1 < h && !RB[i + w]) { RB[i + w] = rr; IB[i + w] = I; CB[i + w] = CB[i]; SB[i + w] = SB[i]; }
+      }
+    }
+    const P = 2.9 * dpr, pr = 0.42;
+    const F = sampleField(w, h, (x, y, oo) => {
+      const i = y * w + x, rr = RB[i];
+      if (rr) { const t = Math.pow(Math.min(1.4, IB[i] / Imax), 0.3); oo.l = clamp(0.3 + 0.72 * t); oo.p = (rr - ri) / pr; oo.q = 0; const pd = Math.hypot(CB[i], SB[i]); if (pd > 0) { oo.pd = pd; oo.chi = Math.atan2(SB[i], CB[i]) / 2; } return; }
+      const X = (x - cx) / scale, Y = (cy - y) / scale, b = Math.hypot(X - bx, Y);
+      if (b < bc) { oo.l = 0.03; oo.p = y / P; oo.q = x / P; return; }
+      if (b < bc + 0.13) { oo.l = 0.9; oo.p = b * 3; oo.q = 0; return; }
+      oo.l = 0.6; oo.p = y / P; oo.q = x / P;
+    });
+    const st = [], rads = [ri * 1.2, ri * 1.2 + 1.8, 6.6, 9, 11.6].filter((v, k, A) => k === 0 || v > A[k - 1] + 1.2), nphi = D.i > 60 ? 16 : 18, maxL = 15 * dpr, placed = [];
+    rads.forEach((rr, ri2) => { for (let k = 0; k < nphi; k++) {
+      const ph = 2 * Math.PI * (k + (ri2 % 2) * 0.5) / nphi, m = map(rr, ph), pp = pol(m);
+      const X = cx + m.X * scale, Y = cy - m.Y * scale;
+      if (Math.hypot(m.X - bx, m.Y) < bc + 0.2 && m.cpsi < 0) continue;
+      if (placed.some(q => Math.hypot(q[0] - X, q[1] - Y) < maxL * 0.95)) continue; placed.push([X, Y]);
+      st.push({ x: X, y: Y, chi: pp.pa, len: clamp(pp.PD / 0.117, 0.12, 1) });
+    } });
+    return { F, st, P, maxL, spin };
+}
+const Disc = {
+  cv: $('#figDisc canvas'), kind: 'disc',
+  params: () => ({ a: DISC.a, i: DISC.i }),
+  build(draft) { const Z = sizeCanvas(this.cv, draft); if (!Z) return false; this.Z = Z; this.req = ++wkSeq; this.apply(discCompute(Z.w, Z.h, Z.dpr, this.params())); return true; },
+  apply(R) { this.F = R.F; this.st = R.st; this.P = R.P; this.maxL = R.maxL; $('#discVal').innerHTML = `the disc’s inner edge, the ISCO: <i>r</i> = ${iscoM(R.spin).toFixed(2)} <i>GM</i>/<i>c</i>²`; },
+  draw() { const c = this.cv.getContext('2d'); ink(c, this.F, this.P, 4); strokes(c, this.st, this.Z.dpr, this.maxL); }
+};
+
+/* ================= (speed) the full engravings are cut in a worker, so the page never freezes meanwhile =================
+   The worker is made from the very same functions (binCompute, discCompute and their helpers) — nothing is duplicated.
+   Quick half-resolution drafts while a slider is being dragged are still cut here, on the page. */
+let WK = null; const wkWait = new Map();
+try {
+  const src = `'use strict';\nconst D2R = Math.PI / 180;\nconst clamp = ${clamp};\nconst iscoM = ${iscoM};\n${rng}\n${sampleField}\n${binCompute}\n${discCompute}\n` +
+    `onmessage = e => { const d = e.data, R = (d.kind === 'bin' ? binCompute : discCompute)(d.w, d.h, d.dpr, d.par), F = R.F; postMessage({ id: d.id, R }, [F.L.buffer, F.Pp.buffer, F.Qq.buffer, F.C2.buffer, F.S2.buffer]); };`;
+  WK = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+  WK.onmessage = e => { const f = wkWait.get(e.data.id); wkWait.delete(e.data.id); if (f) f(e.data.R); };
+  WK.onerror = e => { if (e.preventDefault) e.preventDefault(); WK = null; const waiting = [...wkWait.values()]; wkWait.clear(); waiting.forEach(f => f(null)); };
+} catch (e) { WK = null; }
+function buildFull(p, then) {
+  const Z = measureCanvas(p.cv, false); if (!Z) return;
+  if (!WK) { if (p.build(false)) then(); return; }
+  const id = p.req = ++wkSeq;
+  wkWait.set(id, R => {
+    if (p.req !== id) return;                             // a newer build was asked for meanwhile
+    if (!R) { if (p.build(false)) then(); return; }       // the worker failed: cut it here after all
+    p.cv.width = Z.w; p.cv.height = Z.h; p.Z = Z; p.apply(R); then();
+  });
+  WK.postMessage({ id, kind: p.kind, w: Z.w, h: Z.h, dpr: Z.dpr, par: p.params() });
+}
+
+/* ================= Plate III: an accreting pulsar and the rotating vector (vector drawing) ================= */
+const PSR = { i: 40, t: 30, ph: 0.12, playing: true };
+const basis = () => { const i = PSR.i * D2R, th = PSR.t * D2R; return { i, th, n: [Math.sin(i), 0, Math.cos(i)], up: [-Math.cos(i), 0, Math.sin(i)], left: [0, 1, 0] }; };
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const mAt = (th, phi) => [Math.sin(th) * Math.cos(phi), Math.sin(th) * Math.sin(phi), Math.cos(th)];
+function paB(phi, B = basis()) { const m = mAt(B.th, phi); return Math.atan2(dot(m, B.left), dot(m, B.up)) * R2D; }   // PA from the projected spin axis, CCW
+const paX = phi => wrap180(paB(phi) + 90);                                                                            // the X-mode, ⟂ field
+const chiScreen = paUp => (paUp + 90) * D2R;                                                                          // PA from "up" → the filter's convention
+const psiAt = phi => { const B = basis(); return Math.acos(clamp(Math.cos(B.i) * Math.cos(B.th) + Math.sin(B.i) * Math.sin(B.th) * Math.cos(phi), -1, 1)) * R2D; };
+let SPH = null;
+function engraveSimple(w, h, P, field) {       // one-off burin for the little star
+  const F = sampleField(w, h, field), c = document.createElement('canvas'); c.width = w; c.height = h; const saved = AN.on; AN.on = false; ink(c.getContext('2d'), F, P, 0); AN.on = saved; return c;
+}
+function psrCanvas(el) { const cv = el.querySelector('canvas'), r = el.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); const w = Math.round(r.width * d), h = Math.round(r.height * d); if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } return { c: cv.getContext('2d'), w, h, d }; }
+function drawPulsar() {
+  const { c, w, h, d: dpr } = psrCanvas($('#figPsr'));
+  if (w < 20) return;
+  const B = basis(), phi = PSR.ph * 2 * Math.PI, m = mAt(B.th, phi);
+  const cx = w / 2, cy = h / 2, Rs = Math.min(w, h) * 0.075, Rpl = Math.min(w, h) * 0.42, u = Rs;
+  const toS = Pt => [cx - dot(Pt, B.left) * u, cy - dot(Pt, B.up) * u, dot(Pt, B.n)];
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h);
+  c.strokeStyle = 'rgba(30,26,21,.55)'; c.lineWidth = 1 * dpr; c.setLineDash([5 * dpr, 4 * dpr]); c.beginPath(); c.arc(cx, cy, Rpl, 0, 7); c.stroke(); c.setLineDash([]);
+  // field ticks on the front of the r_pl sphere: B ∝ 3(m·r̂)r̂ − m, projected on the sky
+  const RplU = Rpl / u, step = Rpl / 6.2; c.lineCap = 'round';
+  c.strokeStyle = 'rgba(30,26,21,.5)'; c.lineWidth = 1 * dpr;
+  // (speed) canvas strokes are expensive one by one — collect the ticks into one path, each field line into two
+  c.beginPath();
+  for (let gy = -Rpl; gy <= Rpl; gy += step) for (let gx = -Rpl; gx <= Rpl; gx += step) {
+    const rr = Math.hypot(gx, gy); if (rr > Rpl * 0.93 || rr < Rs * 1.35) continue;
+    const a = -gx / u, b = -gy / u, z = Math.sqrt(Math.max(0, RplU * RplU - a * a - b * b));
+    const Pt = [0, 1, 2].map(k => a * B.left[k] + b * B.up[k] + z * B.n[k]), Pn = Math.hypot(...Pt), rh = Pt.map(v => v / Pn), mdv = dot(m, rh);
+    const Bv = rh.map((v, k) => 3 * mdv * v - m[k]), bl = dot(Bv, B.left), bu = dot(Bv, B.up); if (Math.hypot(bl, bu) < 0.05) continue;
+    const pa = Math.atan2(bl, bu), L = step * 0.32, dx = -Math.sin(pa) * L, dy = -Math.cos(pa) * L;
+    c.moveTo(cx + gx - dx, cy + gy - dy); c.lineTo(cx + gx + dx, cy + gy + dy);
+  }
+  c.stroke();
+  // dipole field lines, turning with the star
+  const a1 = [Math.cos(B.th) * Math.cos(phi), Math.cos(B.th) * Math.sin(phi), -Math.sin(B.th)], b1 = [-Math.sin(phi), Math.cos(phi), 0];
+  for (const Ls of [2.4, 4.2, 7.5]) for (let k = 0; k < 6; k++) {
+    const vp = k / 6 * 2 * Math.PI + 0.3, th0 = Math.asin(Math.sqrt(1 / Ls)); let prev = null;
+    const front = new Path2D(), back = new Path2D();                                   // the near and the far side of this line
+    for (let j = 0; j <= 80; j++) { const vt = th0 + (Math.PI - 2 * th0) * j / 80, r = Ls * Math.sin(vt) ** 2, s = Math.sin(vt), cth = Math.cos(vt);
+      const p = toS([0, 1, 2].map(qq => r * (s * Math.cos(vp) * a1[qq] + s * Math.sin(vp) * b1[qq] + cth * m[qq])));
+      if (prev && !(p[2] < 0 && Math.hypot(p[0] - cx, p[1] - cy) < Rs)) { const P2 = p[2] >= 0 ? front : back; P2.moveTo(prev[0], prev[1]); P2.lineTo(p[0], p[1]); }
+      prev = p; }
+    c.strokeStyle = 'rgba(30,26,21,.18)'; c.lineWidth = 0.8 * dpr; c.stroke(back);
+    c.strokeStyle = 'rgba(30,26,21,.5)'; c.lineWidth = 1.1 * dpr; c.stroke(front);
+  }
+  // the engraved star
+  if (!SPH || SPH.R !== Math.round(Rs) || SPH.d !== dpr) {
+    const R = Math.round(Rs), S2 = 2 * R + 4, P = 2.4 * dpr, l0 = [-0.45, -0.55, 0.7];
+    SPH = { R, d: dpr, c: engraveSimple(S2, S2, P, (x, y, o) => { const X = (x - S2 / 2) / R, Y = (y - S2 / 2) / R, rr = X * X + Y * Y; if (rr > 1) { o.l = 1; return; } const Zz = Math.sqrt(1 - rr), lam = Math.max(0, X * l0[0] + Y * l0[1] + Zz * l0[2]); o.l = clamp(0.12 + 0.8 * lam); o.p = (Y * 0.9 + X * 0.25) * R / P + Zz * 2; o.q = X * R / P; }) };
+  }
+  c.drawImage(SPH.c, cx - SPH.c.width / 2, cy - SPH.c.height / 2);
+  // the spin axis Ω (fixed) and the magnetic axis m (turning) — no hot-spot glyph
+  const spinP = toS([0, 0, 1.6]);
+  c.strokeStyle = 'rgba(30,26,21,.85)'; c.lineWidth = 1.2 * dpr; c.setLineDash([2 * dpr, 3 * dpr]);
+  c.beginPath(); c.moveTo(2 * cx - spinP[0], 2 * cy - spinP[1]); c.lineTo(spinP[0], spinP[1]); c.stroke(); c.setLineDash([]);
+  const mTip = toS(m.map(v => v * 1.9));
+  c.strokeStyle = '#1E1A15'; c.lineWidth = 1.6 * dpr; c.beginPath(); c.moveTo(cx, cy); c.lineTo(mTip[0], mTip[1]); c.stroke();
+  // the polarization of the photons we see: the X-mode, ⟂ to the field at the centre of the r_pl sphere
+  const chi = chiScreen(paX(phi));
+  const st = [[0, 0], [0, -1], [0, 1], [-1, 0], [1, 0]].map(([ox, oy]) => ({ x: cx + ox * Rs * 0.95, y: cy + oy * Rs * 0.95, chi, len: 1 }));
+  strokes(c, st, dpr, Rs * 0.72);
+  c.font = `italic 600 ${15 * dpr}px "Cormorant Garamond", Garamond, serif`; c.fillStyle = '#1E1A15';
+  c.textAlign = 'left'; c.fillText('Ω', spinP[0] + 6 * dpr, spinP[1] - 2 * dpr); c.fillText('m', mTip[0] + 5 * dpr, mTip[1] - 3 * dpr);
+  c.textAlign = 'right'; c.fillText('r', cx + Rpl * 0.72 - 6 * dpr, cy - Rpl * 0.72 - 4 * dpr); c.font = `italic 600 ${10 * dpr}px "Cormorant Garamond", serif`; c.textAlign = 'left'; c.fillText('pl', cx + Rpl * 0.72 - 6 * dpr, cy - Rpl * 0.72);
+  c.font = `italic 500 ${14 * dpr}px "Cormorant Garamond", serif`; c.fillStyle = '#554B3E';
+  c.textAlign = 'left'; c.fillText(`φ = ${(PSR.ph * 360).toFixed(0)}°`, 10 * dpr, h - 10 * dpr); c.textAlign = 'right'; c.fillText(`ψ = ${psiAt(phi).toFixed(0)}°`, w - 10 * dpr, h - 10 * dpr);
+}
+function axes(c, d, x0, y0, x1, y1, yTicks, yLab, xLab) {
+  c.strokeStyle = 'rgba(30,26,21,.7)'; c.lineWidth = 1 * d; c.strokeRect(x0, y0, x1 - x0, y1 - y0);
+  c.font = `italic 500 ${13 * d}px "Cormorant Garamond", serif`; c.fillStyle = '#554B3E';
+  for (const [v, yy, lbl] of yTicks) { c.strokeStyle = 'rgba(30,26,21,.12)'; c.beginPath(); c.moveTo(x0, yy); c.lineTo(x1, yy); c.stroke(); c.textAlign = 'right'; c.fillText(lbl, x0 - 5 * d, yy + 4 * d); }
+  if (xLab) { for (let k = 0; k <= 4; k++) { const x = x0 + (x1 - x0) * k / 4; c.strokeStyle = 'rgba(30,26,21,.12)'; c.beginPath(); c.moveTo(x, y0); c.lineTo(x, y1); c.stroke(); c.textAlign = 'center'; c.fillText(String(k / 4), x, y1 + 15 * d); } }
+  c.save(); c.translate(x0 - 34 * d, (y0 + y1) / 2); c.rotate(-Math.PI / 2); c.textAlign = 'center'; c.fillStyle = '#1E1A15'; c.font = `italic 600 ${14 * d}px "Cormorant Garamond", serif`; c.fillText(yLab, 0, 0); c.restore();
+}
+function curve(c, fx, fy, x0, x1, n, wrapJump) {
+  let prev = null; c.beginPath();
+  for (let k = 0; k <= n; k++) { const u = k / n, x = x0 + (x1 - x0) * u, v = fx(u), y = fy(v);
+    if (k === 0 || (prev != null && wrapJump && Math.abs(v - prev) > wrapJump)) c.moveTo(x, y); else c.lineTo(x, y); prev = v; }
+  c.stroke();
+}
+// (speed) the graph itself only changes with the sliders, the filter or the size, so it is drawn only then;
+// the moving marker — the one thing that changes every frame — is two small elements on top, moved by the compositor
+let rvmKey = '', rvmMk = null;
+function drawRvm() {
+  const el = $('#figRvm'), { c, w, h, d } = psrCanvas(el); if (w < 20) return;
+  const x0 = 48 * d, x1 = w - 12 * d, y0 = 10 * d, strip = AN.on ? 42 * d : 0, y1 = h - 34 * d - strip;
+  const Y = v => y0 + (y1 - y0) * (180 - v) / 180;
+  if (!rvmMk) { rvmMk = [document.createElement('i'), document.createElement('i')]; rvmMk[0].className = 'mk-l'; rvmMk[1].className = 'mk-d'; rvmMk.forEach(e => { e.setAttribute('aria-hidden', 'true'); el.appendChild(e); }); }
+  const px = x0 + (x1 - x0) * PSR.ph, py = Y(paX(PSR.ph * 2 * Math.PI));
+  rvmMk[0].style.height = (y1 + strip - y0) / d + 'px'; rvmMk[0].style.transform = `translate(${(px / d - 0.5).toFixed(2)}px, ${(y0 / d).toFixed(2)}px)`;
+  rvmMk[1].style.transform = `translate(${(px / d).toFixed(2)}px, ${(py / d).toFixed(2)}px)`;
+  const key = [w, h, d, AN.on, AN.th, PSR.i, PSR.t].join();
+  if (key === rvmKey && c.canvas.width === w) return; rvmKey = key;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h);
+  axes(c, d, x0, y0, x1, y1, [[180, Y(180), '180°'], [90, Y(90), '90°'], [0, Y(0), '0°']], 'angle', !AN.on);
+  if (AN.on) { const ta = wrap180(AN.th - 90); c.strokeStyle = 'rgba(30,26,21,.45)'; c.setLineDash([4 * d, 4 * d]); c.beginPath(); c.moveTo(x0, Y(ta)); c.lineTo(x1, Y(ta)); c.stroke(); c.setLineDash([]); c.font = `italic 500 ${13 * d}px "Cormorant Garamond", serif`; c.fillStyle = '#554B3E'; c.textAlign = 'right'; c.fillText('filter axis', x1 - 4 * d, Y(ta) - 4 * d); }
+  c.strokeStyle = '#1E1A15'; c.lineWidth = 1.6 * d; curve(c, u => paX(u * 2 * Math.PI), Y, x0, x1, 240, 120);
+  if (AN.on) {        // flux through the filter: (1 + p cos 2(χ − θ)) / 2, p = 0.6
+    const s0 = y1 + 8 * d, s1 = h - 20 * d, fy = f => s1 - (s1 - s0) * f;
+    c.strokeStyle = 'rgba(30,26,21,.35)'; c.lineWidth = 1 * d; c.strokeRect(x0, s0, x1 - x0, s1 - s0);
+    c.strokeStyle = RUB; c.lineWidth = 1.5 * d; curve(c, u => (1 + 0.6 * Math.cos(2 * (chiScreen(paX(u * 2 * Math.PI)) - AN.th * D2R))) / 2 / 0.8, fy, x0, x1, 200, 0);
+    c.font = `italic 500 ${13 * d}px "Cormorant Garamond", serif`; c.fillStyle = '#554B3E'; c.textAlign = 'left'; c.fillText('through the filter', x0 + 5 * d, s0 + 13 * d);
+    for (let k = 0; k <= 4; k++) { c.textAlign = 'center'; c.fillText(String(k / 4), x0 + (x1 - x0) * k / 4, h - 4 * d); }
+  } else { c.font = `italic 600 ${14 * d}px "Cormorant Garamond", serif`; c.fillStyle = '#1E1A15'; c.textAlign = 'center'; c.fillText('rotational phase φ', (x0 + x1) / 2, h - 2 * d); }
+}
+const drawDyn = () => { drawPulsar(); drawRvm(); };
+
+/* ================= wiring: lazy engraving, redraws on the analyzer, live controls ================= */
+const plates = [Bin, Disc], built = new Set();
+let stamp = 0, pending = false;
+function drawP(p) { p.draw(); p.stamp = stamp; }
+subs.push(() => { stamp++; if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; for (const p of plates) if (built.has(p) && p.visible) drawP(p); if (psrVisible) drawDyn(); }); });
+let psrVisible = false;
+const io = new IntersectionObserver(es => { for (const e of es) {
+  const p = plates.find(q => q.cv.parentElement === e.target);
+  if (p) { p.visible = e.isIntersecting; if (e.isIntersecting && !built.has(p) && !p.asked) { p.asked = true; idle(() => buildFull(p, () => { built.add(p); drawP(p); })); } else if (e.isIntersecting && built.has(p) && p.stamp !== stamp) drawP(p); }
+  if (e.target.id === 'plate3') { psrVisible = e.isIntersecting; if (psrVisible) drawDyn(); }
+} }, { rootMargin: '400px 0px' });
+io.observe($('#figBin')); io.observe($('#figDisc')); io.observe($('#plate3'));
+// a slider drags → a quick draft at half resolution; let go → the full engraving
+function live(p, apply) {
+  let raf = 0, full = 0;
+  return (e) => {
+    apply();
+    if (!built.has(p)) return;
+    cancelAnimationFrame(raf); clearTimeout(full);
+    const final = e && e.type === 'change';
+    const done = () => { drawP(p); p.cv.parentElement.classList.remove('drafting'); };
+    raf = requestAnimationFrame(() => { if (final) return buildFull(p, done); if (p.build(true)) drawP(p); p.cv.parentElement.classList.add('drafting'); });
+    if (!final) full = setTimeout(() => buildFull(p, done), 450);
+  };
+}
+const fmtPh = v => (v / 100).toFixed(2);
+const binApply = () => { BIN.ph = +$('#binPh').value / 100; BIN.i = +$('#binI').value; BIN.q = +$('#binQ').value / 100; $('#binPhV').textContent = fmtPh($('#binPh').value); $('#binIV').textContent = BIN.i + '°'; $('#binQV').textContent = BIN.q.toFixed(2); };
+const discApply = () => { DISC.a = +$('#discA').value / 100; DISC.i = +$('#discI').value; $('#discAV').textContent = DISC.a.toFixed(2); $('#discIV').textContent = DISC.i + '°'; };
+binApply(); discApply();
+const binLive = live(Bin, binApply), discLive = live(Disc, discApply);
+for (const id of ['binPh', 'binI', 'binQ']) { $('#' + id).addEventListener('input', binLive); $('#' + id).addEventListener('change', binLive); }
+for (const id of ['discA', 'discI']) { $('#' + id).addEventListener('input', discLive); $('#' + id).addEventListener('change', discLive); }
+// the pulsar turns while it is on screen
+let last = performance.now(), scrub = false;
+// (speed) if the machine can't keep up — frames arriving slower than ~45 a second while the pulsar turns — it is
+// redrawn every other frame from then on (the turn itself stays smooth in time, just at 30 steps a second)
+let frameEma = 16.7, slowFor = 0, halfRate = false, odd = false;
+const loop = now => { const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (psrVisible && PSR.playing && !RM() && !document.hidden && !scrub) {
+    PSR.ph = (PSR.ph + dt / 9) % 1;
+    if (!halfRate && dt > 0) { frameEma += (dt * 1000 - frameEma) * 0.1; slowFor = frameEma > 22 ? slowFor + dt : 0; if (slowFor > 1.5) halfRate = true; }
+    odd = !odd; if (!halfRate || odd) drawDyn();
+  }
+  requestAnimationFrame(loop); };
+requestAnimationFrame(loop);
+const play = $('#play'), setPlay = p => { PSR.playing = p; play.textContent = p ? 'pause' : 'turn'; play.setAttribute('aria-pressed', p); };
+play.addEventListener('click', () => setPlay(!PSR.playing)); if (RM()) setPlay(false);
+const sI = $('#inI'), sT = $('#inT');
+const upd = () => { PSR.i = +sI.value; PSR.t = +sT.value; $('#vI').textContent = PSR.i + '°'; $('#vT').textContent = PSR.t + '°'; drawDyn(); };
+sI.addEventListener('input', upd); sT.addEventListener('input', upd);
+{ const el = $('#figRvm'); el.style.cursor = 'ew-resize'; el.style.touchAction = 'pan-y';
+  const at = e => { const r = el.getBoundingClientRect(); PSR.ph = clamp((e.clientX - r.left - 48) / (r.width - 60), 0, 0.9999); drawDyn(); };
+  el.addEventListener('pointerdown', e => { scrub = true; el.setPointerCapture(e.pointerId); at(e); });
+  el.addEventListener('pointermove', e => { if (scrub) at(e); });
+  el.addEventListener('pointerup', () => { scrub = false; }); el.addEventListener('pointercancel', () => { scrub = false; }); }
+let rt = 0, lastW = innerWidth;
+addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { SPH = null; drawDyn(); if (Math.abs(innerWidth - lastW) < 2) return; lastW = innerWidth; for (const p of [...built]) buildFull(p, () => drawP(p)); }, 200); });
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { rvmKey = ''; upd(); });
+try { const s = JSON.parse(sessionStorage.getItem('rv.an') || 'null'); if (s) { AN.th = s[0]; AN.on = s[1]; } } catch (e) {}
+setAn(AN.th, AN.on);
+
+/* sub-navigation: mark the chapter in view */
+const navA = $$('#rhNav a');
+const spy = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) navA.forEach(a => { const on = a.getAttribute('href') === '#' + en.target.id; a.setAttribute('aria-current', on); if (on && innerWidth < 760) a.parentNode.scrollTo({ left: a.offsetLeft - 30, behavior: RM() ? 'auto' : 'smooth' }); }); }), { rootMargin: '-40% 0px -55% 0px' });
+$$('section.ch').forEach(s => spy.observe(s));
+
+/* commands for this page */
+RV.register('analyzer', a => {
+  const v = (a[0] || '').toLowerCase();
+  if (!v) return [`analyzer: <span class="a">${AN.on ? AN.th.toFixed(0) + '°' : 'out'}</span>${AN.spin ? ' (turning)' : ''} <span class="m">— analyzer &lt;deg&gt; | on | off | turn | stop</span>`];
+  if (v === 'off' || v === 'out') { stopSpin(); setAn(null, false); return ['the filter is put away. the plates look as printed.']; }
+  if (v === 'on' || v === 'in') { setAn(null, true); return [`the filter is over the plates, at ${AN.th.toFixed(0)}°.`]; }
+  if (v === 'turn' || v === 'spin') { startSpin(); return ['the filter turns slowly. grab the dial (or type analyzer stop) to hold it.']; }
+  if (v === 'stop' || v === 'hold') { stopSpin(); return [`held at ${AN.th.toFixed(0)}°.`]; }
+  const x = parseFloat(v); if (!isFinite(x)) return ['<span class="m">usage: analyzer &lt;degrees&gt; | on | off | turn | stop</span>'];
+  stopSpin(); setAn(x, true); return [`analyzer at ${AN.th.toFixed(0)}°. strokes at ${((AN.th + 90) % 180).toFixed(0)}° go dark.`];
+}, { help: 'analyzer &lt;deg&gt;|on|off|turn · plate 1–3' });
+RV.register('plate', a => { const k = parseInt(a[0], 10), el = { 1: '#plate1', 2: '#plate2', 3: '#plate3' }[k]; if (!el) return ['<span class="m">usage: plate 1–3</span>']; $(el).scrollIntoView({ behavior: RM() ? 'auto' : 'smooth', block: 'start' }); return [`→ plate ${['', 'I', 'II', 'III'][k]}`]; });
+for (const [k, id] of [['papers', '#papers'], ['talks', '#talks'], ['interests', '#interests'], ['path', '#path'], ['career', '#path'], ['plates', '#plate1'], ['figures', '#plate1']])
+  RV.register(k, () => { $(id).scrollIntoView({ behavior: RM() ? 'auto' : 'smooth' }); history.replaceState(null, '', id); return [`→ ${k}`]; }, { hidden: ['career', 'figures', 'interests', 'plates'].includes(k) });
+window.__rs = { AN, setAn, BIN, DISC, PSR, Bin, Disc, built: () => built.size, epi: () => EPI.map(e => [e.ang, +getComputedStyle(e.el).getPropertyValue('--v')]), iscoM, paX };
+})();
+</script>
+</body>
+</html>
