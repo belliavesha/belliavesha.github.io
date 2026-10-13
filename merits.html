@@ -23,9 +23,9 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{min-height:100vh;min-height:100svh;font-family:var(--serif);font-optical-sizing:auto;font-variation-settings:"SOFT" 50,"WONK" 0;color:var(--ink);font-size:17px;line-height:1.45;overflow-x:hidden;background:var(--wall)}
+body{min-height:100vh;min-height:100svh;font-family:var(--serif);font-optical-sizing:auto;font-variation-settings:"SOFT" 50,"WONK" 0;color:var(--ink);font-size:15.3px;line-height:1.45;overflow-x:hidden;background:var(--wall)}
 a{color:inherit}
-:focus-visible{outline:2px dashed var(--berry);outline-offset:4px;border-radius:3px}
+:focus-visible{outline:2px dashed var(--berry);outline-offset:3.6px;border-radius:2.7px}
 
 /* the wallpaper: the flower tile, repeated both ways, warmed from its cool greys towards the almanac's cream.
    .paper/.room live INSIDE .wall (not fixed to the body) so their height comes from .wall's own,
@@ -33,7 +33,7 @@ a{color:inherit}
    version only ever covers one viewport's worth and goes flat below the fold. z-index:-1 keeps both
    behind .wall's real (static) content without having to touch that content's stacking at all. */
 .paper{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
-.paper::before{content:"";position:absolute;inset:0;background:url(assets/images/flowers_tiled2.png) 0 0/1152px 1152px repeat;
+.paper::before{content:"";position:absolute;inset:0;background:url(assets/images/flowers_tiled2.png) 0 0/1036.8px 1036.8px repeat;
   filter:sepia(.45) saturate(.9) brightness(1.1) contrast(.68)}
 .paper::after{content:"";position:absolute;inset:0;background:#F1E6D0;mix-blend-mode:screen;opacity:.32}
 /* the light in the room: daylight from the window by day, a warm lamp at night (kept mild — no jump in brightness from page to page) */
@@ -41,56 +41,56 @@ a{color:inherit}
   background:radial-gradient(110% 80% at 88% 6%, rgba(240,246,252,calc(.35 * (1 - var(--light)))), transparent 60%),
              radial-gradient(70% 60% at 50% 22%, rgba(255,224,178,calc(.45 * var(--light))), rgba(255,214,160,calc(.22 * var(--light))) 70%),
              radial-gradient(150% 115% at 50% 25%, transparent 45%, rgba(40,24,10,calc(.14 + .22 * var(--light))) 100%)}
-.wall{position:relative;min-height:100vh;min-height:100svh;padding:34px 20px calc(150px + var(--rv-reserve));overflow-x:clip}
+.wall{position:relative;min-height:100vh;min-height:100svh;padding:30.6px 18px calc(135px + var(--rv-reserve));overflow-x:clip}
 
 /* the heading: plain text, left of the little window */
-.head{display:flex;align-items:center;justify-content:space-between;gap:24px 40px;max-width:1120px;margin:0 auto 46px}
-.words h1{margin:0;font-weight:380;font-size:clamp(48px,7vw,86px);line-height:.95;letter-spacing:-.015em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
-.words p{margin:.45em 0 0;font-style:italic;font-size:clamp(18px,1.8vw,22px);line-height:1.35;max-width:24em;color:var(--ink-2)}
+.head{display:flex;align-items:center;justify-content:space-between;gap:21.6px 36px;max-width:1008px;margin:0 auto 41.4px}
+.words h1{margin:0;font-weight:380;font-size:clamp(43.2px,7vw,77.4px);line-height:.95;letter-spacing:-.015em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
+.words p{margin:.45em 0 0;font-style:italic;font-size:clamp(16.2px,1.8vw,19.8px);line-height:1.35;max-width:24em;color:var(--ink-2)}
 .words{position:relative}
-.words::before{content:"";position:absolute;inset:-26px -60px -30px -50px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,234,218,.92),rgba(242,234,218,.7) 60%,rgba(242,234,218,0));z-index:-1;pointer-events:none}
-.words h1,.words p{text-shadow:0 0 10px var(--wall),0 0 3px var(--wall)}
-.peek{flex:none;position:relative;display:block;width:150px;height:118px;border:8px solid #EFE8DA;border-radius:2px;
-  box-shadow:0 0 0 2px #7A5C3C,0 12px 20px -8px rgba(0,0,0,.5),inset 0 0 12px rgba(0,0,0,.25);overflow:hidden;background:#8BB4DB}
+.words::before{content:"";position:absolute;inset:-23.4px -54px -27px -45px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,234,218,.92),rgba(242,234,218,.7) 60%,rgba(242,234,218,0));z-index:-1;pointer-events:none}
+.words h1,.words p{text-shadow:0 0 9px var(--wall),0 0 2.7px var(--wall)}
+.peek{flex:none;position:relative;display:block;width:135px;height:106.2px;border:7.2px solid #EFE8DA;border-radius:2px;
+  box-shadow:0 0 0 2px #7A5C3C,0 10.8px 18px -7.2px rgba(0,0,0,.5),inset 0 0 10.8px rgba(0,0,0,.25);overflow:hidden;background:#8BB4DB}
 .peek canvas{display:block;width:100%;height:100%}
-.peek::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#EFE8DA}
-.peek .tag{position:absolute;left:50%;bottom:6px;transform:translate(-50%,4px);white-space:nowrap;font:500 11.5px "DM Mono",ui-monospace,monospace;padding:4px 8px;border-radius:999px;background:rgba(21,23,25,.86);color:#EEE7D9;opacity:0;transition:opacity .2s,transform .2s;z-index:2}
+.peek::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:3.6px;margin-left:-2px;background:#EFE8DA}
+.peek .tag{position:absolute;left:50%;bottom:5.4px;transform:translate(-50%,3.6px);white-space:nowrap;font:500 10.3px "DM Mono",ui-monospace,monospace;padding:3.6px 7.2px;border-radius:899.1px;background:rgba(21,23,25,.86);color:#EEE7D9;opacity:0;transition:opacity .2s,transform .2s;z-index:2}
 .peek:hover .tag,.peek:focus-visible .tag{opacity:1;transform:translate(-50%,0)}
-@media (max-width:640px){.head{flex-direction:column-reverse;align-items:flex-start;margin-bottom:38px}.peek{align-self:flex-end;width:112px;height:88px;border-width:6px;margin-bottom:-10px}}
+@media (max-width:576px){.head{flex-direction:column-reverse;align-items:flex-start;margin-bottom:34.2px}.peek{align-self:flex-end;width:100.8px;height:79.2px;border-width:5.4px;margin-bottom:-9px}}
 
 /* the frames: generated from SITE.merits; each hangs from a nail on a string */
-.hang{list-style:none;margin:0 auto;padding:0;max-width:1120px;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:70px 40px}
+.hang{list-style:none;margin:0 auto;padding:0;max-width:1008px;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:63px 36px}
 .hang li{position:relative;width:var(--w);margin-top:var(--drop,0)}
-.hang li.L{--w:min(430px,100%)} .hang li.M{--w:min(340px,100%)} .hang li.S{--w:min(250px,100%)}
-@media (max-width:640px){.hang{gap:62px 16px}.hang li.L{--w:100%}.hang li.M{--w:100%}.hang li.S{--w:calc(50% - 8px)}.hang li{margin-top:0}}
-.frame{position:relative;display:block;width:100%;text-decoration:none;transform:rotate(var(--tilt,0deg));transform-origin:50% -38px;transition:transform .5s cubic-bezier(.3,1.5,.5,1)}
+.hang li.L{--w:min(387px,100%)} .hang li.M{--w:min(306px,100%)} .hang li.S{--w:min(225px,100%)}
+@media (max-width:576px){.hang{gap:55.8px 14.4px}.hang li.L{--w:100%}.hang li.M{--w:100%}.hang li.S{--w:calc(50% - 7.2px)}.hang li{margin-top:0}}
+.frame{position:relative;display:block;width:100%;text-decoration:none;transform:rotate(var(--tilt,0deg));transform-origin:50% -34.2px;transition:transform .5s cubic-bezier(.3,1.5,.5,1)}
 .frame:hover,.frame:focus-visible{transform:rotate(0deg)}
 /* the string: from the nail DOWN to two screw-eyes on the top of the frame — a Λ, never a V */
-.string{position:absolute;left:0;top:-40px;width:100%;height:46px;overflow:visible;pointer-events:none}
+.string{position:absolute;left:0;top:-36px;width:100%;height:41.4px;overflow:visible;pointer-events:none}
 .string line{stroke:#3A2A1C;stroke-width:1.3}
 .string .eye{fill:none;stroke:#8A7456;stroke-width:1.2}
 .string .nail{fill:url(#nailG)}
-.moulding{position:relative;display:block;padding:var(--fw,12px);background:var(--fc,var(--walnut));border-radius:2px;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 2px 2px 0 rgba(255,255,255,.1),inset -2px -2px 0 rgba(0,0,0,.25),0 18px 24px -12px rgba(15,8,2,.55),0 4px 6px -2px rgba(15,8,2,.35)}
-.frame.birch .moulding{background:var(--birch);background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.03) 0 2px,transparent 2px 9px)}
+.moulding{position:relative;display:block;padding:var(--fw,10.8px);background:var(--fc,var(--walnut));border-radius:2px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 2px 2px 0 rgba(255,255,255,.1),inset -2px -2px 0 rgba(0,0,0,.25),0 16.2px 21.6px -10.8px rgba(15,8,2,.55),0 3.6px 5.4px -2px rgba(15,8,2,.35)}
+.frame.birch .moulding{background:var(--birch);background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.03) 0 2px,transparent 2px 8.1px)}
 .frame.black .moulding{background:var(--black)}
 .frame.gilt .moulding{background:linear-gradient(135deg,#8C6A2E,#C9A457 40%,#8C6A2E 60%,#B9954A)}
-.mat{display:grid;place-items:center;background:var(--mat);aspect-ratio:var(--ar,1.35);padding:13%;box-shadow:inset 1px 1px 3px rgba(0,0,0,.18)}
+.mat{display:grid;place-items:center;background:var(--mat);aspect-ratio:var(--ar,1.35);padding:13%;box-shadow:inset 1px 1px 2.7px rgba(0,0,0,.18)}
 .mat img{max-width:100%;max-height:100%;object-fit:contain;display:block;mix-blend-mode:multiply}
-.frame:hover .mat,.frame:focus-visible .mat{box-shadow:inset 1px 1px 3px rgba(0,0,0,.18),inset 0 0 40px rgba(255,236,190,.35)}
-.plaque{display:block;margin:14px auto 0;max-width:94%;padding:7px 12px 8px;background:var(--plaque);color:var(--ink);border-radius:2px;text-align:center;box-shadow:0 5px 10px -6px rgba(0,0,0,.45);font-size:15px;line-height:1.3}
-.plaque b{display:block;font-weight:560;font-size:15.5px;font-variation-settings:"SOFT" 100,"WONK" 0}
-.plaque span{display:block;font-size:13px;color:var(--ink-2);font-style:italic;margin-top:2px}
-.plaque .pdf{font-style:normal;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--berry);margin-top:4px;font-family:"DM Mono",ui-monospace,monospace}
+.frame:hover .mat,.frame:focus-visible .mat{box-shadow:inset 1px 1px 2.7px rgba(0,0,0,.18),inset 0 0 36px rgba(255,236,190,.35)}
+.plaque{display:block;margin:12.6px auto 0;max-width:94%;padding:6.3px 10.8px 7.2px;background:var(--plaque);color:var(--ink);border-radius:2px;text-align:center;box-shadow:0 4.5px 9px -5.4px rgba(0,0,0,.45);font-size:13.5px;line-height:1.3}
+.plaque b{display:block;font-weight:560;font-size:14px;font-variation-settings:"SOFT" 100,"WONK" 0}
+.plaque span{display:block;font-size:11.7px;color:var(--ink-2);font-style:italic;margin-top:2px}
+.plaque .pdf{font-style:normal;font-size:9.9px;letter-spacing:.1em;text-transform:uppercase;color:var(--berry);margin-top:3.6px;font-family:"DM Mono",ui-monospace,monospace}
 .frame:hover .plaque .pdf,.frame:focus-visible .plaque .pdf{text-decoration:underline}
-.badge{position:absolute;right:-10px;top:-12px;z-index:2;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--berry);color:#fff;font-size:10px;line-height:1.05;text-align:center;font-weight:600;transform:rotate(12deg);box-shadow:0 3px 6px rgba(0,0,0,.35)}
+.badge{position:absolute;right:-9px;top:-10.8px;z-index:2;width:41.4px;height:41.4px;border-radius:50%;display:grid;place-items:center;background:var(--berry);color:#fff;font-size:9px;line-height:1.05;text-align:center;font-weight:600;transform:rotate(12deg);box-shadow:0 2.7px 5.4px rgba(0,0,0,.35)}
 
 /* the floor: boards and a rag rug (räsymatto), and whoever sleeps on it */
-.floor{position:absolute;left:0;right:0;bottom:0;height:120px;background:#8A6A48;background-image:linear-gradient(180deg,rgba(0,0,0,.28),transparent 30%),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 2px,transparent 2px 180px);border-top:9px solid #5E4630}
-.rug{position:absolute;left:50%;top:30px;width:min(520px,78vw);height:54px;transform:translateX(-50%) perspective(300px) rotateX(38deg);
-  background:repeating-linear-gradient(90deg,#EFE6D3 0 10px,#B44A3F 10px 16px,#EFE6D3 16px 30px,#3D4A63 30px 34px,#EFE6D3 34px 46px,#D8A984 46px 50px);border-radius:3px;box-shadow:0 6px 10px rgba(0,0,0,.3)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:108px;background:#8A6A48;background-image:linear-gradient(180deg,rgba(0,0,0,.28),transparent 30%),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 2px,transparent 2px 162px);border-top:8.1px solid #5E4630}
+.rug{position:absolute;left:50%;top:27px;width:min(468px,78vw);height:48.6px;transform:translateX(-50%) perspective(270px) rotateX(38deg);
+  background:repeating-linear-gradient(90deg,#EFE6D3 0 9px,#B44A3F 9px 14.4px,#EFE6D3 14.4px 27px,#3D4A63 27px 30.6px,#EFE6D3 30.6px 41.4px,#D8A984 41.4px 45px);border-radius:2.7px;box-shadow:0 5.4px 9px rgba(0,0,0,.3)}
 /* the hedgehog asleep on the rug: cells (1,1)⇄(1,2) of the shore sheet — slow breaths, z's drawn in */
-.sleeper{position:absolute;left:calc(50% + 56px);top:6px;width:56px;height:56px;background:url(assets/images/hog_sprites.png) 14.2857% 14.2857%/800% 800% no-repeat;filter:brightness(.95) sepia(.2);animation:snore 2.6s steps(1) infinite}
+.sleeper{position:absolute;left:calc(50% + 50.4px);top:5.4px;width:50.4px;height:50.4px;background:url(assets/images/hog_sprites.png) 14.2857% 14.2857%/800% 800% no-repeat;filter:brightness(.95) sepia(.2);animation:snore 2.6s steps(1) infinite}
 @keyframes snore{0%{background-position:14.2857% 14.2857%}50%{background-position:28.5714% 14.2857%}}
 html.rv-reduced .sleeper{animation:none}
 .sleeper[hidden]{display:none}
@@ -121,14 +121,15 @@ html.rv-reduced .sleeper{animation:none}
 'use strict';
 const { clamp, smooth, mix, rgba, esc } = RV;
 const $ = s => document.querySelector(s);
+const Z = 0.9;                                                     // the page is set at 90% (as the CSS): frame widths, drops and strings scale with it
 const FRAME = { gilt: ['gilt', 16], walnut: ['', 12], black: ['black', 9], birch: ['birch', 10] };
 const AR = { L: 1.5, M: 1.3, S: 1.2 };
 const jit = (k, a) => { const x = Math.sin(k * 12.9898 + a * 78.233) * 43758.5453; return x - Math.floor(x); };   // a steady, per-frame wobble
 $('#hang').innerHTML = SITE.merits.map((m, k) => {
   const [cls, fw] = FRAME[m.frame] || FRAME.walnut, size = m.size || 'M';
-  const tilt = m.tilt != null ? m.tilt : ((jit(k, 1) - 0.5) * 4.2).toFixed(1), drop = size === 'L' ? 0 : Math.round(jit(k, 2) * 36);
-  return `<li class="${size}" style="--drop:${drop}px"><a class="frame ${cls}" style="--tilt:${tilt}deg;--fw:${fw}px;--ar:${m.ar || AR[size]}" href="${SITE.PDF + m.pdf}" target="_blank" rel="noopener">` +
-    `<svg class="string" aria-hidden="true"><line x1="50%" y1="4" x2="23%" y2="43"/><line x1="50%" y1="4" x2="77%" y2="43"/><circle class="eye" cx="23%" cy="43.5" r="2.4"/><circle class="eye" cx="77%" cy="43.5" r="2.4"/><circle class="nail" cx="50%" cy="4" r="4"/></svg>` +
+  const tilt = m.tilt != null ? m.tilt : ((jit(k, 1) - 0.5) * 4.2).toFixed(1), drop = size === 'L' ? 0 : Math.round(jit(k, 2) * 36 * Z);
+  return `<li class="${size}" style="--drop:${drop}px"><a class="frame ${cls}" style="--tilt:${tilt}deg;--fw:${(fw * Z).toFixed(1)}px;--ar:${m.ar || AR[size]}" href="${SITE.PDF + m.pdf}" target="_blank" rel="noopener">` +
+    `<svg class="string" aria-hidden="true"><line x1="50%" y1="3.6" x2="23%" y2="38.7"/><line x1="50%" y1="3.6" x2="77%" y2="38.7"/><circle class="eye" cx="23%" cy="39.2" r="2.2"/><circle class="eye" cx="77%" cy="39.2" r="2.2"/><circle class="nail" cx="50%" cy="3.6" r="3.6"/></svg>` +
     (m.badge ? `<span class="badge" aria-hidden="true">${m.badge}</span>` : '') +
     `<span class="moulding"><span class="mat"><img src="assets/images/logos/${esc(m.logo)}" alt="${esc(m.alt)}" loading="lazy"></span></span>` +
     `<span class="plaque"><b>${esc(m.title)}</b><span>${esc(m.where)} · ${esc(m.when)}</span><span class="pdf">open the pdf</span></span></a></li>`;

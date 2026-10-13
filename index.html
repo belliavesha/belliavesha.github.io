@@ -12,6 +12,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..700,0..100,0..1;1,9..144,300..700,0..100,0..1&family=DM+Mono:wght@400;500&display=swap">
+<script>
+/* The lake is laid out as if the browser were zoomed to 70% and then scaled to fit — the proportions of the painting
+   (a wide lake, a big cabin, modest type) at the normal 100%. Phones keep 100%: there the text has to stay readable. */
+window.heroZoom = () => (innerWidth < 520 || matchMedia('(pointer:coarse) and (max-height:520px)').matches) ? 1 : 0.7;
+document.documentElement.style.setProperty('--z', heroZoom());
+</script>
 <link rel="stylesheet" href="site.css">
 <style>
 :root{
@@ -43,7 +49,8 @@ a{color:inherit}
 button{font:inherit;color:inherit}
 
 /* ---------- the scene ---------- */
-.hero{position:relative;height:100vh;height:100svh;min-height:540px;overflow:hidden;background:#243650;isolation:isolate;touch-action:manipulation}
+.hero-clip{position:relative;height:100vh;height:100svh;min-height:calc(540px * var(--z, 1));overflow:hidden}
+.hero{position:relative;width:calc(100% / var(--z, 1));height:calc(100% / var(--z, 1));min-height:540px;transform:scale(var(--z, 1));transform-origin:0 0;container-type:size;overflow:hidden;background:#243650;isolation:isolate;touch-action:manipulation}
 #sky{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
 .fg{position:absolute;inset:0;z-index:2;pointer-events:none;width:100%;height:100%;overflow:visible}
 .fg .foot{animation:footfade 22s linear forwards}
@@ -51,19 +58,19 @@ button{font:inherit;color:inherit}
 @keyframes footfade{from{opacity:.55}to{opacity:0}}
 #wx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
 
-.hero-text{position:absolute;z-index:3;left:max(24px,5.5vw);top:clamp(64px,12vh,128px);width:min(600px,calc(100% - 48px));color:var(--sky-ink)}
+.hero-text{position:absolute;z-index:3;left:max(24px,5.5cqw);top:clamp(64px,12cqh,128px);width:min(600px,calc(100% - 48px));color:var(--sky-ink)}
 .hero.ready .hero-text{transition:color 1.5s ease}
 .scrim{position:absolute;inset:-34px -40px;border-radius:60px;background:var(--scrim-c);opacity:var(--scrim-a);filter:blur(26px);z-index:-1;pointer-events:none}
 .hero.ready .scrim{transition:opacity 1.5s ease,background-color 1.5s ease}
-.hero h1{margin:0;font-weight:360;font-size:clamp(46px,7vw,100px);line-height:.98;letter-spacing:-.018em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
-.lead{margin:.6em 0 0;font-size:clamp(17.5px,1.5vw,21.5px);line-height:1.5;max-width:30em;font-variation-settings:"SOFT" 80,"WONK" 0}
+.hero h1{margin:0;font-weight:360;font-size:clamp(46px,7cqw,100px);line-height:.98;letter-spacing:-.018em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
+.lead{margin:.6em 0 0;font-size:clamp(17.5px,1.5cqw,21.5px);line-height:1.5;max-width:30em;font-variation-settings:"SOFT" 80,"WONK" 0}
 .lead a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:color-mix(in srgb,currentColor 50%,transparent)}
 .lead a:hover{text-decoration-color:currentColor;text-decoration-thickness:2px}
 .lead .chill{display:inline;border:0;background:none;padding:0;cursor:pointer;font:inherit;font-style:italic;color:inherit;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:.22em;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent)}
 .lead .chill:hover{text-decoration-color:currentColor}
 .lead .or{white-space:nowrap}
 .lead .psst-k{font-style:italic}
-@media (max-width:699px){.hero-text{top:clamp(40px,6.5vh,72px)}.hero h1{font-size:44px}.lead{font-size:16.5px;line-height:1.48}}
+@container (max-width:699px){.hero-text{top:clamp(40px,6.5cqh,72px)}.hero h1{font-size:44px}.lead{font-size:16.5px;line-height:1.48}}
 
 /* the cabin window, with Vlad in it (one still photo; the nod is switched off — see NOD_ENABLED) */
 .win{position:absolute;z-index:3;left:0;top:0;padding:5px;background:var(--trim);border-radius:2px;
@@ -122,7 +129,7 @@ html[data-light="night"] .door-h{--brass:#8E7748;--brass-2:#6B5932}
 .chant{position:absolute;z-index:5;pointer-events:none;white-space:nowrap;color:var(--sky-ink);font-style:italic;font-size:17px;font-variation-settings:"SOFT" 100,"WONK" 1;
   text-shadow:0 0 10px var(--scrim-c),0 0 3px var(--scrim-c);transform:translate(-50%,0);animation:chant 1.5s ease-out forwards}
 @keyframes chant{0%{opacity:0;transform:translate(-50%,4px)}15%{opacity:1}70%{opacity:.9}100%{opacity:0;transform:translate(-50%,-22px)}}
-@media (max-width:700px){.say b{font-size:18px}.say small{font-size:12.5px;white-space:normal;width:min(300px,80vw)}.chant{font-size:15px}}
+@container (max-width:700px){.say b{font-size:18px}.say small{font-size:12.5px;white-space:normal;width:min(300px,80cqw)}.chant{font-size:15px}}
 html.rv-reduced .chant{animation:none;opacity:.9}
 
 /* hedgehog, apple, burrow — the secret passage, kept */
@@ -182,6 +189,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
 </head>
 <body data-page="home">
 <a class="rv-skip" href="#heroText">Skip to the text</a>
+<div class="hero-clip">
 <main class="hero" id="home">
   <canvas id="sky" aria-hidden="true"></canvas>
   <div class="hero-text" id="heroText">
@@ -248,6 +256,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
   <div class="say" id="skipSay" aria-live="polite"></div>
   <div class="say" id="fishSay" aria-live="polite"></div>
 </main>
+</div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <g id="appleArt">
     <path d="M17 9.5c-3-2.2-8.5-1.8-10 3.2-1.6 5.3 2 13.8 6.6 14.8 1.4.3 2.3-.4 3.4-.4s2 .7 3.4.4c4.6-1 8.2-9.5 6.6-14.8-1.5-5-7-5.4-10-3.2z" fill="#A8323F"/>
@@ -375,7 +384,7 @@ const pk = a => Array.isArray(a) ? a[mobile ? 1 : 0] : a;
 /* ---------- scene geometry ---------- */
 const hero = $('#home'), cv = $('#sky'), ctx = cv.getContext('2d'), fg = $('#fg');
 const wxc = $('#wx'), wctx = wxc.getContext('2d');
-let W = 0, H = 0, DPR = 1, HY = 0, SHORE = 0, BX = 0, BUR = 0, HS = 47, HB = 64, mobile = false;
+let SC = 1, W = 0, H = 0, DPR = 1, HY = 0, SHORE = 0, BX = 0, BUR = 0, HS = 47, HB = 64, mobile = false;
 const CAB = {}, JET = {}, MB = {}, APPLE = { hang: null, twig: null, path: null, spot: null };
 const top = document.createElement('canvas'), tctx = top.getContext('2d');   // sky + forest (reflected in the lake)
 const skyC = document.createElement('canvas'), sctx = skyC.getContext('2d');
@@ -391,10 +400,11 @@ const xLimit = () => MB.left - HB * 0.45;
 // the left edge of the gable (the roof line the apple rolls down): y at x
 const roofY = x => CAB.top - (x - CAB.x0) * CAB.gh / (CAB.fw / 2) - (mobile ? 3.5 : 5);
 function layout() {
-  W = hero.clientWidth; H = hero.clientHeight; mobile = W < 700;
-  DPR = Math.min(2, window.devicePixelRatio || 1);
+  SC = window.heroZoom ? heroZoom() : 1; document.documentElement.style.setProperty('--z', SC);   // the scene's zoom (see <head>)
+  W = hero.clientWidth; H = hero.clientHeight; mobile = W < 700;                                   // in scene px (unaffected by the scale)
+  DPR = Math.min(2, window.devicePixelRatio || 1) * SC;                                             // canvas px per scene px: still one per screen pixel
   const htr = $('#heroText').getBoundingClientRect(), hrr = hero.getBoundingClientRect();
-  HY = Math.round(Math.min(H * SCENE.horizonMax, Math.max(H * pk(SCENE.horizon), htr.bottom - hrr.top + SCENE.textGap)));
+  HY = Math.round(Math.min(H * SCENE.horizonMax, Math.max(H * pk(SCENE.horizon), (htr.bottom - hrr.top) / SC + SCENE.textGap)));
   SHORE = Math.round(Math.max(H * pk(SCENE.shore), HY + 60));
   HS = pk(SCENE.hog.size);                                  // the hedgehog's size, px
   HB = Math.round(HS * SCENE.hog.cell);                     // …drawn in a 128-px cell with air round him: one rendered cell = one "sprite size"
@@ -547,7 +557,7 @@ function birchSVG(R, night, topY, gy, tx, tww, textBox) {
 function buildFG() {
   if (!W) return;
   const htr = $('#heroText').getBoundingClientRect(), hrr = hero.getBoundingClientRect();
-  const textBottom = htr.bottom - hrr.top;
+  const textBottom = (htr.bottom - hrr.top) / SC;
   const R = rng(hashStr('fg' + W + S.md));
   const night = document.documentElement.dataset.light === 'night', f = n => n.toFixed(1);
   // the ground, from the water line down; its colour (--ground) follows the sun, see applyGround()
@@ -689,7 +699,8 @@ const Y = alt => HY - (HY - 26) * Math.pow(clamp(alt, 0, 90) / 90, 0.8);
 function renderStatic() {
   if (!W) return;
   const tr0 = $('#heroText').getBoundingClientRect(), hr0 = hero.getBoundingClientRect();
-  const behind = (x, y, r) => x + r > tr0.left - hr0.left - 8 && x - r < tr0.right - hr0.left + 8 && y + r > tr0.top - hr0.top - 8 && y - r < tr0.bottom - hr0.top + 8;
+  const tl = (tr0.left - hr0.left) / SC, tr = (tr0.right - hr0.left) / SC, tt = (tr0.top - hr0.top) / SC, tb = (tr0.bottom - hr0.top) / SC;
+  const behind = (x, y, r) => x + r > tl - 8 && x - r < tr + 8 && y + r > tt - 8 && y - r < tb + 8;
   const c = sctx; c.setTransform(DPR, 0, 0, DPR, 0, 0);
   const g = c.createLinearGradient(0, 0, 0, HY);
   g.addColorStop(0, rgba(S.top)); g.addColorStop(0.8, rgba(S.mid)); g.addColorStop(1, rgba(S.hor));
@@ -1265,9 +1276,9 @@ function checkContrast() {
   for (const el of els) {
     const range = document.createRange(); range.selectNodeContents(el);
     for (const r of range.getClientRects()) {
-      const x0 = r.left - hr.left, y0 = r.top - hr.top;
+      const x0 = (r.left - hr.left) / SC, y0 = (r.top - hr.top) / SC, rw = r.width / SC, rh = r.height / SC;
       for (let i = 0; i < 16; i++) for (let j = 0; j < 4; j++) {
-        const x = Math.round((x0 + (i + .5) / 16 * r.width) / 2), y = Math.round((y0 + (j + .5) / 4 * r.height) / 2);
+        const x = Math.round((x0 + (i + .5) / 16 * rw) / 2), y = Math.round((y0 + (j + .5) / 4 * rh) / 2);
         if (x < 0 || y < 0 || x >= SW || y >= SH) continue;
         const k = (y * SW + x) * 4; samples.push(lum([data[k], data[k + 1], data[k + 2]]));
       }
@@ -1643,7 +1654,7 @@ hero.addEventListener('pointermove', e => {
 hero.addEventListener('pointerdown', e => { const [x, y] = heroXY(e); ptr = { x, y }; });
 hero.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') ptr = null; });
 for (const ev of ['pointerup', 'pointercancel']) hero.addEventListener(ev, e => { if (e.pointerType !== 'mouse') ptr = null; });
-function heroXY(e) { const hr = hero.getBoundingClientRect(); return [e.clientX - hr.left, e.clientY - hr.top]; }
+function heroXY(e) { const hr = hero.getBoundingClientRect(); return [(e.clientX - hr.left) / SC, (e.clientY - hr.top) / SC]; }   // screen → scene px
 hogEl.addEventListener('pointerdown', e => {
   if (['inside', 'enter', 'exit'].includes(hog.st)) return;
   e.preventDefault(); hogEl.setPointerCapture(e.pointerId);
