@@ -1217,7 +1217,7 @@ function bindSliceEvents() {
 // ---------------------------------------------------------------- walking along a path
 // "Move along": a slider that moves the analysed parameter along the slice or a traced border.
 // Analyses chain latest-wins, so dragging never queues up stale work.
-const walk = { id: null, t: 0, on: false, dir: 0, looping: false, busy: false, next: null };
+const walk = { id: null, t: 0, on: false, dir: 0, raf: 0, last: 0, moved: 0, busy: false, next: null };
 
 /** Refill the path menu from the plane's overlays; `prefer` selects that path if present. */
 function updateWalk(prefer) {
@@ -1265,29 +1265,27 @@ async function walkTo(P) {
   }
 }
 
-/** ◀ ❚❚ ▶ for the walker: −1 backwards, 0 pause, +1 forwards; it wraps around the path's ends. */
+/** ◀ ❚❚ ▶ for the walker: −1 backwards, 0 pause, +1 forwards; it wraps around the path's ends.
+ *  The point moves at a fixed speed, one pass along the path every WALK_PERIOD seconds, whatever
+ *  the analysis costs; the analysis follows latest-wins (walkTo), skipping positions it cannot keep up with. */
+const WALK_PERIOD = 60;
 function setWalkDir(d) {
   walk.dir = d;
   document.querySelectorAll('[data-walk-dir]').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.walkDir === d));
-  if (d && !walk.looping) walkLoop();
+  if (d && !walk.raf) { walk.last = performance.now(); walk.moved = 0; walk.raf = requestAnimationFrame(walkStep); }
 }
-
-async function walkLoop() {
-  if (!walk.id) { setWalkDir(0); return; }
-  walk.looping = true;
-  try {
-    while (walk.dir && walk.id) {
-      await setWalk(walk.id, walk.t, true);
-      while (walk.busy) await new Promise((r) => setTimeout(r, 30));
-      if (!walk.dir) break;
-      let t = walk.t + walk.dir * 0.005; // 200 analyses per pass
-      if (t > 1 + 1e-9) t -= 1;
-      if (t < -1e-9) t += 1;
-      walk.t = t;
-    }
-  } finally {
-    walk.looping = false;
-  }
+function walkStep(now) {
+  if (!walk.dir || !walk.id) { walk.raf = 0; if (!walk.id && walk.dir) setWalkDir(0); return; }
+  const dt = Math.min(0.1, (now - walk.last) / 1000);
+  walk.last = now;
+  let t = walk.t + (walk.dir * dt) / WALK_PERIOD;
+  if (t > 1) t -= 1;
+  if (t < 0) t += 1;
+  walk.t = t;
+  // move the slider and the cursor every frame; hand a new position to the analysis at most every 50 ms
+  $('walk-t').value = String(Math.round(t * 1000));
+  if (now - walk.moved > 50) { walk.moved = now; setWalk(walk.id, t, true); }
+  walk.raf = requestAnimationFrame(walkStep);
 }
 
 // ---- turning θ*: one full turn every THETA_PERIOD seconds, redrawn at most every 50 ms
