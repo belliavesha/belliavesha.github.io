@@ -2,7 +2,7 @@
 // plots follow the light/dark theme.
 
 import { SHEET_COLORS, CATS, swatch, category } from './colors.js';
-import { cdist } from '../core/section.js';
+import { sectionIndices } from '../core/section.js';
 
 const TWO_PI = 2 * Math.PI;
 const P = () => window.Plotly;
@@ -42,14 +42,23 @@ export function placeholder(el, text) {
 
 /** Colour of the slice section θ = θ* wherever it is shown (graph band, phase points). */
 const SECTION = '#d98e04';
-/** Orbit indices whose angle lies within ±w of θ*. */
+/** Orbit indices whose angle lies within ±w of θ* (the newest band.cap of them, if set). */
 function sectionIdx(theta, band) {
-  const out = [];
-  for (let i = 0; i < theta.length; i++) if (cdist(theta[i], band.theta) <= band.w) out.push(i);
-  return out;
+  return sectionIndices(theta, band.theta, band.w, band.cap || Infinity).idx;
 }
 
-const comp = (re, im, which) => (which === 're' ? re : which === 'im' ? im : Math.hypot(re, im));
+const comp = (re, im, which) => (which === 're' ? re : which === 'im' ? im : which === 'arg' ? Math.atan2(im, re) : Math.hypot(re, im));
+/** arg f jumps by 2π at the branch cut: break the line there instead of drawing a vertical stroke. */
+function breakJumps(x, y) {
+  const X = [], Y = [];
+  for (let i = 0; i < y.length; i++) {
+    if (i && Math.abs(y[i] - y[i - 1]) > Math.PI) { X.push((x[i] + x[i - 1]) / 2); Y.push(null); }
+    X.push(x[i]); Y.push(y[i]);
+  }
+  return { X, Y };
+}
+const ARG_AXIS = { range: [-Math.PI - 0.2, Math.PI + 0.2], tickvals: [-Math.PI, -Math.PI / 2, 0, Math.PI / 2, Math.PI], ticktext: ['−π', '−π/2', '0', 'π/2', 'π'] };
+const compLabel = (which, at = '') => (which === 're' ? `Re f${at}` : which === 'im' ? `Im f${at}` : which === 'arg' ? `arg f${at}` : `|f${at}|`);
 
 /** Split a structure solution into per-sheet polylines over theta in [0, 2pi]. */
 export function sheetsOf(sol) {
@@ -100,13 +109,15 @@ export function plotGraph(el, res, which, band = null) {
     const sheets = sheetsOf(res.sol);
     sheets.forEach((s, i) => {
       const color = SHEET_COLORS[i % SHEET_COLORS.length];
+      let x = s.theta, y = s.re.map((r, q) => comp(r, s.im[q], which));
+      if (which === 'arg') ({ X: x, Y: y } = breakJumps(x, y));
       traces.push({
-        type: 'scattergl', mode: 'lines', x: s.theta, y: s.re.map((r, q) => comp(r, s.im[q], which)),
+        type: 'scattergl', mode: 'lines', x, y, connectgaps: false,
         line: { color, width: 1.8 }, name: `sheet ${i + 1}`,
         hovertemplate: `θ=%{x:.4f}<br>%{y:.6g}<extra>sheet ${i + 1}</extra>`,
       });
     });
-    if (which !== 'abs') {
+    if (which === 're' || which === 'im') {
       const { c, M, FR, FI } = res.sol;
       for (let j = 0; j < c; j++) {
         let m = 0;
@@ -123,7 +134,7 @@ export function plotGraph(el, res, which, band = null) {
       shapes.push({ type: 'rect', xref: 'x', yref: 'paper', x0: a, x1: b, y0: 0, y1: 1, fillcolor: SECTION, opacity: 0.18, line: { width: 0 }, layer: 'below' });
     }
     shapes.push({ type: 'line', xref: 'x', yref: 'paper', x0: band.theta, x1: band.theta, y0: 0, y1: 1, line: { color: SECTION, width: 1, dash: 'dot' } });
-    annotations.push({ xref: 'x', yref: 'paper', x: band.theta, y: 1, yanchor: 'bottom', showarrow: false, text: 'θ* (slice)', font: { color: SECTION, size: 11 } });
+    annotations.push({ xref: 'x', yref: 'paper', x: band.theta, y: 1, yanchor: 'bottom', showarrow: false, text: 'θ*', font: { color: SECTION, size: 11 } });
     if (o) {
       const idx = sectionIdx(o.theta, band);
       traces.push({
@@ -133,12 +144,11 @@ export function plotGraph(el, res, which, band = null) {
       });
     }
   }
-  const label = which === 're' ? 'Re f' : which === 'im' ? 'Im f' : '|f|';
   P().react(el, traces, layout({
     shapes,
     annotations,
     xaxis: { title: { text: 'θ' }, range: [0, TWO_PI], tickvals: [0, Math.PI / 2, Math.PI, 1.5 * Math.PI, TWO_PI], ticktext: ['0', 'π/2', 'π', '3π/2', '2π'] },
-    yaxis: { title: { text: label } },
+    yaxis: { title: { text: compLabel(which) }, ...(which === 'arg' ? ARG_AXIS : {}) },
   }), config);
 }
 
@@ -220,13 +230,16 @@ export function plotSlice(el, sl, which, idx, cursorX = null) {
     { type: 'scatter', mode: 'lines', x: ts, y: Array.from(lam, (v) => (Number.isFinite(v) ? Math.max(-3, v) : null)), line: { color: t.accent, width: 1.4 }, yaxis: 'y2', hovertemplate: 'λ=%{y:.4f}<extra></extra>', connectgaps: false },
   ];
   const shapes = [{ type: 'line', xref: 'paper', yref: 'y2', x0: 0, x1: 1, y0: 0, y1: 0, line: { color: t.muted, width: 1, dash: 'dot' } }];
+  for (const v of sl.vts || []) {
+    // polyline corners
+    shapes.push({ type: 'line', xref: 'x', yref: 'paper', x0: v, x1: v, y0: 0, y1: 1, line: { color: t.muted, width: 1, dash: 'dot' } });
+  }
   if (cursorX != null && Number.isFinite(cursorX)) {
     shapes.push({ type: 'line', xref: 'x', yref: 'paper', x0: cursorX, x1: cursorX, y0: 0, y1: 1, line: { color: SECTION, width: 1.5 } });
   }
-  const label = which === 're' ? 'Re f(θ*)' : which === 'im' ? 'Im f(θ*)' : '|f(θ*)|';
   P().react(el, traces, layout({
     xaxis: { title: { text: xlabel }, anchor: 'y2' },
-    yaxis: { title: { text: label }, domain: [0.34, 1] },
+    yaxis: { title: { text: compLabel(which, '(θ*)') }, domain: [0.34, 1], ...(which === 'arg' ? ARG_AXIS : {}) },
     yaxis2: { title: { text: 'λ' }, domain: [0, 0.28], anchor: 'x', zeroline: true, zerolinecolor: t.muted },
     shapes,
     hovermode: 'x',

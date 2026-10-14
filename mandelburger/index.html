@@ -106,8 +106,8 @@
             <div class="field">
               <label for="quality">Resolution</label>
               <select id="quality">
-                <option value="0.5">Draft ½×</option>
-                <option value="1" selected>Screen 1×</option>
+                <option value="0.5">½× (draft)</option>
+                <option value="1" selected>1×</option>
                 <option value="dpr">Retina</option>
               </select>
             </div>
@@ -116,6 +116,10 @@
               <select id="kmax">
                 <option>2</option><option>3</option><option selected>4</option><option>6</option><option>8</option>
               </select>
+            </div>
+            <div class="field">
+              <label for="plot-dots" title="How many of the latest orbit points are drawn as dots in Graph f(θ) and Attractor in ℂ (the amber θ* highlight picks from these)">Orbit dots</label>
+              <select id="plot-dots"><option value="1000">1 k</option><option value="2000">2 k</option><option value="5000" selected>5 k</option><option value="10000">10 k</option><option value="20000">20 k</option></select>
             </div>
           </div>
           <details>
@@ -184,7 +188,11 @@
         <div class="walk" id="walk" hidden>
           <label for="walk-t">Move along</label>
           <select id="walk-path" aria-label="Path to move along"></select>
-          <button class="btn" type="button" id="walk-play" aria-pressed="false" title="Step along the path, analysing each point">▶</button>
+          <div class="seg play-seg" role="group" aria-label="Move along the path automatically">
+            <button type="button" data-walk-dir="-1" aria-pressed="false" title="Move backwards along the path (from the start it wraps to the end)">◀</button>
+            <button type="button" data-walk-dir="0" aria-pressed="true" title="Pause">❚❚</button>
+            <button type="button" data-walk-dir="1" aria-pressed="false" title="Move forwards along the path (from the end it wraps to the start)">▶</button>
+          </div>
           <input type="range" id="walk-t" min="0" max="1000" step="1" value="0" aria-label="Position along the path" />
         </div>
       </section>
@@ -193,10 +201,27 @@
       <section class="analysis" aria-label="Analysis">
         <div class="verdict">
           <h2 id="verdict">Pick a parameter</h2>
+          <span class="vline mono" id="verdict-line"></span>
           <span class="param" id="verdict-param"></span>
         </div>
-        <p class="note" id="verdict-note"></p>
-        <div class="metrics" id="metrics"></div>
+        <div class="slice-sliders section-ctl" role="group" aria-label="Section θ* ± w: the orbit points highlighted in the graph, the attractor and the slice">
+            <div class="field">
+              <label for="slice-theta">θ* = <span class="mono" id="slice-theta-val">0</span></label>
+              <div class="range-row">
+                <input type="range" id="slice-theta" min="0" max="1000" step="1" value="0" />
+                <div class="seg play-seg" role="group" aria-label="Turn θ* automatically">
+                  <button type="button" data-theta-dir="-1" aria-pressed="false" title="Decrease θ* continuously (below 0 it wraps to 2π)">◀</button>
+                  <button type="button" data-theta-dir="0" aria-pressed="true" title="Pause">❚❚</button>
+                  <button type="button" data-theta-dir="1" aria-pressed="false" title="Increase θ* continuously (past 2π it wraps to 0)">▶</button>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="slice-spread">Spread ±w <span class="mono" id="slice-spread-val"></span></label>
+              <input type="range" id="slice-spread" min="0" max="100" step="1" value="29" />
+            </div>
+            <div class="field slice-cap"><label for="slice-cap" title="How many of the most recent orbit points inside the window are shown, per parameter">Points</label><select id="slice-cap"><option>1</option><option>5</option><option selected>20</option><option>100</option><option>500</option></select></div>
+          </div>
         <div class="tabs" role="tablist">
           <button role="tab" type="button" aria-selected="true" data-tab="graph">Graph f(θ)</button>
           <button role="tab" type="button" aria-selected="false" data-tab="phase">Attractor in ℂ</button>
@@ -206,13 +231,14 @@
           <button role="tab" type="button" aria-selected="false" data-tab="cocycle">Cocycle</button>
         </div>
         <div class="panel" data-panel="graph">
-          <div class="seg" role="group" aria-label="Component" style="max-width: 18rem">
+          <div class="seg" role="group" aria-label="Component" style="max-width: 24rem">
             <button type="button" data-comp="re" aria-pressed="true">Re f</button>
             <button type="button" data-comp="im" aria-pressed="false">Im f</button>
             <button type="button" data-comp="abs" aria-pressed="false">|f|</button>
+            <button type="button" data-comp="arg" aria-pressed="false">arg f</button>
           </div>
           <div class="plot tall" id="plot-graph"></div>
-          <p class="note">Dots: the critical orbit (θ<sub>n</sub> mod 2π, z<sub>n</sub>). Lines: the Newton solution, one colour per sheet. Dashed: the mean of each sheet.</p>
+          <p class="note">Dots: the critical orbit (θ<sub>n</sub> mod 2π, z<sub>n</sub>). Lines: the Newton solution, one colour per sheet. Dashed: the mean of each sheet (Re, Im). Amber: the orbit points in the section θ* ± w set above (the newest “Points” of them). arg f is taken in (−π, π], so a sheet that winds around 0 is drawn with a break where it crosses ±π.</p>
         </div>
         <div class="panel" data-panel="phase" hidden>
           <div class="plot tall" id="plot-phase"></div>
@@ -223,34 +249,35 @@
         </div>
         <div class="panel" data-panel="slice" hidden>
           <div class="row slice-row">
+            <div class="field slice-pick"><label for="slice-pick">Slice</label>
+              <div class="pick-row"><select id="slice-pick" disabled><option disabled selected>none yet</option></select><button class="btn" type="button" id="btn-slice-del" title="Delete this slice" aria-label="Delete this slice" disabled>×</button></div>
+            </div>
+            <div class="field"><label>Draw with Shift</label>
+              <div class="seg" role="group" aria-label="How Shift draws a slice">
+                <button type="button" data-draw="line" aria-pressed="true">Line</button>
+                <button type="button" data-draw="polyline" aria-pressed="false">Polyline</button>
+                <button type="button" data-draw="freehand" aria-pressed="false">Freehand</button>
+              </div>
+            </div>
             <div class="field"><label for="slice-n">Samples</label><select id="slice-n"><option>200</option><option selected>500</option><option>1000</option></select></div>
             <div class="field"><label>&nbsp;</label><button class="btn" type="button" id="btn-slice-real">Slice along horizontal axis</button></div>
-            <div class="seg" role="group" aria-label="Component">
-              <button type="button" data-comp="re" aria-pressed="true">Re</button>
-              <button type="button" data-comp="im" aria-pressed="false">Im</button>
-              <button type="button" data-comp="abs" aria-pressed="false">|f|</button>
-            </div>
           </div>
-          <div class="slice-sliders">
-            <div class="field">
-              <label for="slice-theta">Section angle θ* <span class="mono" id="slice-theta-val">0</span></label>
-              <input type="range" id="slice-theta" min="0" max="1000" step="1" value="0" />
-            </div>
-            <div class="field">
-              <label for="slice-spread">Spread ±w <span class="mono" id="slice-spread-val"></span></label>
-              <input type="range" id="slice-spread" min="0" max="100" step="1" value="29" />
-            </div>
-            <div class="field slice-cap"><label for="slice-cap">Points per parameter</label><select id="slice-cap"><option>12</option><option selected>50</option><option>200</option><option>1000</option></select></div>
+          <p class="note" id="draw-hint"></p>
+          <div class="seg comp-seg" role="group" aria-label="Component">
+            <button type="button" data-comp="re" aria-pressed="true">Re</button>
+            <button type="button" data-comp="im" aria-pressed="false">Im</button>
+            <button type="button" data-comp="abs" aria-pressed="false">|f|</button>
+            <button type="button" data-comp="arg" aria-pressed="false">arg f</button>
           </div>
           <p class="note mono" id="slice-count"></p>
           <div class="plot tall" id="plot-slice"></div>
-          <p class="note" id="slice-note">Shift-drag on the plane to draw a segment, or slice along the horizontal axis through the view centre.</p>
+          <p class="note" id="slice-note">Hold Shift on the plane to draw a slice (line, polyline or freehand, chosen above), or slice along the horizontal axis through the view centre. Every slice is kept: pick it in the list to show its diagram again.</p>
           <details class="note slice-help">
             <summary>What is this diagram?</summary>
             <p>An attractor of f(x+T) = F(f(x), x) lives over the circle θ = x mod 2π, so it cannot be drawn as a single number per parameter. The slice cuts it with the vertical line θ = θ* (the shaded band in “Graph f(θ)”, the highlighted points in “Attractor in ℂ”) and plots what lies on that line, for every parameter along the segment — the analogue of the logistic bifurcation diagram.</p>
             <p>Each dot is an orbit value z<sub>n</sub> whose angle θ<sub>n</sub> = nT mod 2π falls within ±w of θ* — the <em>spread</em>. The line under the sliders says how many of the recorded orbit points fall in the window (the angles are the same for every parameter, about N·w/π of the last N), and how many of them, newest first, are drawn. An invariant graph with k sheets meets the line in exactly k points, so the diagram shows k curves: the number of lines <em>is</em> the number of sheets. Doublings appear as a curve splitting in two; a vertical smear means the section is no longer a finite set — a strange nonchaotic attractor (λ &lt; 0) or chaos (λ &gt; 0). Moving θ* changes where the curves sit, never how many there are.</p>
             <p>A narrow spread gives sharp curves from few points; widening it thickens each curve into a band of height ≈ |f′|·2w (at w = π every orbit point is drawn, and the column is the whole range of f). The angles inside a window are not evenly spread: when T/2π is close to p/q, the θ<sub>n</sub> stack into q columns 2π/q apart, so a window narrower than π/q may hold a single column visited many times.</p>
-            <p>Click the diagram, or drag the “Move along” slider under the plane, to analyse the parameter at that position.</p>
+            <p>A slice can be a straight line, a polyline (its corners are dotted vertical lines in the diagram) or a smoothed freehand trace; the horizontal axis is then the position along it, by arc length. Click the diagram, or drag the “Move along” slider under the plane, to analyse the parameter at that position.</p>
           </details>
         </div>
         <div class="panel" data-panel="struct" hidden>
@@ -270,6 +297,11 @@
           <div class="plot tall" id="plot-cocycle-orbit"></div>
           <p class="note">Grey: the computed orbit. Coloured: the closed-form prediction at the same times.</p>
         </div>
+        <details class="summary" id="summary">
+          <summary>Summary of the analysed parameter</summary>
+          <p class="note" id="verdict-note"></p>
+          <div class="metrics" id="metrics"></div>
+        </details>
       </section>
     </main>
 

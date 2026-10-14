@@ -12,7 +12,7 @@ import { fft, nextPow2 } from './core/fft.js';
 import { fmt } from './core/complex.js';
 import { Pool } from './workers/pool.js';
 import { PlaneView } from './ui/plane.js';
-import { pointAt } from './ui/paths.js';
+import { pointAt, vertexTs } from './ui/paths.js';
 import { sectionIndices } from './core/section.js';
 import { CATS, swatch, category, NEUTRAL_TOL } from './ui/colors.js';
 import { plotGraph, plotPhase, plotSpectrum, plotSlice, placeholder, resizeAll, plotCocycleSpectrum, plotCocycleOrbit } from './ui/plots.js';
@@ -23,6 +23,91 @@ const TWO_PI = 2 * Math.PI;
 // ---------------------------------------------------------------- presets
 const GOLDEN = '2*pi*(sqrt(5)-1)/2';
 const C = ['c1.re', 'c1.im'];
+
+// ---- path helpers for preset slices (points in the preset's plane coordinates)
+const TAU = 2 * Math.PI;
+const SQ3 = Math.sqrt(3);
+const seg = (name, a, b) => ({ name, kind: 'line', pts: [a, b] });
+const curveOf = (name, f, t0 = 0, t1 = TAU, n = 240) => ({ name, kind: 'curve', pts: Array.from({ length: n + 1 }, (_, i) => f(t0 + ((t1 - t0) * i) / n)) });
+const circleOf = (name, cx, cy, r) => curveOf(name, (t) => [cx + r * Math.cos(t), cy + r * Math.sin(t)]);
+/** c = μ/2 − μ²/4 with |μ| = m: where z² + c has a fixed point of multiplier μ (m = 1: the main cardioid). */
+const cardioidOf = (name, m) => curveOf(name, (t) => {
+  const a = (m * Math.cos(t)) / 2, b = (m * Math.sin(t)) / 2; // a + ib = μ/2 = fixed point
+  return [a - (a * a - b * b), b - 2 * a * b];
+});
+/** c = μ·e^(−μ), |μ| = m: where c·e^z has a fixed point (z = μ) of multiplier μ. */
+const expComponentOf = (name, m) => curveOf(name, (t) => {
+  const x = m * Math.cos(t), y = m * Math.sin(t), e = Math.exp(-x);
+  return [e * (x * Math.cos(y) + y * Math.sin(y)), e * (y * Math.cos(y) - x * Math.sin(y))];
+});
+// Each preset carries one or two slices worth looking at (MATH.md §9a says what each shows).
+// They are added when the preset is loaded and computed when the Slice tab is opened.
+const PRESET_SLICES = {
+  mandel: [
+    cardioidOf('|2a₀| = 0.9: λ = log 0.9 exactly (Jensen)', 0.9),
+    cardioidOf('main cardioid |2a₀| = 1: small divisors', 1),
+  ],
+  twosided: [
+    cardioidOf('|2a₀| = 0.9: λ ≠ log 0.9, Jensen fails', 0.9),
+    seg('real axis: one graph → 2 sheets → escape', [0.35, 0], [-1.45, 0]),
+  ],
+  sine: [
+    circleOf('|c1| = 0.55: λ depends on arg c1', 0, 0, 0.55),
+    circleOf('|c1| = 0.62: in and out of the lobes', 0, 0, 0.62),
+  ],
+  powers: [
+    seg('Re c1 = 0.66: through the 2-sheet bulbs, SNA at their edges', [0.66, -0.5], [0.66, 0.5]),
+    seg('real axis', [-1.2, 0], [1.2, 0]),
+  ],
+  logplane: [
+    seg('through r1 = −√3, inclined: chaos, period-3 window, SNA islands, 2 → 1', [-SQ3 - 0.25 * Math.cos(Math.PI / 12), -0.25 * Math.sin(Math.PI / 12)], [-SQ3 + 1.6 * Math.cos(Math.PI / 12), 1.6 * Math.sin(Math.PI / 12)]),
+    seg('r2 = 0: the unforced logistic bifurcation diagram', [0.3, 0], [-2, 0]),
+  ],
+  'warp-rot': [
+    circleOf('|c1| = 0.3: λ varies with arg c1 (constant without the stretching)', 0, 0, 0.3),
+    circleOf('|c1| = 0.45: across the lopsided border', 0, 0, 0.45),
+  ],
+  linear: [
+    circleOf('unit circle: λ = log max(|cos t|, |sin t|) exactly', 0, 0, 1),
+    seg('diagonal r2 = r3: λ = log|r2|, out through the corner', [-1.4, -1.4], [1.4, 1.4]),
+  ],
+  flower: [
+    seg('r3 = 0.5: escape → neutral → 4 curves → neutral → escape', [-1.6, 0.5], [1.6, 0.5]),
+    seg('r2 = 0.5: up through the root crossing the unit circle at r3 = 0', [0.5, -1], [0.5, 2]),
+  ],
+  'warp-lin-mobius': [
+    circleOf('unit circle: λ = log|e^{it} − r1| exactly', 0, 0, 1),
+    seg('real axis: the two disc pieces meet at c1 = 1', [-1.2, 0], [2.4, 0]),
+  ],
+  'warp-lin-hooke': [
+    seg('real axis: graph → SNA → neutral waist → SNA → graph', [-1.6, 0], [1.6, 0]),
+    circleOf('unit circle: through both wings', 0, 0, 1),
+  ],
+  'kepler-mean-focus': [
+    seg('e = 0.6: across the resonance lines (q-sheet curves)', [0.6, 0.25], [0.6, 1.25]),
+    seg('rotation r3 = 0.5: a 2-sheet resonance band, then neutral', [0.02, 0.5], [0.95, 0.5]),
+  ],
+  'kepler-mean-c': [
+    seg('real axis: the straight cramped border, then the orbit', [-1.7, 0], [2.3, 0]),
+    seg('Re c1 = 0.5: across the attracting region', [0.5, -2], [0.5, 2]),
+  ],
+  harperE: [
+    seg('coupling 0.5: spectrum bands neutral (extended states)', [-3.2, 0.5], [3.2, 0.5]),
+    seg('coupling 2 (energy ×2): the same gaps, bands SNA (localised); Aubry duality', [-6.4, 2], [6.4, 2]),
+  ],
+  gopy: [
+    seg('r2 = 0: smooth graph → SNA at r1 = 1 (GOPY)', [0, 0], [3, 0]),
+    seg('r1 = 2.2: across the SNA wedge', [2.2, -1.5], [2.2, 1.5]),
+  ],
+  arnold: [
+    seg('K = 0.8: across the forced Arnold tongues', [0, 0.8], [TAU, 0.8]),
+    seg('Ω = π: up the 1/2 tongue, 2 → 4 sheets, then escape', [Math.PI, 0], [Math.PI, 3.5]),
+  ],
+  exp: [
+    expComponentOf('multiplier |μ| = 0.9 of c·e^z: λ ≈ log 0.9, not exact', 0.9),
+    seg('real axis: out of the main component near 1/e', [-1.6, 0], [1.6, 0]),
+  ],
+};
 const PRESETS = [
   { id: 'mandel', name: 'Analytic forcing — f² + c1 + r1·eⁱˣ (solvable by a power series)', expr: 'f^2 + c1 + r1*cis(x)', params: { c1: [-1.05, 0.05], r1: 0.06 }, axes: C, T: '1', view: { cx: -0.62, cy: 0, r: 1.35 } },
   { id: 'twosided', name: 'Two-sided forcing — f² + c1 + r1·eⁱˣ + r2·e⁻ⁱˣ', expr: 'f^2 + c1 + r1*cis(x) + r2*cis(-x)', params: { c1: [-0.2, 0], r1: 0.1, r2: 0.05 }, axes: C, T: '1', view: { cx: -0.62, cy: 0, r: 1.35 } },
@@ -65,7 +150,7 @@ const PRESETS = [
 const DEFAULTS = {
   preset: 'mandel', expr: 'f^2 + c1 + r1*cis(x)', params: { c1: [-1.05, 0.05], r1: 0.06 }, axes: ['c1.re', 'c1.im'], Texpr: '1', start: 'crit', mode: 'classify',
   quality: '1', kmax: 4, nTrans: 500, nLyap: 1500, tau: 0.2, budget: 8000, Ssample: 256,
-  M: 512, orbitLen: 60000, rays: 64, rayM: 256, view: { cx: -0.62, cy: 0, r: 1.35 }, comp: 're', tab: 'graph', sliceTheta: 0, sliceSpread: 29, sliceCap: 50, structK: 6,
+  M: 512, orbitLen: 60000, rays: 64, rayM: 256, view: { cx: -0.62, cy: 0, r: 1.35 }, comp: 're', tab: 'graph', sliceTheta: 0, sliceSpread: 29, sliceCap: 20, sliceDraw: 'line', structK: 6, summaryOpen: false, plotDots: 5000,
 };
 const S = load();
 S.T = 1;
@@ -97,7 +182,7 @@ Promise.all([pool.ready, analyst.ready]).then(() => {
 const plane = new PlaneView({
   wrap: $('plate'), plane: $('plane'), overlay: $('overlay'), axesEl: $('axes'), progressEl: $('progress'), pool,
   onPick: (P, sn) => { if (sn) setWalk(sn.path.id, sn.t); else walk.on = false; pick(P); },
-  onSlice: (sl) => runSlice(sl),
+  onSlice: (sl) => addSlice(sl),
   onHover: (h) => hover(h),
   onRendered: ({ ms, W, stats }) => {
     $('st-plane').textContent = `${(ms / 1000).toFixed(2)} s · ${W}² px${exactPlane() ? ' · exact' : ''}`;
@@ -324,6 +409,8 @@ function syncInputs() {
   $('T').value = S.Texpr;
   $('quality').value = S.quality;
   $('kmax').value = String(S.kmax);
+  if (![...$('plot-dots').options].some((o) => +o.value === +S.plotDots)) S.plotDots = 5000;
+  $('plot-dots').value = String(S.plotDots);
   $('struct-k').value = String(S.structK);
   $('n-trans').value = S.nTrans; $('n-lyap').value = S.nLyap; $('tau').value = S.tau; $('budget').value = S.budget;
   $('grid-M').value = String(S.M); $('orbit-len').value = String(S.orbitLen);
@@ -331,6 +418,8 @@ function syncInputs() {
   document.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
   document.querySelectorAll('[data-comp]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.comp === S.comp));
   sliceControls();
+  syncDrawMode();
+  $('summary').open = !!S.summaryOpen;
   plane.mode = S.mode;
   plane.quality = S.quality;
 }
@@ -347,6 +436,7 @@ function applyPreset(id) {
     renderPlane();
     pick(currentUV());
   }
+  addPresetSlices(id);
 }
 
 function num(id, fallback) {
@@ -360,7 +450,8 @@ function onParamsChanged({ rerender = true, reanalyze = true } = {}) {
   save();
   if (!validateExpr() || !evalT()) return;
   showCF();
-  clearOverlays();
+  clearBorders();
+  refreshSlice(); // slices stay; their results are recomputed if the change affects them
   if (rerender) renderPlane();
   if (reanalyze) pick(currentUV());
 }
@@ -446,6 +537,7 @@ function bindControls() {
   }
   $('grid-M').addEventListener('change', (e) => { S.M = +e.target.value; save(); pick(currentUV()); });
   $('orbit-len').addEventListener('change', (e) => { S.orbitLen = +e.target.value; save(); pick(currentUV()); });
+  $('plot-dots').addEventListener('change', (e) => { S.plotDots = +e.target.value; save(); pick(currentUV()); });
   $('rays').addEventListener('change', (e) => { S.rays = +e.target.value; save(); });
   $('ray-M').addEventListener('change', (e) => { S.rayM = +e.target.value; save(); });
   $('btn-render').addEventListener('click', () => renderPlane());
@@ -457,18 +549,22 @@ function bindControls() {
   $('btn-clear').addEventListener('click', () => { clearOverlays(); plane.drawOverlay(); });
   $('btn-slice-real').addEventListener('click', () => {
     const b = plane.bounds;
-    const sl = { P1: [b.x0, plane.view.cy], P2: [b.x1, plane.view.cy] };
-    plane.slice = sl;
-    plane.drawOverlay();
-    runSlice(sl);
+    addSlice({ kind: 'line', pts: [[b.x0, plane.view.cy], [b.x1, plane.view.cy]] });
   });
+  $('slice-pick').addEventListener('change', (e) => selectSlice(e.target.value));
+  $('summary').addEventListener('toggle', () => { S.summaryOpen = $('summary').open; save(); });
+  $('btn-slice-del').addEventListener('click', () => plane.activeSlice && deleteSlice(plane.activeSlice));
+  document.querySelectorAll('[data-draw]').forEach((b) =>
+    b.addEventListener('click', () => { S.sliceDraw = b.dataset.draw; save(); syncDrawMode(); }),
+  );
   $('slice-theta').addEventListener('input', (e) => { S.sliceTheta = (TWO_PI * +e.target.value) / 1000; sliceControls(); save(); replot(); });
   $('slice-spread').addEventListener('input', (e) => { S.sliceSpread = +e.target.value; sliceControls(); save(); replot(); });
   $('slice-cap').addEventListener('change', (e) => { S.sliceCap = +e.target.value; sliceControls(); save(); replot(); });
-  $('slice-n').addEventListener('change', () => plane.slice && runSlice(plane.slice));
+  $('slice-n').addEventListener('change', () => { const sl = activeSlice(); if (sl) runSlice(sl); });
   $('walk-path').addEventListener('change', () => setWalk($('walk-path').value, 0, true));
   $('walk-t').addEventListener('input', () => setWalk(walk.id, +$('walk-t').value / 1000, true));
-  $('walk-play').addEventListener('click', () => (walk.playing ? stopPlay() : play()));
+  document.querySelectorAll('[data-walk-dir]').forEach((b) => b.addEventListener('click', () => setWalkDir(+b.dataset.walkDir)));
+  document.querySelectorAll('[data-theta-dir]').forEach((b) => b.addEventListener('click', () => setThetaDir(+b.dataset.thetaDir)));
   document.querySelectorAll('[data-comp]').forEach((b) =>
     b.addEventListener('click', () => {
       S.comp = b.dataset.comp; syncInputs(); save();
@@ -492,6 +588,7 @@ function bindControls() {
 
 function selectTab(tab) {
   S.tab = tab;
+  if (tab === 'slice' && !sliceData && activeSlice()) { selectSlice(plane.activeSlice); return; }
   document.querySelectorAll('[role="tab"]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
   document.querySelectorAll('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== tab; });
   resizeAll(document.querySelectorAll('.plot'));
@@ -558,10 +655,11 @@ async function pick(P) {
   const gen = ++analysisGen;
   const r = returns();
   const job = {
-    prob: problem(), M: S.M, kmax: S.kmax, structK: S.structK, nTrans: Math.max(2000, S.nTrans * 4), nRec: S.orbitLen,
+    prob: problem(), M: S.M, kmax: S.kmax, structK: S.structK, nTrans: Math.max(2000, S.nTrans * 4), nRec: S.orbitLen, plotPoints: S.plotDots,
     tau: S.tau, S: S.Ssample, qA: r.qA, qB: r.qB,
   };
   $('verdict').textContent = 'Computing…';
+  $('verdict-line').textContent = '';
   $('verdict-param').textContent = paramLabel(P);
   $('btn-border').disabled = true;
   analyst.cancel('analyze');
@@ -574,6 +672,8 @@ async function pick(P) {
     if (err && err.cancelled) return;
     console.error(err);
     $('verdict').textContent = 'Analysis failed';
+    $('verdict-line').textContent = '';
+    $('summary').open = true;
     $('verdict-note').textContent = String(err.message || err);
   }
 }
@@ -639,7 +739,15 @@ function showAnalysis() {
     cat = R.chosen.k >= 5 ? 'k5' : `k${R.chosen.k}`;
   }
   const c = CATS.find((q) => q.id === cat);
-  $('verdict').innerHTML = `${escapeHtml(title)} ${c ? `<span class="chip"><i style="background:${swatch(c)}"></i>${escapeHtml(c.label)}</span>` : ''}`;
+  // one line on top: verdict (with its legend colour), λ, the structure; details in the Summary below
+  $('verdict').innerHTML = `${c ? `<i class="dot" style="background:${swatch(c)}" title="${escapeHtml(c.label)}"></i>` : ''}${escapeHtml(title)}`;
+  $('verdict').title = c ? `${title} — ${c.label}` : title;
+  const lamTop = C ? C.lambda : R.escaped ? null : sol && sol.ok ? sol.lambda : R.lambdaOrbit;
+  const parts = [];
+  if (lamTop != null && Number.isFinite(lamTop)) parts.push(`<span class="k">λ</span> ${lamTop.toFixed(5)}`);
+  else if (lamTop === -Infinity) parts.push('<span class="k">λ</span> −∞');
+  if (R.chosen) parts.push(`<span class="k">(c·d, s)</span> (${R.chosen.c}·${R.chosen.d}, ${R.chosen.s})`);
+  $('verdict-line').innerHTML = parts.join('&ensp;');
   $('verdict-param').textContent = paramLabel(last.P);
   $('verdict-note').textContent = note;
 
@@ -662,7 +770,7 @@ function showAnalysis() {
       m.push(['solve', `${sol.ms.toFixed(0)} ms`]);
     }
     m.push(['start z₀', fmt(R.z0, 5)]);
-    m.push(['orbit', `${(S.orbitLen / 1000).toFixed(0)}k in ${R.orbitMs.toFixed(0)} ms`]);
+    m.push(['orbit', `${(S.orbitLen / 1000).toFixed(0)}k in ${R.orbitMs.toFixed(0)} ms, ${R.orbit ? R.orbit.re.length : 0} drawn`]);
   } else {
     m.push(['escape step', String(R.escapeStep)]);
   }
@@ -824,12 +932,28 @@ async function traceBorder() {
   $('border-msg').textContent = `${((performance.now() - t0) / 1000).toFixed(1)} s. ${parts.join('; ')}.`;
 }
 
+/** Traced borders depend on every parameter, so any change drops them. */
+function clearBorders() {
+  borderGen++;
+  pool.cancel('rays');
+  plane.borders = [];
+  updateWalk();
+  plane.drawOverlay();
+}
+
 function clearOverlays() {
   borderGen++;
   pool.cancel('rays');
   plane.borders = [];
-  plane.slice = null;
+  plane.finishDraft(true);
+  plane.slices = [];
+  plane.activeSlice = null;
+  sliceResults.clear();
+  sliceSeq = 0;
+  sliceGen++;
+  pool.cancel('slice');
   sliceData = null;
+  syncSlicePicker();
   sliceControls();
   updateWalk();
   replot();
@@ -854,6 +978,9 @@ function sliceSelection() {
 function sliceControls() {
   S.sliceTheta = ((+S.sliceTheta || 0) % TWO_PI + TWO_PI) % TWO_PI;
   S.sliceSpread = Math.min(100, Math.max(0, +S.sliceSpread || 0));
+  // snap a saved value from an older option list (12/50/200/1000) to the nearest current option
+  const caps = [...$('slice-cap').options].map((o) => +o.value);
+  if (!caps.includes(+S.sliceCap)) S.sliceCap = caps.reduce((a, b) => (Math.abs(Math.log(b / (+S.sliceCap || 20))) < Math.abs(Math.log(a / (+S.sliceCap || 20))) ? b : a));
   $('slice-theta').value = String(Math.round((S.sliceTheta / TWO_PI) * 1000));
   $('slice-spread').value = String(S.sliceSpread);
   $('slice-cap').value = String(S.sliceCap);
@@ -867,72 +994,208 @@ function sliceControls() {
     : '';
 }
 
-/** The section the slice shows, for the graph band and phase highlights; null without a slice. */
+/** The section θ* ± w highlighted in the graph and the attractor (newest `cap` orbit points). */
 function sliceBand() {
-  return sliceData ? { theta: S.sliceTheta, w: spreadW() } : null;
+  return { theta: S.sliceTheta, w: spreadW(), cap: S.sliceCap };
 }
 
-/** x position of the analysed parameter on the slice diagram, when it lies on the slice. */
+/** x position of the analysed parameter on the slice diagram, when it lies on the shown slice. */
 function sliceCursor() {
-  if (!sliceData || !walk.on || walk.id !== 'slice') return null;
-  const { seg, horizontal } = sliceData;
-  return horizontal ? seg.P1[0] + walk.t * (seg.P2[0] - seg.P1[0]) : walk.t;
+  const sl = activeSlice();
+  if (!sliceData || !sl || !walk.on || walk.id !== sl.id) return null;
+  return sliceData.horizontal ? pointAt(sl, walk.t)[0] : walk.t;
 }
+
+// ---- the list of slices (like traced borders): drawn on the plane, picked in the Slice tab,
+// walkable with "Move along". Results are cached per slice (the last SLICE_CACHE computed);
+// a cached result is reused only while the problem and slice settings are unchanged.
+const SLICE_CACHE = 4;
+const sliceResults = new Map(); // id -> {key, data}
+let sliceSeq = 0;
+const activeSlice = () => plane.slices.find((q) => q.id === plane.activeSlice) || null;
+
+const DRAW_HINTS = {
+  line: 'Shift-drag on the plane from one end of the slice to the other.',
+  polyline: 'Hold Shift and click each corner; release Shift (or double-click, or press Enter) to finish. Backspace removes the last corner, Esc cancels.',
+  freehand: 'Hold Shift and drag along any path; the trace is smoothed when you let go.',
+};
+function syncDrawMode() {
+  if (!DRAW_HINTS[S.sliceDraw]) S.sliceDraw = 'line';
+  plane.drawMode = S.sliceDraw;
+  document.querySelectorAll('[data-draw]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.draw === S.sliceDraw));
+  $('draw-hint').textContent = DRAW_HINTS[S.sliceDraw];
+}
+
+function sliceTitle(sl) {
+  if (sl.name) return `${sl.label} · ${sl.name}`;
+  return sl.kind === 'polyline' ? `${sl.label} · polyline, ${sl.pts.length} corners` : `${sl.label} · ${sl.kind}`;
+}
+function syncSlicePicker() {
+  const sel = $('slice-pick');
+  sel.innerHTML = '';
+  for (const sl of plane.slices) {
+    const o = document.createElement('option');
+    o.value = sl.id; o.textContent = sliceTitle(sl);
+    sel.append(o);
+  }
+  if (!plane.slices.length) {
+    const o = document.createElement('option');
+    o.textContent = 'none yet'; o.disabled = true; o.selected = true;
+    sel.append(o);
+  }
+  sel.disabled = !plane.slices.length;
+  $('btn-slice-del').disabled = !plane.slices.length;
+  if (plane.activeSlice) sel.value = plane.activeSlice;
+}
+
+/** Everything a slice result depends on, apart from the path. The plane coordinates in the
+ *  parameters are overwritten per sample, so picking a point does not invalidate it. */
+function sliceKey() {
+  const prob = problem();
+  for (const ax of S.axes) setCoord(prob.params, ax, 0);
+  prob.z0 = [...(prob.params.z0 || [0, 0])];
+  const r = returns();
+  return JSON.stringify({ prob, n: +$('slice-n').value, kmax: S.kmax, tau: S.tau, S: S.Ssample, nTrans: S.nTrans, qA: r.qA, qB: r.qB });
+}
+
+/** Add a slice to the list and show it; with run = false it is computed when first shown. */
+function addSlice({ kind, pts, name = '' }, { run = true, activate = true } = {}) {
+  const id = `slice${++sliceSeq}`;
+  const sl = { id, label: `slice ${sliceSeq}`, kind, pts, name };
+  plane.slices.push(sl);
+  if (activate || !plane.activeSlice) plane.activeSlice = id;
+  plane.drawOverlay();
+  syncSlicePicker();
+  if (run) runSlice(sl);
+  return sl;
+}
+
+/** The preset's own slices (PRESET_SLICES), added without computing them yet. */
+function addPresetSlices(id) {
+  const list = PRESET_SLICES[id] || [];
+  list.forEach((q, i) => addSlice(structuredClone(q), { run: false, activate: i === 0 }));
+  updateWalk();
+  if (list.length && S.tab === 'slice') selectSlice(plane.activeSlice);
+}
+
+/** After a change of the problem: show the shown slice again (from cache if still valid). */
+function refreshSlice() {
+  sliceData = null;
+  if (S.tab === 'slice' && activeSlice()) selectSlice(plane.activeSlice);
+  else replot();
+}
+
+function selectSlice(id) {
+  const sl = plane.slices.find((q) => q.id === id);
+  if (!sl) return;
+  plane.activeSlice = id;
+  plane.drawOverlay();
+  syncSlicePicker();
+  const hit = sliceResults.get(id);
+  if (hit && hit.key === sliceKey()) {
+    sliceGen++;
+    pool.cancel('slice');
+    sliceResults.delete(id); sliceResults.set(id, hit); // most recently used last
+    sliceData = hit.data;
+    selectTab('slice');
+    updateWalk(id);
+    sliceControls();
+    replot();
+    $('slice-note').textContent = SLICE_DONE_NOTE;
+  } else runSlice(sl);
+}
+
+function deleteSlice(id) {
+  const i = plane.slices.findIndex((q) => q.id === id);
+  if (i < 0) return;
+  plane.slices.splice(i, 1);
+  sliceResults.delete(id);
+  if (plane.activeSlice === id) {
+    sliceGen++;
+    pool.cancel('slice');
+    const next = plane.slices[Math.min(i, plane.slices.length - 1)];
+    plane.activeSlice = null;
+    sliceData = null;
+    if (next) selectSlice(next.id);
+    else { syncSlicePicker(); sliceControls(); replot(); $('slice-note').textContent = ''; }
+  } else syncSlicePicker();
+  plane.drawOverlay();
+  updateWalk();
+}
+
+const SLICE_DONE_NOTE = 'Each column: the attractor at one parameter, cut by the line θ = θ*. k curves = k sheets; a smear = no finite section. Colour: category; λ below. Click to analyse a parameter.';
 
 async function runSlice(sl) {
   const gen = ++sliceGen;
   pool.cancel('slice');
-  selectTab('slice');
-  if (walk.id === 'slice') { walk.t = 0; walk.on = false; }
-  updateWalk('slice');
+  if (walk.id === sl.id) { walk.t = 0; walk.on = false; }
+  updateWalk(sl.id);
   const count = +$('slice-n').value;
   const r = returns();
+  const key = sliceKey();
   const nRec = Math.max(6000, recordLength(S.Ssample, r.qB, S.kmax));
-  // orbit tail kept per parameter: ≤ 4e6 values in all (32 MB for re + im)
+  // orbit tail kept per parameter: ≤ 4e6 values per slice (32 MB for re + im)
   const keep = Math.min(nRec, Math.max(2000, Math.floor(4e6 / count)));
   const prob = problem();
   const per = Math.max(4, Math.round(count / (pool.size * 4)));
-  const horizontal = Math.abs(sl.P2[1] - sl.P1[1]) < 1e-12 * Math.max(1, Math.abs(sl.P2[0] - sl.P1[0]));
-  const ts = new Float64Array(count);
+  const A = sl.pts[0], B = sl.pts[sl.pts.length - 1];
+  const horizontal = sl.kind === 'line' && Math.abs(B[1] - A[1]) < 1e-12 * Math.max(1, Math.abs(B[0] - A[0]));
+  // samples equally spaced in arc length along the path
+  const us = new Float64Array(count), vs = new Float64Array(count), ts = new Float64Array(count);
   for (let i = 0; i < count; i++) {
     const t = count > 1 ? i / (count - 1) : 0;
-    ts[i] = horizontal ? sl.P1[0] + t * (sl.P2[0] - sl.P1[0]) : t;
+    const P = pointAt(sl, t);
+    us[i] = P[0]; vs[i] = P[1];
+    ts[i] = horizontal ? P[0] : t;
   }
   const lam = new Float32Array(count).fill(NaN);
   const k = new Int16Array(count).fill(-1);
-  sliceData = {
-    ts, lam, k, re: null, im: null, theta: null, keep: 0, seg: sl, horizontal,
-    xlabel: horizontal ? `${coordLabel(S.axes[0])}  (${coordLabel(S.axes[1])} = ${sl.P1[1].toPrecision(6)})` : `t along (${sl.P1.map((x) => x.toPrecision(5))}) → (${sl.P2.map((x) => x.toPrecision(5))})`,
+  const data = {
+    ts, lam, k, re: null, im: null, theta: null, keep: 0, horizontal,
+    vts: sl.kind === 'polyline' ? vertexTs(sl).slice(1, -1) : [],
+    xlabel: horizontal
+      ? `${coordLabel(S.axes[0])}  (${coordLabel(S.axes[1])} = ${A[1].toPrecision(6)})`
+      : `${sl.label}: position along the path (arc length, 0 → 1)`,
   };
+  sliceData = data;
+  selectTab('slice');
+  sliceControls();
   $('slice-note').textContent = 'Computing slice…';
   const jobs = [];
   for (let i0 = 0; i0 < count; i0 += per) jobs.push([i0, Math.min(count, i0 + per)]);
-  let lastDraw = 0;
+  let lastDraw = 0, failed = false;
   await Promise.all(
     jobs.map(([i0, i1]) =>
       pool
-        .run('slice', { prob, P1: sl.P1, P2: sl.P2, i0, i1, count, nTrans: Math.max(1000, S.nTrans * 2), nRec, keep, kmax: S.kmax, tau: S.tau, S: S.Ssample, qA: r.qA, qB: r.qB }, { tag: 'slice' })
+        .run('slice', { prob, us: us.slice(i0, i1), vs: vs.slice(i0, i1), i0, i1, nTrans: Math.max(1000, S.nTrans * 2), nRec, keep, kmax: S.kmax, tau: S.tau, S: S.Ssample, qA: r.qA, qB: r.qB }, { tag: 'slice' })
         .then((res) => {
           if (gen !== sliceGen) return;
-          const d = sliceData;
-          if (!d.keep) {
-            d.keep = res.keep; d.theta = res.theta;
-            d.re = new Float32Array(count * res.keep).fill(NaN); d.im = new Float32Array(count * res.keep).fill(NaN);
+          if (!data.keep) {
+            data.keep = res.keep; data.theta = res.theta;
+            data.re = new Float32Array(count * res.keep).fill(NaN); data.im = new Float32Array(count * res.keep).fill(NaN);
             sliceControls();
           }
           lam.set(res.lam, res.i0);
           k.set(res.k, res.i0);
-          d.re.set(res.re, res.i0 * d.keep);
-          d.im.set(res.im, res.i0 * d.keep);
+          data.re.set(res.re, res.i0 * data.keep);
+          data.im.set(res.im, res.i0 * data.keep);
           const now = performance.now();
           if (now - lastDraw > 250) { lastDraw = now; replot(); }
         })
-        .catch((err) => { if (!err || !err.cancelled) console.error(err); }),
+        .catch((err) => { failed = true; if (!err || !err.cancelled) console.error(err); }),
     ),
   );
   if (gen !== sliceGen) return;
+  if (!failed && plane.slices.includes(sl)) {
+    sliceResults.delete(sl.id);
+    sliceResults.set(sl.id, { key, data });
+    for (const id of [...sliceResults.keys()]) {
+      if (sliceResults.size <= SLICE_CACHE) break;
+      if (id !== sl.id) sliceResults.delete(id);
+    }
+  }
   replot();
-  $('slice-note').textContent = 'Each column: the attractor at one parameter, cut by the line θ = θ*. k curves = k sheets; a smear = no finite section. Colour: category; λ below. Click to analyse a parameter.';
+  $('slice-note').textContent = SLICE_DONE_NOTE;
   bindSliceEvents();
 }
 
@@ -942,25 +1205,26 @@ function bindSliceEvents() {
   if (sliceBound || !el.on) return;
   sliceBound = true;
   el.on('plotly_click', (ev) => {
-    if (!sliceData || !ev.points.length) return;
-    const { seg, horizontal } = sliceData;
+    const sl = activeSlice();
+    if (!sliceData || !sl || !ev.points.length) return;
     const x = ev.points[0].x;
-    const t = horizontal ? (x - seg.P1[0]) / (seg.P2[0] - seg.P1[0] || 1) : x;
-    setWalk('slice', Math.min(1, Math.max(0, t)), true);
+    let t = x;
+    if (sliceData.horizontal) { const A = sl.pts[0], B = sl.pts[sl.pts.length - 1]; t = (x - A[0]) / (B[0] - A[0] || 1); }
+    setWalk(sl.id, Math.min(1, Math.max(0, t)), true);
   });
 }
 
 // ---------------------------------------------------------------- walking along a path
 // "Move along": a slider that moves the analysed parameter along the slice or a traced border.
 // Analyses chain latest-wins, so dragging never queues up stale work.
-const walk = { id: null, t: 0, on: false, playing: false, busy: false, next: null };
+const walk = { id: null, t: 0, on: false, dir: 0, looping: false, busy: false, next: null };
 
 /** Refill the path menu from the plane's overlays; `prefer` selects that path if present. */
 function updateWalk(prefer) {
   const paths = plane.paths();
   const sel = $('walk-path');
   $('walk').hidden = !paths.length;
-  if (!paths.length) { stopPlay(); walk.id = null; walk.on = false; sel.innerHTML = ''; return; }
+  if (!paths.length) { setWalkDir(0); walk.id = null; walk.on = false; sel.innerHTML = ''; return; }
   sel.innerHTML = '';
   for (const p of paths) {
     const o = document.createElement('option');
@@ -1001,26 +1265,48 @@ async function walkTo(P) {
   }
 }
 
-async function play() {
-  if (!walk.id) return;
-  walk.playing = true;
-  $('walk-play').setAttribute('aria-pressed', 'true');
-  $('walk-play').textContent = '❚❚';
-  if (walk.t >= 1) walk.t = 0;
-  while (walk.playing) {
-    await setWalk(walk.id, walk.t, true);
-    while (walk.busy) await new Promise((r) => setTimeout(r, 30));
-    if (!walk.playing) break;
-    if (walk.t >= 1) break;
-    walk.t = Math.min(1, walk.t + 0.005);
-  }
-  stopPlay();
+/** ◀ ❚❚ ▶ for the walker: −1 backwards, 0 pause, +1 forwards; it wraps around the path's ends. */
+function setWalkDir(d) {
+  walk.dir = d;
+  document.querySelectorAll('[data-walk-dir]').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.walkDir === d));
+  if (d && !walk.looping) walkLoop();
 }
 
-function stopPlay() {
-  walk.playing = false;
-  $('walk-play').setAttribute('aria-pressed', 'false');
-  $('walk-play').textContent = '▶';
+async function walkLoop() {
+  if (!walk.id) { setWalkDir(0); return; }
+  walk.looping = true;
+  try {
+    while (walk.dir && walk.id) {
+      await setWalk(walk.id, walk.t, true);
+      while (walk.busy) await new Promise((r) => setTimeout(r, 30));
+      if (!walk.dir) break;
+      let t = walk.t + walk.dir * 0.005; // 200 analyses per pass
+      if (t > 1 + 1e-9) t -= 1;
+      if (t < -1e-9) t += 1;
+      walk.t = t;
+    }
+  } finally {
+    walk.looping = false;
+  }
+}
+
+// ---- turning θ*: one full turn every THETA_PERIOD seconds, redrawn at most every 50 ms
+const THETA_PERIOD = 24;
+const thetaAnim = { dir: 0, raf: 0, last: 0, drawn: 0 };
+function setThetaDir(d) {
+  thetaAnim.dir = d;
+  document.querySelectorAll('[data-theta-dir]').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.thetaDir === d));
+  if (d && !thetaAnim.raf) { thetaAnim.last = performance.now(); thetaAnim.raf = requestAnimationFrame(thetaStep); }
+  if (!d) save();
+}
+function thetaStep(now) {
+  if (!thetaAnim.dir) { thetaAnim.raf = 0; return; }
+  const dt = Math.min(0.1, (now - thetaAnim.last) / 1000);
+  thetaAnim.last = now;
+  S.sliceTheta = (((S.sliceTheta + (thetaAnim.dir * TWO_PI * dt) / THETA_PERIOD) % TWO_PI) + TWO_PI) % TWO_PI;
+  sliceControls();
+  if (now - thetaAnim.drawn > 50) { thetaAnim.drawn = now; replot(); }
+  thetaAnim.raf = requestAnimationFrame(thetaStep);
 }
 
 // ---------------------------------------------------------------- function reference
@@ -1076,6 +1362,8 @@ function boot() {
   pool.ready.then(() => {
     renderPlane();
     pick(currentUV());
+    const p = PRESETS.find((q) => q.id === S.preset);
+    if (p && p.expr === S.expr) addPresetSlices(p.id);
   });
   window.addEventListener('resize', () => resizeAll(document.querySelectorAll('.plot')));
 }

@@ -1,9 +1,15 @@
 // Parameter-plane view: progressive rendering through the worker pool,
-// zoom / pan / pick / slice interaction, and vector overlays (marker, borders, slice).
-// Clicks within SNAP_PX of the slice or a traced border snap onto it (hold Alt to opt out).
+// zoom / pan / pick / slice interaction, and vector overlays (marker, borders, slices).
+// Clicks within SNAP_PX of a slice or a traced border snap onto it (hold Alt to opt out).
+//
+// Drawing a slice (Shift held), by drawMode:
+//   'line'      shift-drag from one end to the other;
+//   'polyline'  shift-click each corner; release Shift, double-click or press Enter to finish
+//               (Esc cancels, Backspace removes the last corner);
+//   'freehand'  shift-drag along any path; the trail is smoothed and simplified on release.
 
 import { COLORERS, category } from './colors.js';
-import { overlayPaths, nearestOnPath } from './paths.js';
+import { overlayPaths, nearestOnPath, smoothTrail } from './paths.js';
 
 const SNAP_PX = 10;
 
@@ -19,7 +25,10 @@ export class PlaneView {
     this.W = 0; this.H = 0;
     this.marker = null;
     this.borders = [];
-    this.slice = null;
+    this.slices = []; // [{id, label, kind, pts}]
+    this.activeSlice = null; // id of the slice shown in the Slice tab
+    this.drawMode = 'line';
+    this.draft = null; // polyline being drawn: {pts, cursor}
     this.snapshot = null; // {canvas, view}
     this.renderTimer = null;
     this.cfg = null;
@@ -225,7 +234,7 @@ export class PlaneView {
 
   // ------------------------------------------------------------ paths and snapping
   /** The slice and traced borders as walkable paths (see paths.js). */
-  paths() { return overlayPaths(this.slice, this.borders); }
+  paths() { return overlayPaths(this.slices, this.borders); }
 
   /** Snap a client point to the nearest path within SNAP_PX: {P, path, t} or null. */
   snap(clientX, clientY) {
@@ -247,21 +256,13 @@ export class PlaneView {
     ctx.clearRect(0, 0, rect.width, rect.height);
     // borders
     for (const b of this.borders) this.#drawBorder(ctx, b);
-    // slice
-    const sl = extra && extra.slice ? extra.slice : this.slice;
-    if (sl) {
-      const [x1, y1] = this.paramToCss(sl.P1), [x2, y2] = this.paramToCss(sl.P2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([6, 4]);
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-      ctx.setLineDash([]);
-      for (const [x, y] of [[x1, y1], [x2, y2]]) { ctx.beginPath(); ctx.arc(x, y, 3, 0, 2 * Math.PI); ctx.fillStyle = '#fff'; ctx.fill(); }
-      if (sl.cursor != null) {
-        const t = sl.cursor;
-        const [xc, yc] = this.paramToCss([sl.P1[0] + t * (sl.P2[0] - sl.P1[0]), sl.P1[1] + t * (sl.P2[1] - sl.P1[1])]);
-        ctx.beginPath(); ctx.arc(xc, yc, 4, 0, 2 * Math.PI); ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2; ctx.stroke();
-      }
+    // slices: the active one bright, the others dimmer, each numbered at its start
+    for (const sl of this.slices) this.#drawSlice(ctx, sl, sl.id === this.activeSlice ? 1 : 0.45);
+    // a slice being drawn
+    if (extra && extra.preview) this.#drawSlice(ctx, { pts: extra.preview, kind: 'freehand' }, 1, true);
+    if (this.draft) {
+      const pts = this.draft.cursor ? [...this.draft.pts, this.draft.cursor] : this.draft.pts;
+      this.#drawSlice(ctx, { pts, kind: 'polyline' }, 1, true);
     }
     // where a click would snap to
     if (this.snapHint) {
@@ -280,6 +281,46 @@ export class PlaneView {
       ctx.stroke();
       ctx.beginPath(); ctx.arc(x, y, 3, 0, 2 * Math.PI); ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 1.5; ctx.stroke();
     }
+  }
+
+  #drawSlice(ctx, sl, alpha, draft = false) {
+    if (!sl.pts || sl.pts.length < 1) return;
+    const xy = sl.pts.map((P) => this.paramToCss(P));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = draft ? '#ffd166' : '#ffffff';
+    ctx.lineWidth = alpha === 1 ? 1.6 : 1.2;
+    ctx.setLineDash((sl.kind === 'freehand' || sl.kind === 'curve') && !draft ? [] : [6, 4]);
+    ctx.beginPath();
+    xy.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = draft ? '#ffd166' : '#ffffff';
+    const corners = (sl.kind === 'freehand' || sl.kind === 'curve') ? [xy[0], xy[xy.length - 1]] : xy;
+    for (const [x, y] of corners) { ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 2 * Math.PI); ctx.fill(); }
+    if (sl.label && !draft) {
+      const [x, y] = xy[0];
+      ctx.font = '600 11px "IBM Plex Mono", ui-monospace, monospace';
+      ctx.fillText(sl.label.replace(/^slice /, ''), x + 5, y - 5);
+    }
+    ctx.restore();
+  }
+
+  /** Emit a finished slice: pts in parameter coordinates. */
+  #emitSlice(kind, pts) {
+    const clean = pts.filter((P, i) => i === 0 || Math.hypot(...this.#cssDelta(P, pts[i - 1])) > 2);
+    if (clean.length < 2) { this.drawOverlay(); return; }
+    this.onSlice && this.onSlice({ kind, pts: clean });
+  }
+  #cssDelta(P, Q) { const [a, b] = this.paramToCss(P), [c, d] = this.paramToCss(Q); return [a - c, b - d]; }
+
+  /** Finish (or, with fewer than two corners, drop) the polyline being drawn. */
+  finishDraft(cancel = false) {
+    const d = this.draft;
+    if (!d) return;
+    this.draft = null;
+    if (!cancel) this.#emitSlice('polyline', d.pts);
+    else this.drawOverlay();
   }
 
   #drawBorder(ctx, b) {
@@ -335,7 +376,8 @@ export class PlaneView {
         pinch = { ...st, view: { ...this.view }, P: this.clientToParam(st.mx, st.my) };
         return;
       }
-      drag = { x: e.clientX, y: e.clientY, view: { ...this.view }, shift: e.shiftKey, moved: false, P1: this.clientToParam(e.clientX, e.clientY) };
+      drag = { x: e.clientX, y: e.clientY, view: { ...this.view }, shift: e.shiftKey, moved: false, P1: this.clientToParam(e.clientX, e.clientY), trail: [[e.clientX, e.clientY]] };
+      if (this.draft && !e.shiftKey) this.finishDraft(); // a plain click ends a polyline
     });
     const endTouch = (e) => {
       touches.delete(e.pointerId);
@@ -360,6 +402,7 @@ export class PlaneView {
       }
       const P = this.clientToParam(e.clientX, e.clientY);
       this.#hover(P);
+      if (this.draft && !drag) { this.draft.cursor = P; this.drawOverlay(); return; }
       if (!drag) {
         const sn = e.altKey ? null : this.snap(e.clientX, e.clientY);
         const hint = sn ? sn.P : null;
@@ -370,7 +413,11 @@ export class PlaneView {
       if (Math.hypot(dx, dy) > 4) drag.moved = true;
       if (!drag.moved) return;
       if (drag.shift) {
-        this.drawOverlay({ slice: { P1: drag.P1, P2: P } });
+        if (this.drawMode === 'polyline') { if (this.draft) { this.draft.cursor = P; this.drawOverlay(); } return; }
+        if (this.drawMode === 'freehand') {
+          drag.trail.push([e.clientX, e.clientY]);
+          this.drawOverlay({ preview: drag.trail.map(([x, y]) => this.clientToParam(x, y)) });
+        } else this.drawOverlay({ preview: [drag.P1, P] });
       } else {
         const rect = ov.getBoundingClientRect();
         const k = (2 * drag.view.r) / rect.width;
@@ -385,17 +432,35 @@ export class PlaneView {
       endTouch(e);
       if (wasPinch || !drag) return;
       const P = this.clientToParam(e.clientX, e.clientY);
-      if (!drag.moved) {
+      if (drag.shift && this.drawMode === 'polyline') {
+        // each shift-click (or shift-drag release) adds a corner
+        if (!this.draft) this.draft = { pts: [], cursor: null };
+        const last = this.draft.pts[this.draft.pts.length - 1];
+        if (!last || Math.hypot(...this.#cssDelta(P, last)) > 3) this.draft.pts.push(P);
+        this.draft.cursor = null;
+        this.drawOverlay();
+      } else if (!drag.moved) {
         const sn = e.altKey ? null : this.snap(e.clientX, e.clientY);
         this.onPick && this.onPick(sn ? sn.P : P, sn);
-      }
-      else if (drag.shift) { this.slice = { P1: drag.P1, P2: P }; this.drawOverlay(); this.onSlice && this.onSlice(this.slice); }
+      } else if (drag.shift && this.drawMode === 'freehand') {
+        drag.trail.push([e.clientX, e.clientY]);
+        const css = smoothTrail(drag.trail);
+        this.#emitSlice('freehand', css.map(([x, y]) => this.clientToParam(x, y)));
+      } else if (drag.shift) this.#emitSlice('line', [drag.P1, P]);
       else this.setView(this.view);
       drag = null;
     });
     ov.addEventListener('pointerleave', () => {
       this.onHover && this.onHover(null);
       if (this.snapHint) { this.snapHint = null; this.drawOverlay(); }
+    });
+    ov.addEventListener('dblclick', (e) => { if (this.draft) { e.preventDefault(); this.finishDraft(); } });
+    window.addEventListener('keyup', (e) => { if (e.key === 'Shift' && this.draft) this.finishDraft(); });
+    window.addEventListener('keydown', (e) => {
+      if (!this.draft) return;
+      if (e.key === 'Escape') { e.preventDefault(); this.finishDraft(true); }
+      else if (e.key === 'Enter') { e.preventDefault(); this.finishDraft(); }
+      else if (e.key === 'Backspace') { e.preventDefault(); this.draft.pts.pop(); if (!this.draft.pts.length) this.finishDraft(true); else this.drawOverlay(); }
     });
     ov.addEventListener('wheel', (e) => {
       e.preventDefault();

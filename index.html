@@ -315,7 +315,7 @@ function computeState() {
   S.gloom = 0.34 * smooth(60, 10, dd) * (0.6 + 0.4 * r1);
   const w = env.w; S.w = w;
   S.snowing = w.snowing; S.raining = w.raining; S.precip = w.intensity;
-  S.cloud = w.intensity > 0 ? 0.6 + 0.4 * w.intensity : w.sinceEnd < 12 ? 0.75 * smooth(6, 0.5, w.sinceEnd) + 0.14 : w.rainyDay ? 0.2 : 0;
+  S.cloud = w.intensity > 0 ? 0.6 + 0.4 * w.intensity : w.sinceEnd < 12 ? 0.75 * smooth(6, 0.5, w.sinceEnd) + 0.14 : 0.2 * (w.wet || 0);   // overcast through a wet spell, fading in and out
   S.curtain = w.intensity > 0 ? 0 : w.sinceEnd < 14 ? smooth(14, 4, w.sinceEnd) : 0;   // the retreating shower, opposite the sun
   S.wind = (r4 < 0.5 ? -1 : 1) * (6 + r4 * 14);
   const auroraSeason = md >= 820 || md <= 415, ao = RV.opt('aurora');

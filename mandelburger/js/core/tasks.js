@@ -317,7 +317,8 @@ export function sliceTask(job) {
   // For every parameter on the segment: λ, the branch count, and the last `keep` recorded orbit
   // values. Their base angles are the same for every parameter (returned once as `theta`), so the
   // client cuts the attractor at any θ* with any window without recomputing (see section.js).
-  const { prob, P1, P2, i0, i1, count, nTrans, nRec, keep, kmax, tau, S, qA, qB } = job;
+  // The parameters are the points (us[i], vs[i]), i in [i0, i1): any path, sampled by the client.
+  const { prob, us, vs, i0, i1, nTrans, nRec, keep, kmax, tau, S, qA, qB } = job;
   const kernel = getKernel(prob, nTrans + nRec + 2);
   const bufR = new Float64Array(nRec), bufI = new Float64Array(nRec);
   const out3 = new Float64Array(5);
@@ -327,9 +328,7 @@ export function sliceTask(job) {
   const lam = new Float32Array(nOut), kk = new Int16Array(nOut), esc = new Float32Array(nOut);
   const re = new Float32Array(nOut * K).fill(NaN), im = new Float32Array(nOut * K).fill(NaN);
   for (let i = i0; i < i1; i++) {
-    const t = count > 1 ? i / (count - 1) : 0;
-    const u = P1[0] + t * (P2[0] - P1[0]), v = P1[1] + t * (P2[1] - P1[1]);
-    kernel(u, v, nTrans, nRec, bufR, bufI, out3);
+    kernel(us[i - i0], vs[i - i0], nTrans, nRec, bufR, bufI, out3);
     const o = i - i0;
     if (out3[0] >= 0) { esc[o] = out3[0]; lam[o] = NaN; kk[o] = -1; continue; }
     esc[o] = -1;

@@ -142,9 +142,11 @@ RV.skyAt = (alt, grey = 0) => {
 };
 
 /* ================= weather over Turku: deterministic, from Perlin noise =================
-   A day is rainy when a 1-D Perlin fBm of the day-of-year (rank-transformed to a uniform number) falls
-   below the seasonal chance — lowest in March–April, highest in October–November. On a rainy day a
-   second, faster Perlin noise of the clock decides when the showers start and stop.                 */
+   Wet spells come and go with a slow 1-D Perlin fBm of time (rank-transformed to a uniform number): it is a
+   wet spell while that falls below the seasonal chance — lowest in March–April, highest in October–November.
+   Inside a spell a second, faster Perlin noise of the clock decides when the showers start and stop.
+   Everything is continuous in time, so showers fade in and out and simply run on across midnight —
+   nothing starts or stops at 00:00 just because the date changed.                                   */
 function hash(i, s) { let h = Math.imul(i ^ 0x9E3779B9, 0x85EBCA6B) ^ Math.imul(s + 0x632BE5AB, 0xC2B2AE35); h ^= h >>> 15; h = Math.imul(h, 0x2C1B3C6D); h ^= h >>> 12; h = Math.imul(h, 0x297A2D39); h ^= h >>> 15; return (h >>> 0) / 4294967296; }
 function perlin(x, s) { const i = Math.floor(x), f = x - i, g0 = hash(i, s) * 2 - 1, g1 = hash(i + 1, s) * 2 - 1, u = f * f * f * (f * (f * 6 - 15) + 10); return (g0 * f) * (1 - u) + (g1 * (f - 1)) * u; }
 const fbm = (x, s) => perlin(x, s) + 0.5 * perlin(x * 2.03 + 17.1, s + 1) + 0.25 * perlin(x * 4.1 + 3.3, s + 2);
@@ -159,11 +161,12 @@ function seasonP(doy) {
   const t = (x - x0) / (x1 - x0), u = (1 - Math.cos(Math.PI * t)) / 2;
   return MONTH_P[i0] + (MONTH_P[i1] - MONTH_P[i0]) * u;
 }
-const dayWet = L => uniform(fbm(L.doy / 4.2 + (L.year % 1000) * 7.31, 11));
+const spellU = ms => uniform(fbm(ms / DAY / 4.2 + 0.37, 11));                    // the slow wetness noise: a correlation of ~4 days
+const doyC = L => L.doy + (L.hour + L.minute / 60) / 24;                          // day of the year, with the time of day
 function precipAt(ms) {
-  const L = local(ms), p = seasonP(L.doy), u = dayWet(L);
+  const L = local(ms), p = seasonP(doyC(L)), u = spellU(ms);
   if (u >= p) return 0;
-  const depth = (p - u) / p, f = 0.26 + 0.5 * depth;
+  const depth = (p - u) / p, f = (0.26 + 0.5 * depth) * smooth(0, 0.12, depth);   // …tapering to nothing at the edges of a spell
   const v = uniform(fbm(ms / 3.6e6 / 3.2 + 500, 23)), x = (v - (1 - f)) / 0.05;
   return x <= 0 ? 0 : smooth(0, 1, x) * (0.45 + 0.55 * depth);
 }
@@ -171,7 +174,8 @@ RV.snowSeason = L => L.md >= 1122 || L.md <= 325;
 RV.weather = (ms = RV.now()) => {
   const L = local(ms), snowS = RV.snowSeason(L);
   let raw = precipAt(ms);
-  const w = { L, p: seasonP(L.doy), rainyDay: dayWet(L) < seasonP(L.doy), kind: snowS ? 'snow' : 'rain', auto: raw };
+  const pc = seasonP(doyC(L)), uc = spellU(ms), wet = uc < pc ? smooth(0, 0.12, (pc - uc) / pc) : 0;
+  const w = { L, p: seasonP(L.doy), rainyDay: wet > 0, wet, kind: snowS ? 'snow' : 'rain', auto: raw };
   const force = RV.opt(snowS ? 'snow' : 'rain');
   if (force === 'on') raw = Math.max(raw, 0.75);
   if (force === 'off') raw = 0;
@@ -188,6 +192,10 @@ RV.forecast = (ms = RV.now()) => {           // today's shower windows (local ti
   const m0 = localMidnight(ms), spans = []; let cur = null;
   for (let t = m0; t <= m0 + DAY; t += 6e4) { const on = precipAt(t) > 0; if (on && !cur) cur = [t, t]; if (on) cur[1] = t + 6e4; if (!on && cur) { spans.push(cur); cur = null; } }
   if (cur) spans.push(cur);
+  // a shower that runs across midnight keeps its real start (yesterday evening) and end (tomorrow morning)
+  if (spans.length && spans[0][0] === m0) { let t = m0; while (t > m0 - DAY / 2 && precipAt(t - 6e4) > 0) t -= 6e4; spans[0][0] = t; }
+  const last = spans[spans.length - 1];
+  if (last && last[1] > m0 + DAY) { let t = last[1]; while (t < m0 + DAY * 1.5 && precipAt(t) > 0) t += 6e4; last[1] = t; }
   return spans;
 };
 /* the cabin's schedule: sauna on odd days of the year in the evening (or when someone typed `sauna`);
