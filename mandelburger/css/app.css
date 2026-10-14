@@ -158,6 +158,8 @@ button, input, select { font: inherit; color: inherit; }
   min-width: 0;
   overflow-y: auto;
 }
+/* the plate keeps its size when an explanation opens below it: the column scrolls instead */
+.platecol > * { flex-shrink: 0; }
 .analysis {
   border-left: 1px solid var(--line);
   background: var(--surface);
@@ -514,3 +516,55 @@ details > .group { margin-top: 0.6rem; }
 /* three-state motion control: ◀ backwards, ❚❚ pause, ▶ forwards (fixed widths: no jitter) */
 .seg.play-seg { flex: 0 0 auto; width: auto; display: inline-flex; }
 .seg.play-seg button { flex: 0 0 2rem; width: 2rem; padding: 0.25rem 0; text-align: center; font-size: 0.8rem; line-height: 1.2; }
+
+/* ---- compact left panel: inline labels for short names */
+.hint:empty { display: none; }
+.group.tight { gap: 0.4rem; }
+.il { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.il > label, .il > .lbl { flex: 0 0 auto; min-width: 1.6rem; font-size: var(--s-sm); color: var(--muted); }
+.il > label i { font-family: var(--f-math); font-size: 1.08em; color: var(--ink); }
+.il > input, .il > select { flex: 1 1 0; min-width: 0; width: auto; }
+.il > .plus { flex: 0 0 auto; color: var(--muted); font-size: var(--s-sm); }
+.il > .plus i { font-family: var(--f-math); color: var(--ink); }
+.il > .btn { flex: 0 0 auto; }
+.il > .seg { flex: 1 1 auto; width: auto; }
+.il-pair { display: flex; gap: 0.8rem; }
+.il-pair > .il { flex: 1 1 0; }
+.il-head > label { font: 400 1.05rem / 1.2 var(--f-math); color: var(--ink); }
+.il-head > label i { font-size: 1em; }
+.il-T > select { flex: 0 0 7.2rem; }
+.il-axes > select { flex: 1 1 0; }
+label.on-plane, label.on-plane i { color: var(--accent) !important; font-weight: 600; }
+.cf-wrap > summary { font-size: var(--s-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cf-wrap[open] > summary { margin-bottom: 0.35rem; }
+details.adv { gap: 0.55rem; }
+details.adv > summary { font: 600 var(--s-xs) / 1 var(--f-ui); text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); }
+details.adv:not([open]) { gap: 0; }
+.rail .il > label, .rail .il > .lbl { min-width: 2.6rem; }
+.il-pair .il > label { min-width: 1.6rem; }
+.slice-pick > select { max-width: 30rem; }
+.slice-pick > .btn { flex: 0 0 2.2rem; padding: 0.3rem 0; }
+
+/* ---- left panel: name | field | separator or name | field, so every field lines up */
+.pg { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) 1.9rem minmax(0, 1fr); gap: 0.4rem; align-items: center; }
+.pg > label, .pg > .sep { font-size: var(--s-sm); color: var(--muted); white-space: nowrap; }
+.pg > label i, .pg > .sep i { font-family: var(--f-math); font-size: 1.08em; color: var(--ink); }
+.pg > .sep, .pg > label[data-sep] { text-align: center; }
+.pg > input, .pg > select { width: 100%; min-width: 0; }
+.pg-wide > select { grid-column: 2 / -1; }
+details.sec > .sec-body { margin-top: 0.55rem; }
+details.sec > summary { font: 600 var(--s-xs) / 1 var(--f-ui); text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); }
+.draw-seg button { padding: 0.35rem 0.2rem; }
+
+/* ---- expandable explanations under the plots, and the drawing help */
+.note:empty { display: none; }
+details.whatis { font-size: var(--s-sm); color: var(--muted); max-width: 70ch; }
+details.whatis > summary { cursor: pointer; color: var(--accent); font-size: var(--s-sm); width: max-content; max-width: 100%; }
+details.whatis p, details.whatis ul { margin: 0.45rem 0 0; line-height: 1.45; }
+details.whatis ul { padding-left: 1.1rem; }
+details.whatis b { color: var(--ink); font-weight: 600; }
+.platecol details.whatis { margin-top: 0.2rem; }
+ul.draw-help { margin: 0.35rem 0 0; padding-left: 1rem; color: var(--muted); line-height: 1.4; }
+ul.draw-help li { margin-bottom: 0.25rem; }
+ul.draw-help li.on { color: var(--ink); }
+ul.draw-help li.on::marker { color: var(--accent); }

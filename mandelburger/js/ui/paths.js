@@ -7,6 +7,7 @@ export function overlayPaths(slices, borders) {
   const out = [];
   for (const sl of slices) out.push({ id: sl.id, label: sl.label, pts: sl.pts, closed: false, kind: sl.kind });
   borders.forEach((b, i) => {
+    if (b.sliceId) return; // already listed as its slice
     const pts = [...b.rays]
       .filter((r) => r.type !== 'none' && Number.isFinite(r.r))
       .sort((p, q) => p.angle - q.angle)

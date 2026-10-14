@@ -6,7 +6,8 @@
 //   'line'      shift-drag from one end to the other;
 //   'polyline'  shift-click each corner; release Shift, double-click or press Enter to finish
 //               (Esc cancels, Backspace removes the last corner);
-//   'freehand'  shift-drag along any path; the trail is smoothed and simplified on release.
+//   'freehand'  shift-drag along any path; the trail is smoothed and simplified on release;
+//   'border'    shift-click a point: onBorderPick traces its component's border (it becomes a slice).
 
 import { COLORERS, category } from './colors.js';
 import { overlayPaths, nearestOnPath, smoothTrail } from './paths.js';
@@ -14,8 +15,8 @@ import { overlayPaths, nearestOnPath, smoothTrail } from './paths.js';
 const SNAP_PX = 10;
 
 export class PlaneView {
-  constructor({ wrap, plane, overlay, axesEl, progressEl, pool, onPick, onSlice, onHover, onRendered, onViewChange }) {
-    Object.assign(this, { wrap, plane, overlay, axesEl, progressEl, pool, onPick, onSlice, onHover, onRendered, onViewChange });
+  constructor({ wrap, plane, overlay, axesEl, progressEl, pool, onPick, onSlice, onBorderPick, onHover, onRendered, onViewChange }) {
+    Object.assign(this, { wrap, plane, overlay, axesEl, progressEl, pool, onPick, onSlice, onBorderPick, onHover, onRendered, onViewChange });
     this.ctx = plane.getContext('2d');
     this.octx = overlay.getContext('2d');
     this.view = { cx: 0, cy: 0, r: 2 }; // centre and half-width (square view)
@@ -286,6 +287,15 @@ export class PlaneView {
   #drawSlice(ctx, sl, alpha, draft = false) {
     if (!sl.pts || sl.pts.length < 1) return;
     const xy = sl.pts.map((P) => this.paramToCss(P));
+    if (sl.kind === 'border' && !draft) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 11px "IBM Plex Mono", ui-monospace, monospace';
+      ctx.fillText(sl.label.replace(/^slice /, ''), xy[0][0] + 5, xy[0][1] - 5);
+      ctx.restore();
+      return;
+    }
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.strokeStyle = draft ? '#ffd166' : '#ffffff';
@@ -414,6 +424,7 @@ export class PlaneView {
       if (!drag.moved) return;
       if (drag.shift) {
         if (this.drawMode === 'polyline') { if (this.draft) { this.draft.cursor = P; this.drawOverlay(); } return; }
+        if (this.drawMode === 'border') return;
         if (this.drawMode === 'freehand') {
           drag.trail.push([e.clientX, e.clientY]);
           this.drawOverlay({ preview: drag.trail.map(([x, y]) => this.clientToParam(x, y)) });
@@ -432,7 +443,9 @@ export class PlaneView {
       endTouch(e);
       if (wasPinch || !drag) return;
       const P = this.clientToParam(e.clientX, e.clientY);
-      if (drag.shift && this.drawMode === 'polyline') {
+      if (drag.shift && this.drawMode === 'border') {
+        this.onBorderPick && this.onBorderPick(P);
+      } else if (drag.shift && this.drawMode === 'polyline') {
         // each shift-click (or shift-drag release) adds a corner
         if (!this.draft) this.draft = { pts: [], cursor: null };
         const last = this.draft.pts[this.draft.pts.length - 1];
