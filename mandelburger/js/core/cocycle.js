@@ -30,7 +30,96 @@ export function analyzeCocycle({ fill, u, v, T, M = 2048, kind, orbit, z0, plot 
   fill(u, v, zR, zI, 0, NR, NI, DR, DI, 0, M);
   // the generator: g = dF/df for F = g f; L = F(0, x) for F = f + L
   const gr = kind === 'mult' ? DR : NR, gi = kind === 'mult' ? DI : NI;
+  const core = cocycleCore(gr, gi, M, T, kind);
+  const { muR, muI, winding, divisors, Lamp, Pamp, Damp, pmax, ptail, sr, psiAt, psi0, relation, nearest } = core;
+  let reMin = Infinity, reMax = -Infinity;
+  for (let m = 0; m < M; m++) { reMin = Math.min(reMin, sr[m]); reMax = Math.max(reMax, sr[m]); }
 
+  // predicted orbit at the plotted indices, and its error against the true orbit
+  const { start, count } = plot;
+  const predR = new Float32Array(count), predI = new Float32Array(count);
+  let err = 0, scale = 0;
+  // phase from the winding term: i w sum_{k<n} theta_k, accumulated exactly
+  const nFirst = orbit.n0 + start;
+  let windPhase = 0;
+  if (kind === 'mult' && winding !== 0) for (let k = 0; k < nFirst; k++) windPhase += winding * ((k * T) % TWO_PI);
+  for (let j = 0; j < count; j++) {
+    const n = nFirst + j;
+    const th = (n * T) % TWO_PI;
+    const ps = psiAt(th);
+    let zr, zi;
+    if (kind === 'mult') {
+      const lr = muR * n + ps[0] - psi0[0];
+      const li = muI * n + ps[1] - psi0[1] + windPhase;
+      const e = Math.exp(lr);
+      const cr = e * Math.cos(li), ci = e * Math.sin(li);
+      zr = z0[0] * cr - z0[1] * ci; zi = z0[0] * ci + z0[1] * cr;
+      if (winding !== 0) windPhase += winding * th;
+    } else {
+      zr = z0[0] + muR * n + ps[0] - psi0[0];
+      zi = z0[1] + muI * n + ps[1] - psi0[1];
+    }
+    predR[j] = zr; predI[j] = zi;
+    const k = start + j;
+    if (k < orbit.len) {
+      const ar = orbit.zr[k], ai = orbit.zi[k];
+      err = Math.max(err, Math.hypot(ar - zr, ai - zi));
+      scale = Math.max(scale, Math.hypot(ar, ai));
+    }
+  }
+  // ring radii seen by the orbit
+  let rMin = Infinity, rMax = 0;
+  for (let k = 0; k < orbit.len; k++) {
+    const r = Math.hypot(orbit.zr[k], orbit.zi[k]);
+    if (r < rMin) rMin = r;
+    if (r > rMax) rMax = r;
+  }
+
+  const beta = muI;
+
+  // verdict
+  const lambda = kind === 'mult' ? muR : 0;
+  let regime, sheets = null;
+  const tolL = 1e-7;
+  if (kind === 'add') {
+    const drift = Math.hypot(muR, muI);
+    regime = drift > 1e-9
+      ? `The mean of L is ${fmtC(muR, muI)} ≠ 0: the orbit drifts linearly to infinity, z_n ≈ z_0 + ${fmtC(muR, muI)}·n.`
+      : 'mean L = 0: the Birkhoff sums are bounded and the orbit lies on one curve z = z_0 + ψ(θ) − ψ(0) (one neutral graph for every z_0).';
+    if (drift <= 1e-9) sheets = 1;
+  } else if (Math.abs(lambda) > tolL) {
+    regime = `Not cramped: mean log|g| = λ = ${lambda.toFixed(6)} ≠ 0, so |z_n| ≈ e^{λn}: the orbit spirals ${lambda < 0 ? 'into 0' : 'out to ∞'}.`;
+  } else if (winding !== 0) {
+    regime = `Cramped (λ = 0), but g winds ${winding} time${Math.abs(winding) > 1 ? 's' : ''} around 0, so log g is not periodic and no invariant curve exists. The phase picks up a term quadratic in n (an Anzai skew product), and the orbit fills the annulus ${rMin.toPrecision(4)} ≤ |z| ≤ ${rMax.toPrecision(4)}.`;
+  } else if (relation) {
+    sheets = relation.q;
+    regime = `Cramped and a coboundary: ${relation.q}·β = 2π·${relation.n} + ${relation.m}·T. The orbit lies on ${relation.q} curve${relation.q > 1 ? 's' : ''} z = C·e^{iβj}·e^{ψ(θ)}${relation.m ? ` (each winding ${relation.m}/${relation.q} times around 0)` : ''}, j = 0…${relation.q - 1}.`;
+  } else {
+    regime = `Cramped and a coboundary, but e^{iβ} (β/2π = ${(beta / TWO_PI).toFixed(8)}) satisfies no relation q·β = 2πn + mT with q ≤ 12, |m| ≤ 300: the orbit is dense in the annulus ${rMin.toPrecision(4)} ≤ |z| ≤ ${rMax.toPrecision(4)} (dimension 2).`
+      + (nearest && nearest.err < 1e-3
+        ? ` It is close to the relation ${nearest.q}·β ≈ 2π·${nearest.n}${nearest.m ? ` ${nearest.m < 0 ? '−' : '+'} ${Math.abs(nearest.m)}·T` : ''} (off by ${(nearest.err * nearest.q).toExponential(1)}), so for about ${Math.round(1 / (nearest.err * nearest.q)).toLocaleString('en-US')} steps the orbit looks like ${nearest.q} curve${nearest.q > 1 ? 's' : ''} that slowly rotate.`
+        : '');
+  }
+
+  return {
+    kind, lambda, beta, mu: [muR, muI], winding, relation, nearest, sheets, regime,
+    divisors: divisors.slice(0, 6),
+    spectrum: { Lamp, Pamp, Damp },
+    psiTail: pmax > 0 ? ptail / pmax : 0,
+    birkhoffBound: kind === 'mult' ? 2 * Math.max(Math.abs(reMax), Math.abs(reMin)) : null,
+    ringPredicted: kind === 'mult' && winding === 0 ? [Math.hypot(...z0) * Math.exp(reMin - psi0[0]), Math.hypot(...z0) * Math.exp(reMax - psi0[0])] : null,
+    ring: [rMin, rMax],
+    pred: { re: predR, im: predI, relErr: scale > 0 ? err / scale : err },
+  };
+}
+
+/**
+ * The spectral part of a cocycle analysis, from samples of its generator on a uniform grid
+ * θ_m = 2πm/M with rotation T: for kind 'mult' the multiplicative generator g (λ = mean log|g|,
+ * β = mean arg g, winding of g, ψ solving ψ(θ+T) − ψ(θ) = log g − λ − iβ − iwθ), for 'add' the
+ * additive generator L (ψ(θ+T) − ψ(θ) = L − mean L). Also the lattice relation qβ = 2πn + mT.
+ */
+export function cocycleCore(gr, gi, M, T, kind) {
   // ell = log g (continuous branch, linear trend removed) or L itself
   const er = new Float64Array(M), ei = new Float64Array(M);
   let winding = 0;
@@ -106,48 +195,6 @@ export function analyzeCocycle({ fill, u, v, T, M = 2048, kind, orbit, z0, plot 
     if (a > 1e-15 * Math.max(pmax, 1e-300)) modes.push({ m: k < M / 2 ? k : k - M, r: pr[k], i: pi[k] });
   }
   const psi0 = psiAt(0);
-  let reMin = Infinity, reMax = -Infinity;
-  for (let m = 0; m < M; m++) { reMin = Math.min(reMin, sr[m]); reMax = Math.max(reMax, sr[m]); }
-
-  // predicted orbit at the plotted indices, and its error against the true orbit
-  const { start, count } = plot;
-  const predR = new Float32Array(count), predI = new Float32Array(count);
-  let err = 0, scale = 0;
-  // phase from the winding term: i w sum_{k<n} theta_k, accumulated exactly
-  const nFirst = orbit.n0 + start;
-  let windPhase = 0;
-  if (kind === 'mult' && winding !== 0) for (let k = 0; k < nFirst; k++) windPhase += winding * ((k * T) % TWO_PI);
-  for (let j = 0; j < count; j++) {
-    const n = nFirst + j;
-    const th = (n * T) % TWO_PI;
-    const ps = psiAt(th);
-    let zr, zi;
-    if (kind === 'mult') {
-      const lr = muR * n + ps[0] - psi0[0];
-      const li = muI * n + ps[1] - psi0[1] + windPhase;
-      const e = Math.exp(lr);
-      const cr = e * Math.cos(li), ci = e * Math.sin(li);
-      zr = z0[0] * cr - z0[1] * ci; zi = z0[0] * ci + z0[1] * cr;
-      if (winding !== 0) windPhase += winding * th;
-    } else {
-      zr = z0[0] + muR * n + ps[0] - psi0[0];
-      zi = z0[1] + muI * n + ps[1] - psi0[1];
-    }
-    predR[j] = zr; predI[j] = zi;
-    const k = start + j;
-    if (k < orbit.len) {
-      const ar = orbit.zr[k], ai = orbit.zi[k];
-      err = Math.max(err, Math.hypot(ar - zr, ai - zi));
-      scale = Math.max(scale, Math.hypot(ar, ai));
-    }
-  }
-  // ring radii seen by the orbit
-  let rMin = Infinity, rMax = 0;
-  for (let k = 0; k < orbit.len; k++) {
-    const r = Math.hypot(orbit.zr[k], orbit.zi[k]);
-    if (r < rMin) rMin = r;
-    if (r > rMax) rMax = r;
-  }
 
   // lattice relation q beta = 2 pi n + m T (multiplicative, w = 0)
   let relation = null, nearest = null;
@@ -166,40 +213,7 @@ export function analyzeCocycle({ fill, u, v, T, M = 2048, kind, orbit, z0, plot 
     }
   }
 
-  // verdict
-  const lambda = kind === 'mult' ? muR : 0;
-  let regime, sheets = null;
-  const tolL = 1e-7;
-  if (kind === 'add') {
-    const drift = Math.hypot(muR, muI);
-    regime = drift > 1e-9
-      ? `The mean of L is ${fmtC(muR, muI)} ≠ 0: the orbit drifts linearly to infinity, z_n ≈ z_0 + ${fmtC(muR, muI)}·n.`
-      : 'mean L = 0: the Birkhoff sums are bounded and the orbit lies on one curve z = z_0 + ψ(θ) − ψ(0) (one neutral graph for every z_0).';
-    if (drift <= 1e-9) sheets = 1;
-  } else if (Math.abs(lambda) > tolL) {
-    regime = `Not cramped: mean log|g| = λ = ${lambda.toFixed(6)} ≠ 0, so |z_n| ≈ e^{λn}: the orbit spirals ${lambda < 0 ? 'into 0' : 'out to ∞'}.`;
-  } else if (winding !== 0) {
-    regime = `Cramped (λ = 0), but g winds ${winding} time${Math.abs(winding) > 1 ? 's' : ''} around 0, so log g is not periodic and no invariant curve exists. The phase picks up a term quadratic in n (an Anzai skew product), and the orbit fills the annulus ${rMin.toPrecision(4)} ≤ |z| ≤ ${rMax.toPrecision(4)}.`;
-  } else if (relation) {
-    sheets = relation.q;
-    regime = `Cramped and a coboundary: ${relation.q}·β = 2π·${relation.n} + ${relation.m}·T. The orbit lies on ${relation.q} curve${relation.q > 1 ? 's' : ''} z = C·e^{iβj}·e^{ψ(θ)}${relation.m ? ` (each winding ${relation.m}/${relation.q} times around 0)` : ''}, j = 0…${relation.q - 1}.`;
-  } else {
-    regime = `Cramped and a coboundary, but e^{iβ} (β/2π = ${(beta / TWO_PI).toFixed(8)}) satisfies no relation q·β = 2πn + mT with q ≤ 12, |m| ≤ 300: the orbit is dense in the annulus ${rMin.toPrecision(4)} ≤ |z| ≤ ${rMax.toPrecision(4)} (dimension 2).`
-      + (nearest && nearest.err < 1e-3
-        ? ` It is close to the relation ${nearest.q}·β ≈ 2π·${nearest.n}${nearest.m ? ` ${nearest.m < 0 ? '−' : '+'} ${Math.abs(nearest.m)}·T` : ''} (off by ${(nearest.err * nearest.q).toExponential(1)}), so for about ${Math.round(1 / (nearest.err * nearest.q)).toLocaleString('en-US')} steps the orbit looks like ${nearest.q} curve${nearest.q > 1 ? 's' : ''} that slowly rotate.`
-        : '');
-  }
-
-  return {
-    kind, lambda, beta, mu: [muR, muI], winding, relation, nearest, sheets, regime,
-    divisors: divisors.slice(0, 6),
-    spectrum: { Lamp, Pamp, Damp },
-    psiTail: pmax > 0 ? ptail / pmax : 0,
-    birkhoffBound: kind === 'mult' ? 2 * Math.max(Math.abs(reMax), Math.abs(reMin)) : null,
-    ringPredicted: kind === 'mult' && winding === 0 ? [Math.hypot(...z0) * Math.exp(reMin - psi0[0]), Math.hypot(...z0) * Math.exp(reMax - psi0[0])] : null,
-    ring: [rMin, rMax],
-    pred: { re: predR, im: predI, relErr: scale > 0 ? err / scale : err },
-  };
+  return { muR, muI, winding, wr, wi, pr, pi, divisors, Lamp, Pamp, Damp, pmax, ptail, sr, si, psiAt, psi0, modes, relation, nearest };
 }
 
 function fmtC(r, i) {
@@ -309,4 +323,89 @@ export function cocyclePixel(fills, u, v, kind, T, kmax, buf) {
   const exact = Math.abs(lam) < Math.max(1e-9, 10 * err) && w === 0 && err < 1e-8;
   const k = exact ? latticeOrder(beta, T, kmax) : 0;
   return { esc: -1, lam, k, beta, exact };
+}
+
+// ---------------------------------------------------------------- the tangent cocycle
+/**
+ * The tangent (linearised) cocycle of an invariant structure found by Newton. A perturbation
+ * evolves by δ_{j+1}(φ + τ_j) = D_j(φ)·δ_j(φ) with D_j = ∂F/∂f(f_j(φ), φ), τ_j = T (τ_{c−1} =
+ * T + 2πs). Over one return through the c components it is the multiplicative cocycle
+ * W(φ) = Π_j D_j(φ + jT) on the cover circle φ ∈ [0, 2πd), rotated by cT + 2πs; in ϑ = φ/d
+ * that is a cocycle over the rotation T' = (cT + 2πs)/d, analysed by cocycleCore.
+ * When W reduces to a constant (winding 0, ψ resolved), e^{λ+iβ} is the fibred multiplier:
+ * |·| = e^λ per return, and its angle β is the forced analogue of a fixed point's internal
+ * angle. For F = g(x)·f the tangent cocycle is g itself (the linear case of the Cocycle tab).
+ *
+ * Inputs: D (DR, DI) and the solution F (FR, FI) and F(f) (NR, NI) on the solver grid,
+ * c·M values, M points per component over [0, 2πd).
+ */
+export function tangentCocycle({ DR, DI, NR, NI, FR, FI, c, d, s, M, T, lambdaStep = null }) {
+  // spectral shift on the cover: frequency k/d per unit φ
+  const shift = (srcR, srcI, off, tau) => {
+    const wr = new Float64Array(M), wi = new Float64Array(M);
+    for (let m = 0; m < M; m++) { wr[m] = srcR[off + m]; wi[m] = srcI[off + m]; }
+    if (tau !== 0) {
+      fft(wr, wi);
+      for (let m = 0; m < M; m++) {
+        const f = (m < M / 2 ? m : m - M) / d;
+        const cr = Math.cos(f * tau), ci = Math.sin(f * tau);
+        const r = wr[m] * cr - wi[m] * ci;
+        wi[m] = wr[m] * ci + wi[m] * cr;
+        wr[m] = r;
+      }
+      fft(wr, wi, true);
+    }
+    return [wr, wi];
+  };
+  const Wr = new Float64Array(M).fill(1), Wi = new Float64Array(M);
+  for (let j = 0; j < c; j++) {
+    const [ar, ai] = shift(DR, DI, j * M, j * T);
+    for (let m = 0; m < M; m++) {
+      const r = Wr[m] * ar[m] - Wi[m] * ai[m];
+      Wi[m] = Wr[m] * ai[m] + Wi[m] * ar[m];
+      Wr[m] = r;
+    }
+  }
+  const Tret = (c * T + TWO_PI * s) / d;
+  const core = cocycleCore(Wr, Wi, M, Tret, 'mult');
+  const { muR, muI, winding, relation, nearest, pmax, ptail } = core;
+  const lam = lambdaStep != null && Number.isFinite(lambdaStep) ? lambdaStep * c : muR; // the solver's λ is singularity-corrected
+  const beta = muI - TWO_PI * Math.round(muI / TWO_PI); // in (−π, π]
+  const mult = [Math.exp(lam) * Math.cos(beta), Math.exp(lam) * Math.sin(beta)];
+  // the coboundary check: g = f(φ+τ)/f(φ) = F(f)/f along the cycle has mean log|g| = 0 exactly
+  let gsum = 0, gn = 0;
+  for (let k = 0; k < c * M; k++) {
+    const a = Math.hypot(NR[k], NI[k]), b = Math.hypot(FR[k], FI[k]);
+    if (a > 0 && b > 0) { gsum += Math.log(a / b); gn++; }
+  }
+  const gCheck = gn ? gsum / M : NaN; // summed over the c components = per return
+  // the curve W(ϑ), at most 512 points, for plotting
+  const step = Math.max(1, Math.floor(M / 512));
+  const cr = [], ci = [];
+  for (let m = 0; m <= M; m += step) { cr.push(Wr[m % M]); ci.push(Wi[m % M]); }
+  // what the multiplier says
+  const per = c > 1 || d > 1 ? ' per return (one pass through all sheets)' : '';
+  const a2 = (((beta / TWO_PI) % 1) + 1) % 1; // internal angle in [0, 1), as for the Mandelbrot set
+  // the closest simple internal angle p/q (q ≤ 8): where on the circle the multiplier points
+  let pq = null;
+  for (let q = 1; q <= 8; q++) {
+    const p = Math.round(a2 * q);
+    const e = Math.abs(a2 - p / q);
+    if (!pq || e < pq.err - 1e-12) pq = { p, q, err: e };
+  }
+  let regime;
+  if (winding !== 0) {
+    regime = `The tangent cocycle winds ${winding} time${Math.abs(winding) > 1 ? 's' : ''} around 0, so it does not reduce to a constant: perturbations are stretched by e^λ = ${Math.exp(lam).toPrecision(5)}${per} but have no mean rotation. (For analytic forcing this happens when the graph's power series has zeros inside the disc, as in Jensen's formula.)`;
+  } else {
+    const angle = pq.err < 0.02 ? ` The angle is close to ${pq.p}/${pq.q}.` : '';
+    regime = `The linearisation reduces to the constant multiplier μ = e^{λ+iβ} = ${fmtC(mult[0], mult[1])}${per}: perturbations shrink by |μ| = ${Math.exp(lam).toPrecision(5)} and turn by the internal angle β/2π = ${a2.toFixed(6)} each time.${angle} At the edge of the component |μ| → 1, and the angle says what happens there: β ≈ 0 a fold, β ≈ π a doubling, β/2π ≈ p/q (shifted by multiples of the rotation) a q-sheet bulb.`;
+  }
+  return {
+    kind: 'tangent', c, d, s, Tret, lambda: lam, lambdaStep: lam / c, beta, winding, multiplier: mult, internalAngle: a2, closestPQ: pq, M,
+    relation, nearest, regime, gCheck,
+    divisors: core.divisors.slice(0, 6),
+    spectrum: { Lamp: core.Lamp, Pamp: core.Pamp, Damp: core.Damp },
+    psiTail: pmax > 0 ? ptail / pmax : 0,
+    curve: { re: Float32Array.from(cr), im: Float32Array.from(ci) },
+  };
 }

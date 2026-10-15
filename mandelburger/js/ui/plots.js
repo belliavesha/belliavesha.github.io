@@ -251,14 +251,14 @@ export function resizeAll(els) {
   for (const el of els) if (el && el.data) P().Plots.resize(el);
 }
 
-export function plotCocycleSpectrum(el, c) {
+export function plotCocycleSpectrum(el, c, { forcing = '|L̃ₘ|' } = {}) {
   const t = tokens();
   const { Lamp, Pamp, Damp } = c.spectrum;
   const m = Array.from({ length: Lamp.length }, (_, k) => k + 1);
   const clean = (a) => Array.from(a, (v) => (v > 1e-17 ? v : null));
   P().react(el, [
     { type: 'scatter', mode: 'lines', x: m, y: Array.from(Damp), name: '1/|e^{imT} − 1|', line: { color: t.muted, width: 1, dash: 'dot' }, hovertemplate: 'm=%{x}<br>1/|e^{imT}−1|=%{y:.3e}<extra></extra>' },
-    { type: 'scatter', mode: 'lines', x: m, y: clean(Lamp), name: '|L̃ₘ|', line: { color: SHEET_COLORS[0], width: 1.4 }, hovertemplate: 'm=%{x}<br>|L̃ₘ|=%{y:.3e}<extra></extra>' },
+    { type: 'scatter', mode: 'lines', x: m, y: clean(Lamp), name: forcing, line: { color: SHEET_COLORS[0], width: 1.4 }, hovertemplate: `m=%{x}<br>${forcing}=%{y:.3e}<extra></extra>` },
     { type: 'scatter', mode: 'lines', x: m, y: clean(Pamp), name: '|ψₘ|', line: { color: SHEET_COLORS[1], width: 1.4 }, hovertemplate: 'm=%{x}<br>|ψₘ|=%{y:.3e}<extra></extra>' },
   ], layout({
     showlegend: true,
@@ -279,5 +279,40 @@ export function plotCocycleOrbit(el, res) {
     legend: { orientation: 'h', y: 1.08, x: 0 },
     xaxis: { title: { text: 'Re z' } },
     yaxis: { title: { text: 'Im z' }, scaleanchor: 'x', scaleratio: 1 },
+  }), config);
+}
+
+/**
+ * The tangent cocycle w(θ) (over one return) as a curve in ℂ, with the unit circle and the
+ * fibred multiplier μ = e^{λ+iβ}: |μ| < 1 inside the circle means attracting; its angle is the
+ * internal angle. The rays at angles 2πp/q (q ≤ 4) mark where bulbs of q sheets attach.
+ */
+export function plotTangent(el, t) {
+  const tk = tokens();
+  const circ = Array.from({ length: 181 }, (_, i) => (2 * Math.PI * i) / 180);
+  const traces = [
+    { type: 'scatter', mode: 'lines', x: circ.map(Math.cos), y: circ.map(Math.sin), line: { color: tk.muted, width: 1, dash: 'dot' }, name: '|w| = 1', hoverinfo: 'skip' },
+    { type: 'scatter', mode: 'lines', x: Array.from(t.curve.re), y: Array.from(t.curve.im), line: { color: SHEET_COLORS[0], width: 1.6 }, name: t.c > 1 || t.d > 1 ? 'w over one return' : 'w(θ) = ∂F/∂f along f', hovertemplate: '%{x:.4g} %{y:+.4g}i<extra>w</extra>' },
+    { type: 'scatter', mode: 'markers', x: [0], y: [0], marker: { size: 6, color: tk.ink, symbol: 'x' }, name: '0', hoverinfo: 'skip' },
+  ];
+  const shapes = [];
+  for (const [p, q] of [[0, 1], [1, 2], [1, 3], [2, 3], [1, 4], [3, 4]]) {
+    const a = (2 * Math.PI * p) / q;
+    shapes.push({ type: 'line', x0: 0, y0: 0, x1: 1.08 * Math.cos(a), y1: 1.08 * Math.sin(a), line: { color: tk.line, width: 1 } });
+  }
+  const annotations = [[0, 1], [1, 2], [1, 3], [2, 3], [1, 4], [3, 4]].map(([p, q]) => {
+    const a = (2 * Math.PI * p) / q;
+    return { x: 1.16 * Math.cos(a), y: 1.16 * Math.sin(a), text: q === 1 ? '0' : `${p}/${q}`, showarrow: false, font: { size: 10, color: tk.muted } };
+  });
+  if (t.winding === 0) {
+    traces.push({ type: 'scatter', mode: 'markers', x: [t.multiplier[0]], y: [t.multiplier[1]], marker: { size: 11, color: SECTION, line: { color: tk.ink, width: 1 } }, name: 'multiplier μ = e^{λ+iβ}', hovertemplate: `μ = %{x:.6g} %{y:+.6g}i<br>β/2π = ${t.internalAngle.toFixed(6)}<extra></extra>` });
+    shapes.push({ type: 'line', x0: 0, y0: 0, x1: t.multiplier[0], y1: t.multiplier[1], line: { color: SECTION, width: 1.2 } });
+  }
+  P().react(el, traces, layout({
+    showlegend: true,
+    legend: { orientation: 'h', y: 1.08, x: 0 },
+    shapes, annotations,
+    xaxis: { title: { text: 'Re w' } },
+    yaxis: { title: { text: 'Im w' }, scaleanchor: 'x', scaleratio: 1 },
   }), config);
 }

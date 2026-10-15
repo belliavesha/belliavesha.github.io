@@ -15,7 +15,7 @@ import { PlaneView } from './ui/plane.js';
 import { pointAt, vertexTs } from './ui/paths.js';
 import { sectionIndices } from './core/section.js';
 import { CATS, swatch, category, NEUTRAL_TOL } from './ui/colors.js';
-import { plotGraph, plotPhase, plotSpectrum, plotSlice, placeholder, resizeAll, plotCocycleSpectrum, plotCocycleOrbit } from './ui/plots.js';
+import { plotGraph, plotPhase, plotSpectrum, plotSlice, placeholder, resizeAll, plotCocycleSpectrum, plotCocycleOrbit, plotTangent } from './ui/plots.js';
 
 const $ = (id) => document.getElementById(id);
 const TWO_PI = 2 * Math.PI;
@@ -770,6 +770,7 @@ function showAnalysis() {
       m.push(['spectral tail', sol.spec.tailRatio.toExponential(1), cls(sol.spec.tailRatio, 1e-10, 1e-6)]);
       m.push(['max |f|', sol.maxAbs.toPrecision(5)]);
       m.push(['winding of f', sol.winding.join(', ')]);
+      if (sol.tangent && sol.tangent.winding === 0) m.push([`multiplier μ${sol.c > 1 || sol.d > 1 ? ' (return)' : ''}`, `|μ| ${Math.hypot(...sol.tangent.multiplier).toFixed(4)}, β/2π ${sol.tangent.internalAngle.toFixed(4)}`]);
       m.push(['grid', `${sol.c}×${sol.M}`]);
       m.push(['solve', `${sol.ms.toFixed(0)} ms`]);
     }
@@ -801,9 +802,29 @@ function showAnalysis() {
     cm.push(['ψ spectral tail', C.psiTail.toExponential(1), C.psiTail < 1e-8 ? 'good' : 'warn']);
     $('cocycle-metrics').innerHTML = cm.map(([k, v, c2]) => `<div class="metric"><div class="k">${k}</div><div class="v ${c2 || ''}">${escapeHtml(v)}</div></div>`).join('');
     $('cocycle-note').textContent = C.regime;
+  } else if (sol && sol.tangent) {
+    // nonlinear F: the tangent cocycle w = ∂F/∂f along the Newton solution
+    const t = sol.tangent, cm = [];
+    const ret = t.c > 1 || t.d > 1;
+    cm.push(['λ = mean log|w| per step', t.lambdaStep.toFixed(7), t.lambdaStep < 0 ? 'good' : 'bad']);
+    if (t.winding === 0) {
+      cm.push([`multiplier μ = e^{λ+iβ}${ret ? ' per return' : ''}`, fmt(t.multiplier, 6)]);
+      cm.push(['|μ|', Math.hypot(...t.multiplier).toPrecision(6)]);
+      cm.push(['internal angle β/2π', t.internalAngle.toFixed(8)]);
+      cm.push(['closest p/q (q ≤ 8)', `${t.closestPQ.p}/${t.closestPQ.q} (off ${t.closestPQ.err.toFixed(4)})`]);
+    }
+    cm.push(['winding of w', String(t.winding), t.winding === 0 ? 'good' : 'warn']);
+    if (ret) cm.push(['return', `${t.c} component${t.c > 1 ? 's' : ''} × ${t.d}-fold cover, T′ = ${t.Tret.toFixed(6)}`]);
+    cm.push([`smallest divisors (m < ${t.M / 2})`, t.divisors.slice(0, 3).map((d) => `m=${d.m}: ${d.size.toExponential(1)}`).join(', ')]);
+    cm.push(['ψ spectral tail', t.psiTail.toExponential(1), t.psiTail < 1e-8 ? 'good' : 'warn']);
+    cm.push(['check: mean log|f(θ+T)/f(θ)|', Number.isFinite(t.gCheck) ? t.gCheck.toExponential(1) : '—', Math.abs(t.gCheck) < 1e-10 ? 'good' : 'warn']);
+    $('cocycle-metrics').innerHTML = cm.map(([k, v, c2]) => `<div class="metric"><div class="k">${k}</div><div class="v ${c2 || ''}">${escapeHtml(v)}</div></div>`).join('');
+    $('cocycle-note').textContent = t.regime;
   } else {
     $('cocycle-metrics').innerHTML = '';
-    $('cocycle-note').textContent = 'The Cocycle tab applies when F is linear in f: F = g(x)·f (multiplicative cocycle) or F = f + L(x) (additive). Then the orbit has a closed form through the cohomological equation.';
+    $('cocycle-note').textContent = R.escaped
+      ? 'The orbit escapes: there is no invariant structure to linearise.'
+      : 'No Newton solution here (no finite sheet structure, or Newton did not converge), so there is no tangent cocycle to analyse.';
   }
 
   // structures table
@@ -837,12 +858,15 @@ function replot() {
       if (!R || !R.sol) placeholder($('plot-spec'), 'No Newton solution');
       else plotSpectrum($('plot-spec'), R.sol);
     } else if (tab === 'cocycle') {
-      if (!R || !R.cocycle) {
-        placeholder($('plot-cocycle-spec'), 'Applies when F = g(x)·f or F = f + L(x)');
-        placeholder($('plot-cocycle-orbit'), '');
-      } else {
+      if (R && R.cocycle) {
         plotCocycleSpectrum($('plot-cocycle-spec'), R.cocycle);
         plotCocycleOrbit($('plot-cocycle-orbit'), R);
+      } else if (R && R.sol && R.sol.tangent) {
+        plotCocycleSpectrum($('plot-cocycle-spec'), R.sol.tangent, { forcing: '|log w|ₘ (mean removed)' });
+        plotTangent($('plot-cocycle-orbit'), R.sol.tangent);
+      } else {
+        placeholder($('plot-cocycle-spec'), 'No invariant structure to linearise');
+        placeholder($('plot-cocycle-orbit'), '');
       }
     } else if (tab === 'slice') {
       if (!sliceData) placeholder($('plot-slice'), 'Shift-drag on the plane, or use “Horizontal slice” on the left');

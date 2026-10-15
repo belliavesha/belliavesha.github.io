@@ -12,7 +12,7 @@ import { detectStructure, seedFromOrbit } from './structure.js';
 import { StructureProblem, newtonSolve, spectrum, graphTransform, maxAbs } from './solver.js';
 import { buildModel, makeGridFill, setCoord, uvOf, isZ0Axis, cocycleKindOf } from './model.js';
 import { nextPow2 } from './fft.js';
-import { analyzeCocycle, cocyclePixel, latticeOrder } from './cocycle.js';
+import { analyzeCocycle, cocyclePixel, latticeOrder, tangentCocycle } from './cocycle.js';
 
 const TWO_PI = 2 * Math.PI;
 
@@ -200,8 +200,14 @@ export function analyzeTask(job) {
       }
       winding.push(Math.round(acc / (2 * Math.PI)));
     }
+    // the tangent cocycle along the solution (the linearisation; MATH.md §14.9)
+    let tangent = null;
+    if (res.ok) {
+      P.evalRHS(res.FR, res.FI);
+      tangent = tangentCocycle({ DR: P.DR, DI: P.DI, NR: P.NR, NI: P.NI, FR: res.FR, FI: res.FI, c: st.c, d: st.d, s: st.s, M, T, lambdaStep: res.lambda });
+    }
     sol = {
-      winding,
+      winding, tangent,
       c: st.c, d: st.d, s: st.s, k: st.k, M,
       FR: res.FR, FI: res.FI, ok: res.ok, reason: res.reason, newton: res.newton, gmres: res.gmres,
       resid: res.resid, lambda: res.lambda, maxAbs: maxAbs(res.FR, res.FI),
