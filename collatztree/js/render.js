@@ -243,6 +243,17 @@
             }
         }
 
+        // hovered row of the path table: a ring around that number
+        const hv = S.hoverNode;
+        if (hv != null && hv !== sel && L.index.has(hv)) {
+            const k = L.index.get(hv);
+            c.beginPath();
+            c.arc(L.xs[k], L.ys[k], 7 / z, 0, Math.PI * 2);
+            c.lineWidth = 2.5 / z;
+            c.strokeStyle = light ? 'rgba(43, 16, 39, 0.85)' : 'rgba(255, 255, 255, 0.9)';
+            c.stroke();
+        }
+
         // 3. the selected number: a small dot in its own colour, ringed by the glow colour
         const [hh, ss, ll] = i > 0 ? st.hsl[i] : [300, light ? 25 : 75, 50];
         c.beginPath();

@@ -210,7 +210,20 @@ function addSampleToGraph(sample, ruleSet, updateStats = false) {
 /**
  * Main Tree Construction Algorithm
  */
-function makeSampleSet(minVal, range, maxSamples, startVal) {
+/** Small seeded PRNG (mulberry32): the same seed gives the same sample, so a link can rebuild a tree. */
+function seededRandom(seed) {
+    let a = seed >>> 0;
+    return function () {
+        a = (a + 0x6D2B79F5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function makeSampleSet(minVal, range, maxSamples, startVal, seed) {
+    const random = seed != null ? seededRandom(seed) : Math.random;
     const maxVal = minVal + range;
     let sampleSet = [];
 
@@ -224,7 +237,7 @@ function makeSampleSet(minVal, range, maxSamples, startVal) {
         // Sample size smaller than range - take random samples
         const usedNumbers = new Set();
         while (sampleSet.length < maxSamples) {
-            const randomSample = Math.floor(Math.random() * range) + minVal;
+            const randomSample = Math.floor(random() * range) + minVal;
             if (!usedNumbers.has(randomSample)) {
                 usedNumbers.add(randomSample);
                 sampleSet.push(randomSample);

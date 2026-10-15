@@ -37,8 +37,17 @@
         return res;
     }
 
-    /** "Build trees": sample numbers and build all trees. */
-    async function buildTrees() {
+    function newSeed() {
+        try { return crypto.getRandomValues(new Uint32Array(1))[0]; }
+        catch (e) { return Math.floor(Math.random() * 4294967296); }
+    }
+
+    /**
+     * "Build trees": sample numbers and build all trees.
+     * Every build uses a random seed for its sample; a link passes its own seed
+     * (and root) so it rebuilds the same tree.
+     */
+    async function buildTrees({ seed = null, root = null, fromLink = false } = {}) {
         clearTimeout(rebuildTimer);
         const sample = CT.controls.readSample();
         if (!sample) { CT.ui.toast('Fix the highlighted sample field first.', 'error'); return; }
@@ -46,14 +55,16 @@
         const rules = CT.controls.getRules();
         const mod = rules.length;
         const start = CT.controls.readStart();
-        CT.io.clearLink();
-        const ok = await runJob({ mode: 'sample', min: sample.min, range: sample.range, count: sample.count, start, mod, rules });
+        if (seed == null) seed = newSeed();
+        if (!fromLink) CT.io.clearLink();
+        const ok = await runJob({ mode: 'sample', min: sample.min, range: sample.range, count: sample.count, start, seed, mod, rules });
         if (!ok) return;
-        afterBuild({ mod, rules }, { start });
+        S.source = { type: 'sample', count: sample.count, min: sample.min, range: sample.range, start, seed };
+        afterBuild({ mod, rules }, { start, root });
     }
 
-    /** Load a tree file / preset / link: rebuild exactly that tree from its leaves. */
-    async function loadTree(d, { fromLink = false } = {}) {
+    /** Load a tree file or preset: rebuild exactly that tree from its leaves. */
+    async function loadTree(d, { source = { type: 'file' }, fromLink = false } = {}) {
         clearTimeout(rebuildTimer);
         CT.controls.setConfig(d.config);
         const minLeaf = Math.min(...d.leaves), maxLeaf = Math.max(...d.leaves);
@@ -65,10 +76,13 @@
         const config = { mod: d.config.modulus, rules: d.config.rules };
         const ok = await runJob({ mode: 'leaves', leaves: d.leaves, mod: config.mod, rules: config.rules });
         if (!ok) return;
+        S.source = source;
         afterBuild(config, { root: d.root });
         if (S.currentRoot != null && graph.root.get(start) === S.currentRoot) {
             graph.trees[S.currentRoot].startValue = start;
             CT.render.request();
+        } else if (d.start != null && S.ruleSet) {
+            setStart(d.start);   // a linked start value outside the preset's leaves
         }
     }
 
@@ -128,6 +142,7 @@
             return;
         }
         graph.trees[root].startValue = v;
+        if (S.source && S.source.type === 'sample') S.source.start = v;   // so a link includes it
         CT.controls.addTreeOption(root);
         const switching = CT.controls.byStart() && root !== S.currentRoot;
         if (CT.controls.byStart()) {
@@ -281,7 +296,7 @@
     // ---------- toolbar, shortcuts ----------
 
     function initToolbar() {
-        $('#renderBtn').addEventListener('click', buildTrees);
+        $('#renderBtn').addEventListener('click', () => buildTrees());
         $('#cancelBtn').addEventListener('click', () => {
             jobToken++;
             CT.build.cancel();
@@ -339,9 +354,15 @@
         let link = null;
         try { link = CT.io.readLink(); }
         catch (e) { CT.ui.toast(`This link could not be opened: ${e.message}`, 'error', 6000); CT.io.clearLink(); }
-        // A shared link redraws only the shared tree; it never samples numbers.
-        if (link) loadTree(link, { fromLink: true });
-        else buildTrees();
+        if (!link) { buildTrees(); return; }
+        // A link carries only settings; the tree is rebuilt from them.
+        if (link.kind === 'preset') {
+            CT.io.loadPreset(link.file, { angles: link.angles, initAngle: link.initAngle, start: link.start, fromLink: true });
+        } else {
+            CT.controls.setConfig(link.config);
+            CT.controls.setSampleFields({ count: link.sample.count, min: link.sample.min, range: link.sample.range, start: link.start });
+            buildTrees({ seed: link.sample.seed, root: link.root, fromLink: true });
+        }
     }
 
     CT.app = { buildTrees, scheduleRebuild, markStale, loadTree, selectRoot, setStart, onModeChange };

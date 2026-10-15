@@ -169,15 +169,34 @@
                 <button type="button" class="icon-btn small" id="inspClose" aria-label="Close details">
                     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg></button>
             </div>
-            <dl class="insp-grid">
-                <dt>next</dt><dd id="inspNext"></dd>
-                <dt id="inspResLabel">mod</dt><dd id="inspRes"></dd>
-                <dt>depth</dt><dd id="inspDepth"></dd>
-                <dt>height</dt><dd id="inspHeight"></dd>
-                <dt>weight</dt><dd id="inspWeight"></dd>
-                <dt>children</dt><dd id="inspKids"></dd>
-            </dl>
-            <p class="insp-path" id="inspPath"></p>
+            <div class="insp-rows">
+                <button type="button" class="insp-row" id="rowNext" title="Go to the next number">
+                    <span class="k">next</span><span class="v" id="inspNext"></span>
+                    <span class="k" id="inspResLabel">mod</span><span class="v" id="inspRes"></span>
+                    <svg class="row-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg>
+                </button>
+                <button type="button" class="insp-row" id="rowDepth" aria-expanded="false" aria-controls="inspTableWrap" title="Show the path to the root">
+                    <span class="k">depth</span><span class="v" id="inspDepth"></span>
+                    <span class="k">height</span><span class="v" id="inspHeight"></span>
+                    <svg class="row-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"/></svg>
+                </button>
+                <button type="button" class="insp-row" id="rowWeight" aria-expanded="false" aria-controls="inspTableWrap" title="Show the children">
+                    <span class="k">weight</span><span class="v" id="inspWeight"></span>
+                    <span class="k">children</span><span class="v" id="inspKids"></span>
+                    <svg class="row-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"/></svg>
+                </button>
+            </div>
+            <div class="insp-table-wrap" id="inspTableWrap" hidden>
+                <div class="insp-cap">
+                    <span id="inspCap"></span>
+                    <button type="button" class="icon-btn small" id="inspCollapse" aria-label="Hide the table" title="Hide the table">
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 12.5 10 8l4.5 4.5"/></svg></button>
+                </div>
+                <table class="insp-table" id="inspTable">
+                    <thead><tr><th scope="col">depth</th><th scope="col">n</th><th scope="col" id="inspModHead">mod</th><th scope="col">weight</th></tr></thead>
+                    <tbody id="inspTbody"></tbody>
+                </table>
+            </div>
             <div class="insp-actions">
                 <button type="button" class="btn" id="inspStart">Set as start</button>
                 <button type="button" class="btn" id="inspPathBtn" aria-pressed="true">Path</button>

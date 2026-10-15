@@ -3,7 +3,7 @@
  * Uses the unchanged algorithms from tree_math.js; only splits the loop
  * into steps so progress can be reported and the job can be cancelled.
  *
- * job = { mode: 'sample', min, range, count, start, mod, rules }
+ * job = { mode: 'sample', min, range, count, start, seed, mod, rules }
  *     | { mode: 'leaves', leaves, mod, rules }
  */
 function* buildJobSteps(job) {
@@ -14,7 +14,7 @@ function* buildJobSteps(job) {
     if (job.mode === 'leaves') {
         samples = job.leaves;
     } else {
-        samples = makeSampleSet(job.min, job.range, job.count, job.start);
+        samples = makeSampleSet(job.min, job.range, job.count, job.start, job.seed);
         if (job.start != null && !isNaN(job.start)) graph.startValue = parseInt(job.start);
     }
 
