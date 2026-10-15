@@ -32,6 +32,10 @@ class RuleSet {
                 continue;
             }
 
+            if (ruleSafetyError(ruleStr)) {
+                compiled.push((n) => n); // unsafe/invalid -> identity, same fail-safe as a syntax error
+                continue;
+            }
             try {
                 // Create a function that takes 'n' and returns the result
                 const func = new Function('n', 'return ' + ruleStr);
@@ -39,12 +43,10 @@ class RuleSet {
                     try {
                         return Math.floor(func(n));
                     } catch (e) {
-                        console.error("Error executing rule:", ruleStr, e);
                         return n; // fail safe
                     }
                 });
             } catch (e) {
-                console.error("Invalid rule syntax:", ruleStr, e);
                 compiled.push((n) => n); // fail safe
             }
         }
@@ -95,12 +97,10 @@ function addSampleToGraph(sample, ruleSet, updateStats = false) {
         
         // Check if sequence diverged (got too large)
         if (Math.abs(curr) > MAX_VALUE ) {
-            console.log(`Sample ${sample} diverged to ${curr}, skipping`);
             graph.divergentNodes.push(sample);
             return;
         }
         if (sequence.length > MAX_DEPTH) {
-            console.log(`Sample ${sample} did not converge in ${MAX_DEPTH} steps, skipping`);
             graph.divergentNodes.push(sample);
             return;
         }
@@ -210,9 +210,7 @@ function addSampleToGraph(sample, ruleSet, updateStats = false) {
 /**
  * Main Tree Construction Algorithm
  */
-function buildGraph(minVal, range, maxSamples, rule, startVal) {
-    resetGraph();
-    
+function makeSampleSet(minVal, range, maxSamples, startVal) {
     const maxVal = minVal + range;
     let sampleSet = [];
 
@@ -240,8 +238,14 @@ function buildGraph(minVal, range, maxSamples, rule, startVal) {
         if (!sampleSet.includes(startInt)) {
             sampleSet.push(startInt);
         }
-        graph.startValue = startInt;
     }
+    return sampleSet;
+}
+
+function buildGraph(minVal, range, maxSamples, rule, startVal) {
+    resetGraph();
+    const sampleSet = makeSampleSet(minVal, range, maxSamples, startVal);
+    if (startVal != null && !isNaN(startVal)) graph.startValue = parseInt(startVal);
 
     // Add each sample to the graph
     for (let sample of sampleSet) {
@@ -259,7 +263,7 @@ function addToGraph(node, root, parent) {
         if (!graph.children.has(parent)) graph.children.set(parent, []);
         graph.children.get(parent).push(node);
     } else {
-        console.log("WTF, why would I add root to Graph, it must be already there")
+        // root is created when its cycle is found; nothing to do
     }
     
     if (!graph.children.has(node)) graph.children.set(node, []);
@@ -331,3 +335,45 @@ function computeWeights() {
 
     }
 }
+
+
+// --- Rule validation (UI + share links) ---
+
+const SAFE_MATH_FUNCS = 'floor|ceil|round|trunc|abs|sign|sqrt|cbrt|pow|min|max|log|log2|log10|exp';
+
+/**
+ * Rules are compiled with new Function, so only plain arithmetic in n is accepted:
+ * numbers, n, operators, brackets and a few Math.* functions. Returns an error string or null.
+ */
+function ruleSafetyError(ruleStr) {
+    if (typeof ruleStr !== 'string' || !ruleStr.trim()) return 'Empty rule';
+    if (ruleStr.length > 200) return 'Rule is too long';
+    const stripped = ruleStr
+        .replace(new RegExp('\\bMath\\.(' + SAFE_MATH_FUNCS + ')\\b', 'g'), '')
+        .replace(/\bn\b/g, '')
+        .replace(/\d+(\.\d*)?(e[+-]?\d+)?/gi, '');
+    const bad = stripped.match(/[^\s+\-*/%()&|^~<>=!?:,.]/);
+    if (bad) return `Use only n, numbers, operators and Math functions (found "${bad[0]}")`;
+    return null;
+}
+
+/** Full check: safe, compiles, and returns a finite number for a few n. */
+function validateRule(ruleStr, mod, residue) {
+    const safety = ruleSafetyError(ruleStr);
+    if (safety) return { error: safety };
+    let f;
+    try { f = new Function('n', 'return ' + ruleStr); }
+    catch (e) { return { error: 'Syntax error: ' + e.message }; }
+    // try the first positive n in this residue class
+    let n = residue;
+    if (n <= 0) n += mod;
+    try {
+        const v = Math.floor(f(n));
+        if (!Number.isFinite(v)) return { error: `Gives ${v} for n = ${n}` };
+        return { error: null, example: `${n} → ${v}` };
+    } catch (e) {
+        return { error: e.message };
+    }
+}
+
+function setGraph(g) { graph = g; }

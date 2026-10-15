@@ -102,6 +102,7 @@
 .ctl{display:grid;gap:2px;margin:10.8px 5.4px 0;font-size:14.8px;position:relative}
 .ctl label{display:grid;grid-template-columns:6.4em minmax(0,1fr) 3.6em;align-items:center;gap:9px;white-space:nowrap}
 .ctl .k{color:var(--ink)}
+.ctl + .fig{margin-top:14px}                              /* Plate III: Fig. 4 below the controls, not on top of them */
 .ctl .note{font-size:13.5px;font-style:italic;color:var(--ink-2)}
 .ctl .v{font-family:"DM Mono",ui-monospace,monospace;font-size:11.2px;color:var(--ink-2);text-align:right}
 .ctl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;min-width:63px;height:19.8px;background:transparent;cursor:pointer;margin:0}
@@ -132,13 +133,10 @@
 .view figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:7.2px;margin-top:5.4px;line-height:1.2}
 .view figcaption b{font-family:var(--sc);font-weight:700;font-size:13.1px;letter-spacing:.1em;color:var(--vink)}
 .view figcaption span{font-style:italic;font-size:13.5px;color:var(--vink-2);white-space:nowrap}
-.view .vimg::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 0 var(--vink);transition:box-shadow .25s;pointer-events:none}
-.view.lit .vimg::after{box-shadow:inset 0 0 0 2px var(--vink)}
 .views .figcap{color:var(--vink-2);margin-top:10.8px}
 .views .figcap .sc{color:var(--vink)}
 .path tr td{transition:background-color .25s}
-.path tr.lit td{background:rgba(231,196,166,.38)}
-.path tr.lit td.y{box-shadow:inset 2.7px 0 0 #D8A984}
+.path tr.lit td{background:rgba(231,196,166,.26)}                      /* the city of the photo under the cursor: a faint warm wash, nothing more */
 @media (max-width:936px){.views{max-width:558px}}
 @media (max-width:432px){.vgrid,.vcol{gap:9px}.view figcaption{flex-direction:column;gap:0}}
 
@@ -207,6 +205,7 @@
           <label><span class="k">phase <i>φ</i></span><input type="range" id="binPh" min="0" max="100" value="0" aria-label="Orbital phase"><span class="v" id="binPhV"></span></label>
           <label><span class="k">incl. <i>i</i></span><input type="range" id="binI" min="15" max="82" value="62" aria-label="Inclination of the orbit"><span class="v" id="binIV"></span></label>
           <label><span class="k">ratio <i>q</i></span><input type="range" id="binQ" min="5" max="105" value="42" aria-label="Mass ratio, companion to compact object"><span class="v" id="binQV"></span></label>
+          <span><button type="button" class="play" id="binPlay" aria-pressed="false">orbit</button></span>
         </div>
         <p class="figcap" id="cap1"><span class="sc">Fig. 1.</span> <i>A low-mass X-ray binary</i>, ray-marched through the Roche potential: the companion fills its lobe, gas pours through L₁ and is swung by the Coriolis force onto the disc. X-rays from the compact object are scattered by the star — its lit face is a mirror — and by the stream and the disc, and come out polarized <b>perpendicular to the plane of scattering</b>: the red strokes circle the compact object. Turn the orbit with <i>φ</i>, tilt it with <i>i</i>, weigh the companion with <i>q</i>.</p>
       </figure>
@@ -241,13 +240,13 @@
         <div class="plate-h"><span class="pl">Plate III.</span><span class="ti">An accreting pulsar, and the rotating vector</span></div>
         <div class="fig f-psr" id="figPsr"><canvas role="img" aria-label="An accreting pulsar seen from Earth: a neutron star, its spin axis, dipole field lines that rotate with the star, and a dashed circle marking the polarization-limiting radius with small ticks showing the field direction there; red strokes show the resulting polarization."></canvas></div>
         <p class="figcap"><span class="sc">Fig. 3.</span> <i>The pulsar as seen from Earth.</i> Grey ticks: the magnetic field on the sphere of the adiabatic radius <i>r</i><sub>pl</sub> (dashed; really tens of stellar radii). On the way out a photon’s polarization follows the field — the magnetized vacuum is birefringent — and freezes at <i>r</i><sub>pl</sub>, where every ray sees the same dipole: so the red strokes (the X-mode, ⟂ field) all agree.</p>
-        <div class="fig f-rvm" id="figRvm"><canvas role="img" aria-label="Graph of polarization angle against rotational phase: the S-shaped swing of the rotating-vector model, with a marker at the current phase, and — when the filter is in — the flux passing through the filter."></canvas></div>
         <div class="ctl">
           <label><span class="k">incl. <i>i</i></span><input type="range" id="inI" min="5" max="90" value="40" aria-label="Inclination of the spin axis to the line of sight"><span class="v" id="vI">40°</span></label>
           <label><span class="k">obliquity <i>θ</i></span><input type="range" id="inT" min="5" max="85" value="30" aria-label="Angle between spin and magnetic axes"><span class="v" id="vT">30°</span></label>
           <span><button type="button" class="play" id="play" aria-pressed="true">pause</button></span>
         </div>
-        <p class="figcap" id="cap3"><span class="sc">Fig. 4.</span> <i>Polarization angle against phase</i> — the rotating-vector model, tan χ = sin θ sin φ / (sin <i>i</i> cos θ − cos <i>i</i> sin θ cos φ), plus 90° for the X-mode; fitting it to IXPE data is how <a href="assets/pdfs/2025_AA_Loktev_4U1538.pdf">the 4U 1538-52 paper</a> weighs the geometry. Drag across the graph to turn the star by hand; with the filter in, the lower strip is the flux it lets through.</p>
+        <div class="fig f-rvm" id="figRvm"><canvas role="img" aria-label="Graph of polarization angle against rotational phase: the S-shaped swing of the rotating-vector model, with a marker at the current phase."></canvas></div>
+        <p class="figcap" id="cap3"><span class="sc">Fig. 4.</span> <i>Polarization angle against phase</i> — the rotating-vector model, tan χ = sin θ sin φ / (sin <i>i</i> cos θ − cos <i>i</i> sin θ cos φ), plus 90° for the X-mode; fitting it to IXPE data is how <a href="assets/pdfs/2025_AA_Loktev_4U1538.pdf">the 4U 1538-52 paper</a> weighs the geometry. Drag across the graph to turn the star by hand.</p>
         <p class="figcap"><i>To include the effects of non-adiabatic pockets and accretion-flow birefringence, see <a href="https://arxiv.org/abs/2608.27699">Mushtukov et al. (2026)</a>.</i></p>
       </figure>
     </div>
@@ -364,9 +363,8 @@ $('#tocPath').textContent = SITE.path.length + ' stops';
   let vt = 0; addEventListener('resize', () => { clearTimeout(vt); vt = setTimeout(() => views.forEach(engrave), 200); });
   // a view and its row in the table light up together
   const rows = $$('#pathRows tr');
-  const lite = (k, on) => { const v = views[k]; if (!v) return; grid.querySelector(`.view[data-k="${k}"]`).classList.toggle('lit', on); if (rows[v.row]) rows[v.row].classList.toggle('lit', on); };
+  const lite = (k, on) => { const v = views[k]; if (v && rows[v.row]) rows[v.row].classList.toggle('lit', on); };   // a photo under the cursor marks its row
   $$('.view', grid).forEach(f => { const k = +f.dataset.k; f.addEventListener('pointerenter', () => lite(k, true)); f.addEventListener('pointerleave', () => lite(k, false)); });
-  rows.forEach((tr, i) => { const k = views.findIndex(v => v.row === i); if (k < 0) return; tr.addEventListener('pointerenter', () => lite(k, true)); tr.addEventListener('pointerleave', () => lite(k, false)); });
 }
 // epigraphs: quiet lines before their chapters. Above each, a row of red strokes like the plates' — drawn along
 // the plane of polarization of the ink below, so the dial should be turned to match them
@@ -833,25 +831,19 @@ function curve(c, fx, fy, x0, x1, n, wrapJump) {
 let rvmKey = '', rvmMk = null;
 function drawRvm() {
   const el = $('#figRvm'), { c, w, h, d } = psrCanvas(el); if (w < 20) return;
-  const x0 = 48 * d, x1 = w - 12 * d, y0 = 10 * d, strip = AN.on ? 42 * d : 0, y1 = h - 34 * d - strip;
+  const x0 = 48 * d, x1 = w - 12 * d, y0 = 10 * d, y1 = h - 34 * d;
   const Y = v => y0 + (y1 - y0) * (180 - v) / 180;
   if (!rvmMk) { rvmMk = [document.createElement('i'), document.createElement('i')]; rvmMk[0].className = 'mk-l'; rvmMk[1].className = 'mk-d'; rvmMk.forEach(e => { e.setAttribute('aria-hidden', 'true'); el.appendChild(e); }); }
   const px = x0 + (x1 - x0) * PSR.ph, py = Y(paX(PSR.ph * 2 * Math.PI));
-  rvmMk[0].style.height = (y1 + strip - y0) / d + 'px'; rvmMk[0].style.transform = `translate(${(px / d - 0.5).toFixed(2)}px, ${(y0 / d).toFixed(2)}px)`;
+  rvmMk[0].style.height = (y1 - y0) / d + 'px'; rvmMk[0].style.transform = `translate(${(px / d - 0.5).toFixed(2)}px, ${(y0 / d).toFixed(2)}px)`;
   rvmMk[1].style.transform = `translate(${(px / d).toFixed(2)}px, ${(py / d).toFixed(2)}px)`;
   const key = [w, h, d, AN.on, AN.th, PSR.i, PSR.t].join();
   if (key === rvmKey && c.canvas.width === w) return; rvmKey = key;
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h);
-  axes(c, d, x0, y0, x1, y1, [[180, Y(180), '180°'], [90, Y(90), '90°'], [0, Y(0), '0°']], 'angle', !AN.on);
+  axes(c, d, x0, y0, x1, y1, [[180, Y(180), '180°'], [90, Y(90), '90°'], [0, Y(0), '0°']], 'angle', true);
   if (AN.on) { const ta = wrap180(AN.th - 90); c.strokeStyle = 'rgba(30,26,21,.45)'; c.setLineDash([4 * d, 4 * d]); c.beginPath(); c.moveTo(x0, Y(ta)); c.lineTo(x1, Y(ta)); c.stroke(); c.setLineDash([]); c.font = `italic 500 ${13 * d}px "Cormorant Garamond", serif`; c.fillStyle = '#554B3E'; c.textAlign = 'right'; c.fillText('filter axis', x1 - 4 * d, Y(ta) - 4 * d); }
   c.strokeStyle = '#1E1A15'; c.lineWidth = 1.6 * d; curve(c, u => paX(u * 2 * Math.PI), Y, x0, x1, 240, 120);
-  if (AN.on) {        // flux through the filter: (1 + p cos 2(χ − θ)) / 2, p = 0.6
-    const s0 = y1 + 8 * d, s1 = h - 20 * d, fy = f => s1 - (s1 - s0) * f;
-    c.strokeStyle = 'rgba(30,26,21,.35)'; c.lineWidth = 1 * d; c.strokeRect(x0, s0, x1 - x0, s1 - s0);
-    c.strokeStyle = RUB; c.lineWidth = 1.5 * d; curve(c, u => (1 + 0.6 * Math.cos(2 * (chiScreen(paX(u * 2 * Math.PI)) - AN.th * D2R))) / 2 / 0.8, fy, x0, x1, 200, 0);
-    c.font = `italic 500 ${13 * d}px "Cormorant Garamond", serif`; c.fillStyle = '#554B3E'; c.textAlign = 'left'; c.fillText('through the filter', x0 + 5 * d, s0 + 13 * d);
-    for (let k = 0; k <= 4; k++) { c.textAlign = 'center'; c.fillText(String(k / 4), x0 + (x1 - x0) * k / 4, h - 4 * d); }
-  } else { c.font = `italic 600 ${14 * d}px "Cormorant Garamond", serif`; c.fillStyle = '#1E1A15'; c.textAlign = 'center'; c.fillText('rotational phase φ', (x0 + x1) / 2, h - 2 * d); }
+  c.font = `italic 600 ${14 * d}px "Cormorant Garamond", serif`; c.fillStyle = '#1E1A15'; c.textAlign = 'center'; c.fillText('rotational phase φ', (x0 + x1) / 2, h - 2 * d);
 }
 const drawDyn = () => { drawPulsar(); drawRvm(); };
 
@@ -887,6 +879,23 @@ binApply(); discApply();
 const binLive = live(Bin, binApply), discLive = live(Disc, discApply);
 for (const id of ['binPh', 'binI', 'binQ']) { $('#' + id).addEventListener('input', binLive); $('#' + id).addEventListener('change', binLive); }
 for (const id of ['discA', 'discI']) { $('#' + id).addEventListener('input', discLive); $('#' + id).addEventListener('change', discLive); }
+/* Plate I turns: a new full engraving is asked for as soon as the last one is in, and the phase follows the clock
+   (one orbit in BIN_PERIOD s) — so the binary keeps its pace however fast the machine engraves. Off screen it waits. */
+const BIN_PERIOD = 24, binPlay = $('#binPlay');
+let binPlaying = false, binPh = 0, binLast = 0, binAsked = 0;
+function setBinPlay(on) { binPlaying = on; binPlay.textContent = on ? 'pause' : 'orbit'; binPlay.setAttribute('aria-pressed', on); if (on) { binPh = BIN.ph; binLast = performance.now(); } }
+binPlay.addEventListener('click', () => setBinPlay(!binPlaying));
+$('#binPh').addEventListener('pointerdown', () => setBinPlay(false)); $('#binPh').addEventListener('keydown', () => setBinPlay(false));
+setInterval(() => {
+  const now = performance.now();
+  if (!binPlaying || !built.has(Bin) || !Bin.visible || document.hidden) { binLast = now; return; }
+  if (binAsked && now - binAsked < 4000) return;          // the last frame is still being engraved
+  binPh = (binPh + Math.min(0.6, (now - binLast) / 1000) / BIN_PERIOD) % 1; binLast = now;
+  BIN.ph = binPh; $('#binPh').value = Math.round(binPh * 100); $('#binPhV').textContent = binPh.toFixed(2);
+  binAsked = now;
+  const done = () => { binAsked = 0; drawP(Bin); };
+  if (WK) buildFull(Bin, done); else { if (Bin.build(true)) drawP(Bin); binAsked = 0; }   // without the worker: quick drafts
+}, 40);
 // the pulsar turns while it is on screen
 let last = performance.now(), scrub = false;
 // (speed) if the machine can't keep up — frames arriving slower than ~45 a second while the pulsar turns — it is
