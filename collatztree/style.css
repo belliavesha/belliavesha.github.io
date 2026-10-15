@@ -168,6 +168,19 @@ button, input, select { font: inherit; color: inherit; }
     scrollbar-color: var(--line) transparent;
 }
 
+/* signature, pinned to the bottom of the panel */
+.panel-foot {
+    flex: none;
+    padding: 10px 16px 12px;
+    border-top: 1px solid var(--panel-edge);
+    font-size: var(--fs-small);
+}
+.panel-foot a {
+    color: var(--text-3);
+    text-decoration: none;
+}
+.panel-foot a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
 .group {
     border-top: 1px solid var(--panel-edge);
     padding: 12px 0 10px;
