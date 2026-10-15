@@ -17,7 +17,17 @@
    (a wide lake, a big cabin, modest type) at the normal 100%. Phones keep 100%: there the text has to stay readable. */
 window.heroZoom = () => (innerWidth < 520 || matchMedia('(pointer:coarse) and (max-height:520px)').matches) ? 1 : 0.7;
 document.documentElement.style.setProperty('--z', heroZoom());
+/* Until the scene is drawn the page shows only a wash of its colours — sky, lake, shore — so nothing appears before it is
+   placed. The wash is the one saved on the last visit (if recent), else a neutral guess for day or night. */
+(function () {
+  let g = null;
+  try { const w = JSON.parse(localStorage.getItem('rv.wash') || 'null'); if (w && Date.now() - w.t < 3 * 36e5) g = w.g; } catch (e) {}
+  if (!g) { const h = new Date().getHours(), day = h >= 7 && h < 19;
+    g = day ? 'linear-gradient(#93AECA 0%,#D6DEE3 46%,#A9BAC4 46%,#6F8796 76%,#A6B58B 76%)' : 'linear-gradient(#0A1220 0%,#1C2A3D 46%,#152234 46%,#0D1722 76%,#1B2822 76%)'; }
+  document.documentElement.style.setProperty('--wash', g);
+})();
 </script>
+<noscript><style>.hero{--st1:1;--st2:1;--st3:1}</style></noscript>
 <link rel="stylesheet" href="site.css">
 <style>
 :root{
@@ -49,8 +59,16 @@ a{color:inherit}
 button{font:inherit;color:inherit}
 
 /* ---------- the scene ---------- */
+/* the reveal (see reveal() in the script): 1 the landscape and the text · 2 jetty, birch, cabin, mailbox, hedgehog · 3 the weather.
+   A layer stays invisible until the scene has been measured and drawn, so nothing flashes in an unplaced spot. */
+.hero{--st1:0;--st2:0;--st3:0}
+#sky,.hero-text,.fg .st-land{opacity:var(--st1)}
+.fg .st-birch,.fg .st-house,.win,.mailbox,.door-h,.burrow{opacity:var(--st2)}
+.win-glow{filter:opacity(var(--st2))}
+#wx{opacity:var(--st3)}
+.hog,.apple{opacity:0}                                  /* (their fade is set from the script, which overrides this) */
 .hero-clip{position:relative;height:100vh;height:100svh;min-height:calc(540px * var(--z, 1));overflow:hidden}
-.hero{position:relative;width:calc(100% / var(--z, 1));height:calc(100% / var(--z, 1));min-height:540px;transform:scale(var(--z, 1));transform-origin:0 0;container-type:size;overflow:hidden;background:#243650;isolation:isolate;touch-action:manipulation}
+.hero{position:relative;width:calc(100% / var(--z, 1));height:calc(100% / var(--z, 1));min-height:540px;transform:scale(var(--z, 1));transform-origin:0 0;container-type:size;overflow:hidden;background:var(--wash,#243650);isolation:isolate;touch-action:manipulation}
 #sky{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
 .fg{position:absolute;inset:0;z-index:2;pointer-events:none;width:100%;height:100%;overflow:visible}
 .fg .foot{animation:footfade 22s linear forwards}
@@ -64,15 +82,15 @@ button{font:inherit;color:inherit}
 .hero h1,.lead{text-shadow:0 0 2px var(--scrim-c),0 0 6px var(--scrim-c),0 0 12px var(--scrim-c)}
 .scrim{position:absolute;inset:-34px -40px;border-radius:60px;background:var(--scrim-c);opacity:var(--scrim-a);filter:blur(26px);z-index:-1;pointer-events:none}
 .hero.ready .scrim{transition:opacity 1.5s ease,background-color 1.5s ease}
-.hero h1{margin:0;font-weight:360;font-size:clamp(46px,7cqw,100px);line-height:.98;letter-spacing:-.018em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
-.lead{margin:.6em 0 0;font-size:clamp(17.5px,1.5cqw,21.5px);line-height:1.5;max-width:30em;font-variation-settings:"SOFT" 80,"WONK" 0}
+.hero h1{margin:0;font-weight:360;font-size:clamp(34.5px,5.25cqw,75px);line-height:.98;letter-spacing:-.018em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
+.lead{margin:.6em 0 0;font-size:clamp(16.6px,1.43cqw,20.4px);line-height:1.5;max-width:30em;font-variation-settings:"SOFT" 80,"WONK" 0}
 .lead a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:color-mix(in srgb,currentColor 50%,transparent)}
 .lead a:hover{text-decoration-color:currentColor;text-decoration-thickness:2px}
 .lead .chill{display:inline;border:0;background:none;padding:0;cursor:pointer;font:inherit;font-style:italic;color:inherit;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:.22em;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent)}
 .lead .chill:hover{text-decoration-color:currentColor}
 .lead .or{white-space:nowrap}
 .lead .psst-k{font-style:italic}
-@container (max-width:699px){.hero-text{top:clamp(40px,6.5cqh,72px)}.hero h1{font-size:44px}.lead{font-size:16.5px;line-height:1.48}}
+@container (max-width:699px){.hero-text{top:clamp(40px,6.5cqh,72px)}.hero h1{font-size:33px}.lead{font-size:15.7px;line-height:1.48}}
 
 /* the cabin window, with Vlad in it (one still photo; the nod is switched off — see NOD_ENABLED) */
 .win{position:absolute;z-index:3;left:0;top:0;padding:5px;background:var(--trim);border-radius:2px;
@@ -248,7 +266,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
   <div class="hog" id="hog" role="img" aria-label="A hand-drawn hedgehog pottering along the shore. You can pick him up.">
     <div class="spr"><svg class="carry" viewBox="0 0 34 34" aria-hidden="true"><use href="#appleArt"/></svg></div>
   </div>
-  <aside class="note" id="note" aria-label="Check this out">
+  <aside class="note" id="note" aria-label="Check this out" hidden>
     <span class="pin" aria-hidden="true"></span>
     <button type="button" class="note-k" id="noteFold" aria-expanded="true">psst — have a look</button>
     <p class="note-t" id="noteText"></p>
@@ -404,6 +422,8 @@ const hogYMax = x => Math.max(hogYMin(x), H - SCENE.hog.dockGap);
 const xLimit = () => MB.left - HB * 0.45;
 // the left edge of the gable (the roof line the apple rolls down): y at x
 const roofY = x => CAB.top - (x - CAB.x0) * CAB.gh / (CAB.fw / 2) - (mobile ? 3.5 : 5);
+const textBox = () => { const r = $('#heroText').getBoundingClientRect(); return `${Math.round(r.width)}×${Math.round(r.height)}`; };
+let laidOutText = '';
 function layout() {
   SC = window.heroZoom ? heroZoom() : 1; document.documentElement.style.setProperty('--z', SC);   // the scene's zoom (see <head>)
   W = hero.clientWidth; H = hero.clientHeight; mobile = W < 700;                                   // in scene px (unaffected by the scale)
@@ -457,6 +477,7 @@ function layout() {
   if (hog.y) hog.y = clamp(hog.y, hogYMin(hog.x), hogYMax(hog.x));
   appleRelayout();
   needDraw = true;
+  laidOutText = textBox();                               // the text box this layout was made for
 }
 function placeThings() {
   const w = $('#win'), cw = CAB.win;
@@ -620,9 +641,9 @@ function buildFG() {
     if (S.snowGround) pile += `<path d="M${f(px - pw + 3)} ${f(py)} Q${f(px)} ${f(py - pw * 0.8)} ${f(px + pw - 3)} ${f(py)}" stroke="${night ? '#33434F' : '#D4DCE0'}" stroke-width="1" fill="none"/>`;
     S.pileX = px; S.pileY = py;
   } else S.pileX = S.pileY = null;
-  fg.innerHTML = crown + `<path d="M${Lp}L${Rr}Z" fill="var(--bark)"/>${marks.join('')}${twig}` +
-    `<path class="ground" d="${d}" fill="var(--ground, var(--paper))" style="filter:drop-shadow(0 -1px 2px rgba(0,0,0,.14))"/>${pile}${det}` +
-    cabinSVG(R, night) + `<g id="feet"></g>`;
+  fg.innerHTML = `<g class="st-birch">${crown}<path d="M${Lp}L${Rr}Z" fill="var(--bark)"/>${marks.join('')}${twig}</g>` +
+    `<g class="st-land"><path class="ground" d="${d}" fill="var(--ground, var(--paper))" style="filter:drop-shadow(0 -1px 2px rgba(0,0,0,.14))"/>${pile}${det}</g>` +
+    `<g class="st-house">${cabinSVG(R, night)}</g><g id="feet"></g>`;
 }
 /* the red cabin (Falu red, white trim): gable end towards the lake, on a stone plinth with the hedgehog's lair dug in under it */
 function cabinSVG(R, night) {
@@ -897,8 +918,9 @@ function drawFrame(t) {
   c.fillStyle = rgba(mix(S.hor, [255, 255, 255], 0.35), night ? 0.12 : 0.35); c.fillRect(0, HY + 1, W, 1);
   drawRings(c, t);
   drawStones(c, t);
-  drawJetty(c, t);
+  c.globalAlpha = ST[2]; drawJetty(c, t);
   for (const l of falling) { c.save(); c.translate(l.x, l.y); c.rotate(l.a); c.fillStyle = l.c; c.beginPath(); c.ellipse(0, 0, 3.4, 1.7, 0, 0, 7); c.fill(); c.restore(); }
+  c.globalAlpha = 1;
 }
 function drawIce(c) {
   const r = rng(21), night = S.night;
@@ -1387,10 +1409,11 @@ function applyGround() {
 }
 /* ---------- tick: every 20 s (or every second in a time-lapse) ---------- */
 let lastTheme = null;
+const themeKey = () => S.night + S.leaves + S.snowGround + S.pile + S.frozen + S.lamp;   // what the foreground SVG depends on
 function tick() {
   computeState();
   applyTheme(); applyGround();
-  const th = S.night + S.leaves + S.snowGround + S.pile + S.frozen + S.lamp;
+  const th = themeKey();
   if (th !== lastTheme) { buildFG(); lastTheme = th; $('#mailbox').classList.toggle('snowy', !!S.snowGround); }
   else if (!$('#cabin')) buildFG();
   Win.set(S.win);
@@ -1401,7 +1424,7 @@ function tick() {
   $('#mailbox svg').style.filter = flt;
   renderStatic(); needDraw = true;
   wxChip();
-  requestAnimationFrame(() => { drawFrame(performance.now() / 1000); checkContrast(); });
+  requestAnimationFrame(() => { drawFrame(performance.now() / 1000); checkContrast(); saveWash(); });
 }
 /* the on-screen readout of today's shower (in the dock), while it rains and for the rainbow minutes after */
 function wxChip() {
@@ -1669,7 +1692,7 @@ function updateHog(dt) {
 function renderHog() {
   const s = hog.sc || 1, [r, c] = hog.fr;
   hogEl.style.transform = `translate(${(hog.x - HB / 2).toFixed(1)}px, ${(hog.y - HB * 0.875).toFixed(1)}px)`;
-  hogEl.style.opacity = hog.op == null ? 1 : hog.op;
+  hogEl.style.opacity = (hog.op == null ? 1 : hog.op) * ST[2];
   spr.style.transform = `scale(${(hog.dir > 0 ? -1 : 1) * s}, ${s})`;
   spr.style.setProperty('--bp', `${c / 7 * 100}% ${r / 7 * 100}%`);
   if (hog.carrying) { const p = CARRY['' + r + c] || CARRY['00']; carryEl.style.left = p[0] + '%'; carryEl.style.top = p[1] + '%'; }
@@ -1811,7 +1834,7 @@ function renderApple() {
   const onTwig = apple.st === 'tree' || apple.st === 'grow';
   appleEl.style.transformOrigin = onTwig ? '56% 12%' : '50% 53%';
   appleEl.style.transform = `translate(${(apple.x - 15).toFixed(1)}px, ${(apple.y - 15).toFixed(1)}px) rotate(${(apple.rot || 0).toFixed(3)}rad) scale(${apple.sc.toFixed(3)})`;
-  appleEl.style.opacity = apple.op;
+  appleEl.style.opacity = apple.op * ST[2];
 }
 function openBurrow(on) { apple.st = on ? 'gone' : apple.st; burrowEl.classList.toggle('open', on); burrowEl.tabIndex = on ? 0 : -1; burrowEl.setAttribute('aria-hidden', on ? 'false' : 'true'); }
 burrowEl.addEventListener('click', () => { if (!burrowEl.classList.contains('open')) return; const r = burrowEl.getBoundingClientRect(); RV.descend(r.left + r.width / 2, r.top + r.height * 0.6); });
@@ -1861,7 +1884,7 @@ const noteEl = $('#note'), pinOnly = $('#pinOnly');
 function setFold(f) { noteEl.classList.toggle('folded', f); $('#noteFold').setAttribute('aria-expanded', !f); }
 $('#noteFold').addEventListener('click', () => { noteFoldUser = !noteEl.classList.contains('folded'); setFold(noteFoldUser); });
 function fillNote() { $('#noteText').innerHTML = SITE.md(POOL[noteIdx].text); }
-if (!SCENE.note) { noteEl.hidden = true; pinOnly.hidden = true; }         // switched off: SCENE.note = true brings it back
+noteEl.hidden = !SCENE.note; if (!SCENE.note) pinOnly.hidden = true;         // switched off: SCENE.note = true brings it back
 function placeNote() {
   if (!W || !SCENE.note) return;
   const nw = mobile ? Math.min(220, W - 40) : 232, trunkX = BX + (mobile ? 8 : 14);
@@ -1888,7 +1911,29 @@ $('#chill').addEventListener('click', () => RV.hooks.skip());
 /* ---------- main loop ---------- */
 let lastT = performance.now(), lastTick = 0, lastDraw = 0, visible = true;
 document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
+/* ---------- the reveal: landscape first, then what stands in it, then the weather ---------- */
+const ST = [1, 0, 0, 0];                                 // ST[k]: how far layer k has faded in (k = 1, 2, 3)
+let revealT0 = null;
+function startReveal() { if (revealT0 == null) revealT0 = performance.now(); }
+function stepReveal(now) {
+  if (revealT0 == null || ST[3] >= 1) return;
+  const t = (now - revealT0) / 1000;
+  for (let k = 1; k <= 3; k++) {
+    const v = reduced() ? 1 : smooth(0, 1, (t - [0, 0, 0.051, 0.1][k]) / 0.11);   // starts at 0 s, 0.25 s, 0.6 s; each fades in over 0.45 s
+    if (v !== ST[k]) { ST[k] = v; hero.style.setProperty('--st' + k, v.toFixed(3)); }
+  }
+  needDraw = true;                                       // the jetty fades in on the canvas
+}
+function saveWash() {                                    // the colours of this scene, for the first paint of the next visit
+  try {
+    const night = S.night, lake = S.frozen ? mix(S.hor, [236, 240, 243], night ? 0.08 : 0.5) : mix(S.mid, night ? hex('#07111A') : hex('#35596B'), night ? .55 : .45);
+    const hy = (HY / H * 100).toFixed(1), gy = (ground(W * 0.4) / H * 100).toFixed(1), gc = hero.style.getPropertyValue('--ground').trim() || rgba(lake);
+    const g = `linear-gradient(${rgba(S.top)} 0%,${rgba(S.hor)} ${hy}%,${rgba(mix(lake, S.hor, .45))} ${hy}%,${rgba(lake)} ${gy}%,${gc} ${gy}%)`;
+    localStorage.setItem('rv.wash', JSON.stringify({ g, t: Date.now() }));
+  } catch (e) {}
+}
 function loop(now) {
+  stepReveal(now);
   const dt = Math.min(0.04, (now - lastT) / 1000); lastT = now;
   const t = now / 1000;
   if (now - lastTick > (RV.speed() > 1 ? 1000 : S.w && S.w.sinceEnd < 12 ? 4000 : 20000)) { lastTick = now; tick(); }
@@ -1907,14 +1952,18 @@ RV.onChange(p => { applyHogSetting(); lastTick = performance.now(); tick(); });
 /* ---------- boot ---------- */
 window.__rv = { lastSkip: null, lastCatch: null };
 computeState(); applyTheme(); applyGround();
-layout(); Win.set(S.win); renderStatic();
+layout();                                                // measure the window; build the forest, the clouds and the foreground once
+lastTheme = themeKey();                                  // (so the first tick below doesn't build the foreground a second time)
 applyHogSetting();
 hog.x = mobile ? W * 0.3 : W * 0.46; hogBoot(); setAppleTree(); appleRelayout();
 for (let i = 0; i < 160; i++) stepSmoke(0.05, i * 0.05);        // the chimney has been going for a while
 tick();
 addEventListener('resize', () => { layout(); renderStatic(); Win.size(); requestAnimationFrame(checkContrast); });
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(() => { layout(); renderStatic(); drawFrame(performance.now() / 1000); checkContrast(); }));   // the text's final size moves the horizon
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(() => { if (textBox() === laidOutText) return; layout(); renderStatic(); drawFrame(performance.now() / 1000); checkContrast(); }));   // the text's final size moves the horizon — re-lay out only if it did change
 requestAnimationFrame(loop);
+// the reveal starts once the first frame is drawn — and the web fonts are in (the text's size sets the horizon), or 0.45 s at most
+(document.fonts && document.fonts.status !== 'loaded' ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 450))]) : Promise.resolve())
+  .then(() => requestAnimationFrame(() => requestAnimationFrame(startReveal)));
 
 /* test & tinkering hooks (no UI) */
 const HOOKS = {

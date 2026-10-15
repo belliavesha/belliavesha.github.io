@@ -584,6 +584,24 @@ function monthOf(w) {
   i = EN_MONTHS.findIndex(m => w.startsWith(m)); return i >= 0 && w.length >= 3 ? i + 1 : 0;
 }
 function midsummerEve(y) { let d = 19; while (new Date(Date.UTC(y, 5, d)).getUTCDay() !== 5) d++; return d; }
+// times of day from the sun over Turku on the (simulated) day: dawn and dusk are the sun 6° below the horizon (civil twilight)
+function sunTimes(ms) {
+  const m0 = localMidnight(ms), step = 2 * 6e4, alt = t => sunPos(t).alt;
+  let noon = m0, hi = -99; for (let t = m0; t <= m0 + DAY; t += step) { const a = alt(t); if (a > hi) { hi = a; noon = t; } }
+  let deep = noon, lo = 99; for (let t = noon; t <= noon + DAY; t += step) { const a = alt(t); if (a < lo) { lo = a; deep = t; } }
+  const cross = (h, rising, from, to) => { let p = alt(from); for (let t = from + step; t <= to; t += step) { const a = alt(t); if (rising ? p < h && a >= h : p > h && a <= h) return t; p = a; } return null; };
+  const rise = cross(-0.833, true, m0, noon) ?? noon - 3 * 36e5, set = cross(-0.833, false, noon, m0 + DAY) ?? noon + 3 * 36e5;
+  const dawn = cross(-6, true, m0, noon) ?? rise - 40 * 6e4, dusk = cross(-6, false, noon, m0 + DAY + 4 * 36e5) ?? set + 40 * 6e4;
+  return { m0, noon, deep, rise, set, dawn, dusk };
+}
+const TOD_WORDS = { dawn: 'dawn', aamunkoitto: 'dawn', sunrise: 'rise', auringonnousu: 'rise', morning: 'morning', aamu: 'morning', noon: 'noon', day: 'noon', 'päivä': 'noon', 'keskipäivä': 'noon',
+  afternoon: 'afternoon', 'iltapäivä': 'afternoon', evening: 'evening', ilta: 'evening', sunset: 'set', auringonlasku: 'set', dusk: 'dusk', 'hämärä': 'dusk', night: 'night', 'yö': 'night', midnight: 'midnight', 'keskiyö': 'midnight' };
+function timeOfDay(word, ms) {
+  const k = TOD_WORDS[word]; if (!k) return null;
+  const s = sunTimes(ms), min = t => Math.round(t / 6e4) * 6e4;
+  return min({ dawn: s.dawn, rise: s.rise, morning: (s.rise + s.noon) / 2, noon: s.noon, afternoon: (s.noon + s.set) / 2, evening: Math.max(s.noon + 36e5, s.set - 40 * 6e4),
+    set: s.set, dusk: s.dusk, night: s.deep, midnight: s.m0 + DAY }[k]);
+}
 function parseWhen(s) {
   s = s.trim().replace(/^["']|["']$/g, ''); if (!s) return null;
   const now = RV.now(), L = local(now), low = s.toLowerCase().replace(/\s+/g, ' ');
@@ -591,6 +609,7 @@ function parseWhen(s) {
   if (/^(now|nyt|today|tänään)$/.test(low)) return Date.now();
   if (/^(tomorrow|huomenna)$/.test(low)) return now + DAY;
   if (/^(yesterday|eilen)$/.test(low)) return now - DAY;
+  if ((m = low.match(/^(.*\S)\s+([a-zäö]+)$/)) && TOD_WORDS[m[2]]) { const base = parseWhen(m[1]); return base == null || !isFinite(base) ? null : timeOfDay(m[2], base); }   // 24.12. dusk · tomorrow dawn · juhannus night
   if ((m = low.match(/^([+-])\s*(\d+(?:\.\d+)?)\s*(m|min|h|d|w)?$/))) return now + (m[1] === '-' ? -1 : 1) * parseFloat(m[2]) * { m: 6e4, min: 6e4, h: 36e5, d: DAY, w: 7 * DAY }[m[3] || 'h'];
   // a time of day may follow any of the forms below
   let tod = null; const mt = low.match(/(?:^|\s)(?:klo\s*)?(\d{1,2})[:.](\d{2})$/);
@@ -605,6 +624,7 @@ function parseWhen(s) {
     'itsenäisyyspäivä': () => at(L.year, 12, 6, 18, 0), sauna: () => { let t = fromLocal(L.year, L.month, L.day, 19, 30); if (local(t).doy % 2 === 0) t += DAY; return t; }
   };
   if (named[rest]) return named[rest]();
+  if (!tod && TOD_WORDS[rest]) return timeOfDay(rest, now);                       // date dusk · date -s morning · date yö
   if ((m = rest.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:t(\d{1,2}):(\d{2}))?$/))) return at(+m[1], +m[2], +m[3], m[4] ? +m[4] : 12, m[5] ? +m[5] : 0);
   if ((m = rest.match(/^(\d{1,2})\.(\d{1,2})\.?(\d{4})?$/))) return at(m[3] ? +m[3] : L.year, +m[2], +m[1], 12, 0);            // 24.12. (Finnish order)
   if ((m = rest.match(/^(\d{1,2})\.?\s+([a-zäö]+)\.?(?:\s+(\d{4}))?$/)) && monthOf(m[2])) return at(m[3] ? +m[3] : L.year, monthOf(m[2]), +m[1], 12, 0);   // 24 joulukuuta · 3 oct
@@ -656,7 +676,7 @@ const MAN = {
   vlad: ['VLAD(1)                        Lakeside Manual                        VLAD(1)', '', '<span class="hd">NAME</span>', '    vlad — astrophysicist; X-ray polarimetry, X-ray binaries, relativistic plasma', '', '<span class="hd">SYNOPSIS</span>', '    vlad [--polarize] [--ray-trace] [--simulate-plasma] [--climb 6b] [--fish kuha]', '', '<span class="hd">DESCRIPTION</span>', '    Postdoctoral researcher at the Astronomical Institute of the Czech Academy of', '    Sciences (since October 2026), with Dr. Michal Dovčiak: the spectro-polarimetric', '    and timing properties of X-ray binaries and relativistic plasma physics.', '', '<span class="hd">HISTORY</span>', '    MSc Saint Petersburg · PhD Turku (IXPE) · CCA Flatiron · Helsinki (runko) ·', '    Newcastle &amp; Durham (X-MAPS) · ASU CAS.', '', '<span class="hd">BUGS</span>', '    Progressively loses the ability to play the piano and the guitar.', '    Favourite fish (kuha) differs from favourite fish to eat (salmon, tho).', '    Favourite lorem is ipsum, especially of the dolor variety, but sit amet.', '', '<span class="hd">SEE ALSO</span>', `    ${cmdLink('about')}, ${cmdLink('research')}, ${cmdLink('cv')}, ${cmdLink('contact')}, ${cmdLink('man hedgehog')}, ${cmdLink('man sauna')}`],
   hedgehog: ['<span class="hd">hedgehog</span> — lives on the shore; shy', '    hog on|off · hog come · hog sleep · hog wake · hog roll · hog speed &lt;0.25–4&gt; · hog status', '    Don’t be afraid of him, but do not scare him either. Come too close and he rolls', '    into a ball; linger and he keeps an eye on you. He can be picked up.', '<span class="hd">NOTES</span>', '    Hedgehogs, as everyone knows, carry apples home on their backs.'],
   sauna: ['<span class="hd">sauna</span>(8) — heat the kiuas, throw löyly', '    On odd days of the year the cabin sauna is heated in the evening: smoke from', '    the chimney, steam on the window. `sauna` heats it now, for 90 lake-minutes.', '<span class="hd">CAVEATS</span>', '    Afterwards, the brave go to the avanto.'],
-  date: ['date                          show the (possibly simulated) time in Turku', 'date -s "2026-12-21 18:00"    set the clock (Turku time). Also: 18:00 · +3h · -2d · tomorrow ·', '                              24.12. · 24 joulukuuta · lokakuu · joulu · juhannus · vappu · kaamos', 'date --speed 600              time-lapse (×600); 1 = normal', 'date --reset                  back to the real now'],
+  date: ['date                          show the (possibly simulated) time in Turku', 'date -s "2026-12-21 18:00"    set the clock (Turku time). Also: 18:00 · +3h · -2d · tomorrow ·', '                              24.12. · 24 joulukuuta · lokakuu · joulu · juhannus · vappu · kaamos', 'date dawn · sunrise · morning · noon · afternoon · evening · sunset · dusk · night · midnight', '                              (by the sun over Turku on the current day)', 'date --speed 600              time-lapse (×600); 1 = normal', 'date --reset                  back to the real now'],
   luck: ['luck             how lucky your throws are: the mean number of skips (a Poisson λ)', 'luck 5           a better arm. remembered in this browser; `reset` puts it back to ' + SKIP_LAMBDA],
   ls: ['ls [-a] [-l] [dir]   list the repository of this site (names are clickable)'],
   cd: ['cd &lt;dir&gt;    move around the repository', 'cd &lt;page&gt;   go to a page: ~ (home), research, about, merits, papers, talks, contact'],
@@ -841,7 +861,7 @@ const C = {
     if (f === '--speed' || f === 'speed') { const x = parseFloat(a[1]); if (!isFinite(x) || x < 0) return ['<span class="m">date --speed &lt;x&gt;, e.g. </span>' + cmdLink('date --speed 600')]; RV.setClock(null, Math.min(x, 100000)); return [x === 1 ? 'time runs normally.' : x === 0 ? 'time stands still. (enjoy it.)' : `time-lapse ×${Math.min(x, 100000)}. ${cmdLink('speed 1')} to stop.`]; }
     const arg = f === '-s' || f === '--set' || f === 'set' ? a.slice(1).join(' ') : a.join(' ');
     const t = parseWhen(arg);
-    if (t === null || !isFinite(t)) return ['<span class="r">date: couldn’t read that.</span> <span class="m">try 21:30 · 2026-12-21 18:00 · 24.12. · 24 joulukuuta · +3h · -2d · tomorrow · joulu · juhannus · vappu · kaamos</span>'];
+    if (t === null || !isFinite(t)) return ['<span class="r">date: couldn’t read that.</span> <span class="m">try 21:30 · dawn · noon · dusk · night · 2026-12-21 18:00 · 24.12. · 24 joulukuuta · +3h · -2d · tomorrow · joulu · juhannus · vappu · kaamos</span>'];
     RV.setClock(t); return describeTime().concat(onHome() ? [] : ['<span class="m">(the lake follows this clock.)</span>']);
   },
   speed: a => a.length ? C.date(['--speed', a[0]]) : [`time runs at ×${RV.speed()}`],
@@ -942,7 +962,7 @@ async function run(line, fromClick, quiet) {
 }
 RV.run = run;
 function commonPrefix(arr) { if (!arr.length) return ''; let p = arr[0]; for (const s of arr) while (!s.toLowerCase().startsWith(p.toLowerCase())) p = p.slice(0, -1); return p; }
-const SUB = { hog: ['on', 'off', 'come', 'sleep', 'wake', 'roll', 'speed', 'status'], date: ['-s', '--speed', '--reset'], weather: ['clear', 'auto'], rain: ['on', 'off', 'auto'], snow: ['on', 'off', 'auto'], aurora: ['on', 'off', 'auto'],
+const SUB = { hog: ['on', 'off', 'come', 'sleep', 'wake', 'roll', 'speed', 'status'], date: ['-s', '--speed', '--reset', 'dawn', 'sunrise', 'morning', 'noon', 'afternoon', 'evening', 'sunset', 'dusk', 'night', 'midnight'], weather: ['clear', 'auto'], rain: ['on', 'off', 'auto'], snow: ['on', 'off', 'auto'], aurora: ['on', 'off', 'auto'],
   smoke: ['on', 'off', 'auto'], window: ['clear', 'steam', 'frost', 'auto'], motion: ['reduced', 'full', 'auto'], man: ['vlad', 'hedgehog', 'sauna', 'date', 'luck', 'ls', 'cd', 'weather'], analyzer: ['on', 'off', 'turn', '0', '45', '90', '135'], plate: ['1', '2', '3'], luck: ['reset'] };
 function complete() {
   const v = input.value, parts = v.split(/\s+/), last = parts[parts.length - 1];
