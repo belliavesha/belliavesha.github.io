@@ -205,6 +205,12 @@ html[data-light="night"] .note{background:#E9E3D6;box-shadow:0 14px 30px -14px r
 .pin-only:hover::before{inset:4px}
 .pin-only[hidden]{display:none}
 html.rv-reduced .note,html.rv-reduced .win img{transition:none}
+/* a faint daylight glare on the window glass; the polarizing filter (the `filter` command) takes it off (--glare, set from the script) */
+.win .glass::after{content:'';position:absolute;inset:0;background:rgba(236,240,244,var(--glare,.085));pointer-events:none;transition:background .35s ease}
+/* rm -rf /: the scene goes piece by piece — all but the hedgehog */
+.hero.wiping{background:#040506}
+.hero.wiping #sky,.hero.wiping #wx,.hero.wiping .fg g,.hero.wiping .win,.hero.wiping .win-glow,.hero.wiping .mailbox,.hero.wiping .door-h,.hero.wiping .rod,.hero.wiping .apple,.hero.wiping .hero-text{transition:opacity .5s ease}
+.hero .rm-gone{opacity:0!important;pointer-events:none}
 </style>
 </head>
 <body data-page="home">
@@ -315,12 +321,26 @@ const STARS = [[2.53,89.26,2],[11.062,61.75,1.8],[11.031,56.38,2.4],[11.897,53.6
 
 /* ---------- state ---------- */
 const S = {};
+// what the command line removed (`rm leaves`, `rm snow`: until the page is reloaded; `rm water`: the lake drains, then refills)
+const RMS = { leaves: false, snow: false, stars: 0, sun: 0, moon: 0, gone: new Set() };   // stars, sun, moon: when `rm …` ran (performance.now()); gone: the stars already shot off
+const STARS_FADE = 3.5;                                  // s for the sun to shrink to nothing and the sky to go dark
+const fadeOf = t => t ? smooth(0, 1, (performance.now() - t) / 1000 / STARS_FADE) : 0;
+const starsGone = () => fadeOf(RMS.stars);
+function rmSun(sun) {                                     // the sun the scene is lit by: after `rm sun` (or `rm stars` — it is a star), none: the light drains away
+  const eV = starsGone(), e = Math.max(eV, fadeOf(RMS.sun));
+  S.sunDisk = { alt: sun.alt, az: sun.az, k: 1 - e }; S.voidK = eV;
+  S.moonK = 1 - Math.max(e, fadeOf(RMS.moon));          // no sun, no moonlight: it only ever reflected the sun
+  if (!e) return sun;
+  return { alt: sun.alt + (Math.min(sun.alt, -18 - 22 * eV) - sun.alt) * e, az: sun.az };   // rm sun: a moonless night · rm stars: darker than any night
+}
+const LAKE = { st: 'full', k: 0, dryUntil: 0 };          // st: full · draining · dry · filling; k: how far it has faded away (0–1)
+const dry = () => LAKE.st !== 'full';
 function computeState() {
-  const ms = RV.now(), env = RV.env(ms), sun = env.sun, moon = A.moonPos(ms), ph = A.moonPhase(ms), L = env.L;
+  const ms = RV.now(), env = RV.env(ms), sun = rmSun(env.sun), moonReal = A.moonPos(ms), moon = S.moonK <= 0 ? { alt: -90, az: 0 } : moonReal, ph = A.moonPhase(ms), L = env.L;   // (no sun: the moon has nothing to reflect)
   const md = L.md, doy = L.doy;
   const seed = rng(hashStr('ms' + `${L.year}-${L.month}-${L.day}`));
   const r1 = seed(), r2 = seed(), r3 = seed(), r4 = seed();
-  Object.assign(S, { ms, env, sun, moon, phase: ph, L, md, doy });
+  Object.assign(S, { ms, env, sun, moon, moonReal, phase: ph, L, md, doy });
   S.frozen = env.frozen;
   S.iceOut = md > 412 && md <= 428;
   S.snowGround = RV.snowSeason(L);
@@ -328,6 +348,9 @@ function computeState() {
   S.leaves = md >= 1105 || md < 501 ? 'bare' : md < 521 ? 'mouse' : md < 901 ? 'green' : md < 926 ? 'turning' : md < 1021 ? 'gold' : 'falling';
   S.flowers = md >= 415 && md <= 610; S.blueberries = md >= 705 && md <= 831; S.lingon = md >= 820 && md <= 1015;
   S.fallen = md >= 920 && md <= 1130; S.pile = md >= 1001 || md <= 415; S.hibernate = md >= 1101 || md <= 415;
+  S.fallenCol = ['#D9A33A', '#BF7430'];
+  if (RMS.leaves) { if (!S.fallen && (S.leaves === 'green' || S.leaves === 'mouse')) S.fallenCol = ['#7C8C4E', '#8A9A55']; S.leaves = 'bare'; S.fallen = true; }   // rm leaves: all of them on the ground
+  if (RMS.snow || dry()) S.snowGround = false;                             // rm snow · rm water (snow is water too)
   S.swans = (md >= 325 && md <= 510) || (md >= 915 && md <= 1031);
   const dd = Math.min(Math.abs(doy - 335), 365 - Math.abs(doy - 335));
   S.gloom = 0.34 * smooth(60, 10, dd) * (0.6 + 0.4 * r1);
@@ -335,20 +358,24 @@ function computeState() {
   S.snowing = w.snowing; S.raining = w.raining; S.precip = w.intensity;
   S.cloud = w.intensity > 0 ? 0.6 + 0.4 * w.intensity : w.sinceEnd < 12 ? 0.75 * smooth(6, 0.5, w.sinceEnd) + 0.14 : 0.2 * (w.wet || 0);   // overcast through a wet spell, fading in and out
   S.curtain = w.intensity > 0 ? 0 : w.sinceEnd < 14 ? smooth(14, 4, w.sinceEnd) : 0;   // the retreating shower, opposite the sun
+  if (RMS.snow && S.snowing) { S.snowing = false; S.precip = 0; }
+  if (dry()) { S.snowing = S.raining = false; S.precip = 0; S.cloud = 0; S.curtain = 0; }   // no water: no rain, no snow, no clouds
   S.wind = (r4 < 0.5 ? -1 : 1) * (6 + r4 * 14);
   const auroraSeason = md >= 820 || md <= 415, ao = RV.opt('aurora');
   S.aurora = ao === 'on' ? true : ao === 'off' ? false : auroraSeason && r3 < 0.42;
-  S.auroraK = S.aurora ? smooth(-9, -14, sun.alt) * (1 - 0.85 * S.cloud) : 0;
+  S.auroraK = S.aurora ? smooth(-9, -14, sun.alt) * (1 - 0.85 * S.cloud) * S.sunDisk.k : 0;   // (no sun, no solar wind)
   S.juhannus = L.month === 6 && L.day >= 19 && L.day <= 25 && L.weekday === 'Fri' && (L.hour >= 20 || L.hour < 3);
   S.neighbourSauna = L.weekday === 'Sat' && L.hour >= 16 && L.hour <= 23;
-  S.sauna = env.sauna; S.smoke = env.smoke; S.win = env.win; S.lamp = env.lamp;
+  S.sauna = env.sauna; S.smoke = env.smoke; S.win = env.win; S.lamp = env.lamp || (S.sunDisk.k < 0.6 && sun.alt < -5);   // in the dark that follows `rm sun` / `rm stars`, the cabins put their lights on
   S.farLit = S.lamp;
+  if (dry()) S.win = 'clear';                                              // no steam, no frost on the glass
   const sky = RV.skyAt(sun.alt, clamp(S.gloom + 0.5 * S.cloud, 0, 0.9));
   S.top = sky[0]; S.mid = sky[1]; S.hor = sky[2];
+  if (S.voidK > 0) { const k = 0.65 * S.voidK; S.top = mix(S.top, [1, 2, 4], k); S.mid = mix(S.mid, [2, 3, 6], k); S.hor = mix(S.hor, [4, 5, 8], k); }   // darker than any night: no starlight, no moon
   S.night = sun.alt < -7;
-  S.starK = smooth(-6, -13, sun.alt) * (1 - S.gloom * 1.6) * (1 - 0.5 * (moon.alt > 0 ? ph.frac : 0)) * (1 - S.cloud);
+  S.starK = smooth(-6, -13, sun.alt) * (1 - S.gloom * 1.6) * (1 - 0.5 * (moon.alt > 0 ? ph.frac * S.moonK : 0)) * (1 - S.cloud);
   S.glowK = 0.62 * Math.exp(-Math.pow((sun.alt + 1) / 5.2, 2)) * (1 - 0.7 * S.cloud);
-  S.rainbow = rainbowNow();
+  S.rainbow = dry() ? null : rainbowNow();
 }
 /* a rainbow is a 42° circle around the antisolar point. Its legs stand on the horizon at azimuth
    (sun + 180°) ± δ, cos δ = cos 42° / cos h — i.e. ~138° from the Sun. We draw it only if a leg lies in
@@ -392,8 +419,9 @@ const SCENE = {
   //       trunk ÷ front width from the left wall · trunk top (px; null = just below the text) · trunk width px · lean px · limbs · limb length px · hanging-twig length px
   rainbow: { spread: 3.0, width: 1.25, fade: [3, 24], baseBoost: 1.2, alpha: 0.62 },
   //         colour-band spread (1 = a thin bow) · stroke width · fully bright below fade[0]°, gone above fade[1]° · extra width at the base · opacity
-  hog: { size: [57, 46], cell: 1.22, walkAngle: 15, stride: 0.109, dockGap: 64 },
-  //     HS px · rendered cell ÷ HS · max climb/descent while walking (°) · distance per drawing ÷ HB · keep his feet this far above the bottom (the dock)
+  hog: { size: [57, 46], cell: 1.22, walkAngle: 15, stride: 0.109, dockGap: 64, watch: 4.6, flee: 1.5 },
+  //     HS px · rendered cell ÷ HS · max climb/descent while walking (°) · distance per drawing ÷ HB · keep his feet this far above the bottom (the dock) ·
+  //     the cursor within `watch` sprite sizes (HB): he stops and keeps an eye on it · closer than `flee`: he rolls into a ball
   hogJump: { chance: 0.0067, height: [3, 5], dist: [3, 8], g: 1100, frame: 0.17, land: 0.11 },
   //         the long jump, once in a blue moon: chance each time he picks something to do · apex height and length, in sprite sizes (HB) ·
   //         gravity px/s² · s per drawing in the air (01·02 up, 03·04 down) · s on the landing drawing (05)
@@ -412,6 +440,7 @@ const CAB = {}, JET = {}, MB = {}, APPLE = { hang: null, twig: null, path: null,
 const top = document.createElement('canvas'), tctx = top.getContext('2d');   // sky + forest (reflected in the lake)
 const skyC = document.createElement('canvas'), sctx = skyC.getContext('2d');
 const forC = document.createElement('canvas'), fctx = forC.getContext('2d');
+const forDC = document.createElement('canvas'), fdctx = forDC.getContext('2d');   // the same far shore with the water gone (rm water)
 let CLOUDS = null;
 function ground(x) {                                     // the water line: the lake above it, the ground below
   return SHORE - SCENE.shoreWave * Math.sin(x / W * Math.PI * 1.8 + 0.6);
@@ -469,7 +498,7 @@ function layout() {
   JET.tip0 = [JET.base[0] + 46 * rs, JET.base[1] - 72 * rs];
   // where stones may be skipped: the open water left of the mailbox and the house
   S.skipMaxX = Math.min(CAB.x0, MB.left) - (mobile ? 4 : 10);
-  for (const [c, h] of [[cv, H], [top, HY + 2], [skyC, HY + 2], [forC, HY + 2], [wxc, H]]) { c.width = Math.round(W * DPR); c.height = Math.round(h * DPR); }
+  for (const [c, h] of [[cv, H], [top, HY + 2], [skyC, HY + 2], [forC, HY + 2], [forDC, HY + 2], [wxc, H]]) { c.width = Math.round(W * DPR); c.height = Math.round(h * DPR); }
   fg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   planApple();
   buildClouds(); buildForest(); buildFG(); placeThings(); placeNote();
@@ -502,7 +531,8 @@ const inPoly = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i
 function birchSVG(R, night, topY, gy, tx, tww, textBox) {
   const out = { limbs: [], twigs: [], leaves: [], snow: [] };
   const sc = mobile ? 0.62 : 1;
-  const leafCol = () => { const r = R(); return S.leaves === 'mouse' ? '#A9BD5E' : S.leaves === 'green' ? (night ? '#56643A' : (r < .5 ? '#7C8C4E' : '#8A9A55')) : S.leaves === 'turning' ? (r < .5 ? '#9AA14A' : '#D5A43B') : (r < .75 ? '#D9A33A' : '#BF7430'); };   // same random draws by day and by night: the tree keeps its shape
+  const RL = rng(hashStr('leaves' + W + S.md)), RS = rng(hashStr('snow' + W));   // leaves and snow have their own dice: with or without them, the same branches
+  const leafCol = () => { const r = RL(); return S.leaves === 'mouse' ? '#A9BD5E' : S.leaves === 'green' ? (night ? '#56643A' : (r < .5 ? '#7C8C4E' : '#8A9A55')) : S.leaves === 'turning' ? (r < .5 ? '#9AA14A' : '#D5A43B') : (r < .75 ? '#D9A33A' : '#BF7430'); };   // same random draws by day and by night: the tree keeps its shape
   const leafy = S.leaves !== 'bare';
   const trunkH = gy - topY;
   // grow one limb: from (x,y), outward (side), starting a0° from vertical, bending over until the tip droops
@@ -522,13 +552,13 @@ function birchSVG(R, night, topY, gy, tx, tww, textBox) {
       const L = reach * (0.45 + 0.75 * R()) * (0.55 + 0.6 * t), sway = side * (3 + R() * 9) * sc, drift = (R() - .4) * 10 * sc;
       const ex = px + sway * 0.4 + drift, ey = py + L;
       out.twigs.push(`<path d="M${px.toFixed(1)} ${py.toFixed(1)} q${sway.toFixed(1)} ${(L * 0.3).toFixed(1)} ${(ex - px).toFixed(1)} ${L.toFixed(1)}" stroke="var(--twig)" stroke-opacity="${(0.28 + R() * 0.3).toFixed(2)}" stroke-width="${(0.55 + R() * .35).toFixed(2)}" fill="none"/>`);
-      if (leafy && !(S.leaves === 'falling' && R() < .55)) {
+      if (leafy && !(S.leaves === 'falling' && RL() < .55)) {
         const nl = Math.round((S.leaves === 'mouse' ? 3 : 6) * (0.6 + 0.7 * L / reach));
         for (let j = 0; j < nl; j++) {
-          const u = (j + 0.6 + R() * 0.4) / (nl + 0.4), q = 1 - u;
-          const lx = q * q * px + 2 * q * u * (px + sway) + u * u * ex + (R() - .5) * 3, ly = q * q * py + 2 * q * u * (py + L * 0.3) + u * u * ey;
-          const sz = (S.leaves === 'mouse' ? 1.4 : 2.1 + R() * 1.4) * (mobile ? 0.85 : 1);
-          out.leaves.push(`<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="${(sz * .62).toFixed(1)}" ry="${sz.toFixed(1)}" transform="rotate(${(R() * 70 - 35).toFixed(0)} ${lx.toFixed(1)} ${ly.toFixed(1)})" fill="${leafCol()}" opacity="${night ? .75 : .92}"/>`);
+          const u = (j + 0.6 + RL() * 0.4) / (nl + 0.4), q = 1 - u;
+          const lx = q * q * px + 2 * q * u * (px + sway) + u * u * ex + (RL() - .5) * 3, ly = q * q * py + 2 * q * u * (py + L * 0.3) + u * u * ey;
+          const sz = (S.leaves === 'mouse' ? 1.4 : 2.1 + RL() * 1.4) * (mobile ? 0.85 : 1);
+          out.leaves.push(`<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="${(sz * .62).toFixed(1)}" ry="${sz.toFixed(1)}" transform="rotate(${(RL() * 70 - 35).toFixed(0)} ${lx.toFixed(1)} ${ly.toFixed(1)})" fill="${leafCol()}" opacity="${night ? .75 : .92}"/>`);
         }
       }
     }
@@ -556,7 +586,7 @@ function birchSVG(R, night, topY, gy, tx, tww, textBox) {
     const x0 = tx(y0) + side * tww(y0) * 0.25;
     const pts = grow2(x0, y0, side, a0, a1, len, 26, 0.18 + R() * 0.3);
     out.limbs.push(stroke(pts, Math.max(1.2, tww(y0) * 0.26), 0.55, 0.62));
-    if (S.snowGround) out.snow.push(`<path d="${path(pts.slice(1, 12))}" transform="translate(0,-1.4)" stroke="${night ? '#C9D2DA' : '#FBFCFD'}" stroke-opacity=".85" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-dasharray="${(14 + R() * 20).toFixed(0)} ${(8 + R() * 14).toFixed(0)}"/>`);
+    if (S.snowGround) out.snow.push(`<path d="${path(pts.slice(1, 12))}" transform="translate(0,-1.4)" stroke="${night ? '#C9D2DA' : '#FBFCFD'}" stroke-opacity=".85" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-dasharray="${(14 + RS() * 20).toFixed(0)} ${(8 + RS() * 14).toFixed(0)}"/>`);
     const ex = tx(y0), ew = tww(y0);
     out.limbs.push(`<path d="M${(ex - ew * 0.5).toFixed(1)} ${(y0 + 3).toFixed(1)} Q${ex.toFixed(1)} ${(y0 - 4).toFixed(1)} ${(ex + ew * 0.5).toFixed(1)} ${(y0 + 3).toFixed(1)} Q${ex.toFixed(1)} ${(y0 + 1).toFixed(1)} ${(ex - ew * 0.5).toFixed(1)} ${(y0 + 3).toFixed(1)}Z" fill="var(--bark-mark)" opacity=".8"/>`);
     curtain(pts, side, mobile ? 7 : 11, CR * (0.7 + 0.5 * env));
@@ -584,7 +614,7 @@ function buildFG() {
   if (!W) return;
   const htr = $('#heroText').getBoundingClientRect(), hrr = hero.getBoundingClientRect();
   const textBottom = (htr.bottom - hrr.top) / SC;
-  const R = rng(hashStr('fg' + W + S.md));
+  const R = rng(hashStr('fg' + W + S.md)), RF = rng(hashStr('fallen' + W + S.md)), RP = rng(hashStr('pile' + W));   // RF, RP: for what comes and goes (rm leaves, rm snow)
   const night = document.documentElement.dataset.light === 'night', f = n => n.toFixed(1);
   // the ground, from the water line down; its colour (--ground) follows the sun, see applyGround()
   let d = `M0 ${H + 2}`;
@@ -622,14 +652,14 @@ function buildFG() {
     if (S.flowers && k > 0.78) det += `<circle cx="${x + 4}" cy="${y - 9}" r="2.4" fill="#D8B13A"/><path d="M${x + 4} ${y} v-7" stroke="var(--grass)" stroke-width="1"/>`;
     if (S.blueberries && k > 0.6 && k < 0.8) det += `<path d="M${x} ${y} q3 -6 8 -8" stroke="var(--grass)" stroke-width="1.2" fill="none"/><circle cx="${x + 3}" cy="${y - 4}" r="2.3" fill="#3B4A7E"/><circle cx="${x + 7}" cy="${y - 6}" r="2" fill="#34426F"/>`;
     if (S.lingon && k > 0.84) det += `<circle cx="${x}" cy="${y - 3}" r="2.1" fill="var(--berry)"/><circle cx="${x + 4}" cy="${y - 4}" r="1.9" fill="var(--berry)"/>`;
-    if (S.fallen && k < 0.5) det += `<ellipse cx="${x + 6}" cy="${y + 3}" rx="3.2" ry="1.6" fill="${R() < .6 ? '#D9A33A' : '#BF7430'}" transform="rotate(${(R() * 50 - 25).toFixed(0)} ${x + 6} ${y + 3})" opacity=".9"/>`;
+    if (S.fallen && k < 0.5) det += `<ellipse cx="${x + 6}" cy="${y + 3}" rx="3.2" ry="1.6" fill="${S.fallenCol[RF() < .6 ? 0 : 1]}" transform="rotate(${(RF() * 50 - 25).toFixed(0)} ${x + 6} ${y + 3})" opacity=".9"/>`;
     if (S.snowGround && k < 0.25) det += `<path d="M${x} ${y + 4} q10 -3 20 0" stroke="${night ? '#2B3947' : '#C9D3DA'}" stroke-width="1.4" fill="none" opacity=".8"/>`;
   }
   for (let i = 0, n = mobile ? 9 : 26; i < n; i++) {
     const x = 10 + R() * Math.max(10, MB.left - 24), y0 = ground(x) + 16, y = y0 + R() * Math.max(4, H - SCENE.hog.dockGap + 20 - y0), k = R(), sc = 0.8 + 0.5 * (y - y0) / (H - y0);
     if (S.snowGround) { if (k < 0.5) det += `<path d="M${f(x)} ${f(y)} q${f(12 * sc)} -3 ${f(24 * sc)} 0" stroke="${night ? '#2B3947' : '#D2DBE1'}" stroke-width="1.4" fill="none" opacity=".75"/>`; }
     else if (S.leaves !== 'bare' || k < 0.4) det += `<path d="M${f(x)} ${f(y)} q${f(-2 * sc)} ${f(-7 * sc)} ${f(-5 * sc)} ${f(-9 * sc)} M${f(x)} ${f(y)} q0 ${f(-8 * sc)} ${f(sc)} ${f(-12 * sc)} M${f(x)} ${f(y)} q${f(2 * sc)} ${f(-6 * sc)} ${f(6 * sc)} ${f(-8 * sc)}" stroke="var(--grass)" stroke-width="1.1" fill="none" stroke-linecap="round" opacity=".85"/>`;
-    if (S.fallen && k > 0.6) det += `<ellipse cx="${f(x + 8)}" cy="${f(y + 2)}" rx="3.2" ry="1.6" fill="${k > .8 ? '#D9A33A' : '#BF7430'}" opacity=".85"/>`;
+    if (S.fallen && k > 0.6) det += `<ellipse cx="${f(x + 8)}" cy="${f(y + 2)}" rx="3.2" ry="1.6" fill="${S.fallenCol[k > .8 ? 0 : 1]}" opacity=".85"/>`;
   }
   // the leaf pile he sleeps in during the cold months
   let pile = '';
@@ -637,7 +667,7 @@ function buildFG() {
     const pw = mobile ? 22 : 30, sx = APPLE.spot ? APPLE.spot[0] - HB * 2.6 : W * 0.3;
     const px = clamp(sx, pw + 8, Math.max(pw + 8, xLimit() - pw)), py = hogYMin(px) + 0.35 * (hogYMax(px) - hogYMin(px));
     pile = `<path d="M${f(px - pw)} ${f(py + 2)} Q${f(px)} ${f(py - pw * 0.9)} ${f(px + pw)} ${f(py + 2)}Z" fill="${S.snowGround ? (night ? '#1A2530' : '#FBF9F4') : '#A87545'}"/>`;
-    for (let i = 0; i < 12; i++) { const a = R() * Math.PI, rr = pw * (0.3 + R() * 0.6); const lx = px + Math.cos(a) * rr, ly = py - Math.sin(a) * rr * 0.75; if (S.snowGround && R() < .7) continue; pile += `<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="3.6" ry="1.8" fill="${['#C08A45', '#8E5B2E', '#D9A33A'][i % 3]}" transform="rotate(${(R() * 180).toFixed(0)} ${lx.toFixed(1)} ${ly.toFixed(1)})"/>`; }
+    for (let i = 0; i < 12; i++) { const a = RP() * Math.PI, rr = pw * (0.3 + RP() * 0.6); const lx = px + Math.cos(a) * rr, ly = py - Math.sin(a) * rr * 0.75; if (S.snowGround && RP() < .7) continue; pile += `<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="3.6" ry="1.8" fill="${['#C08A45', '#8E5B2E', '#D9A33A'][i % 3]}" transform="rotate(${(RP() * 180).toFixed(0)} ${lx.toFixed(1)} ${ly.toFixed(1)})"/>`; }
     if (S.snowGround) pile += `<path d="M${f(px - pw + 3)} ${f(py)} Q${f(px)} ${f(py - pw * 0.8)} ${f(px + pw - 3)} ${f(py)}" stroke="${night ? '#33434F' : '#D4DCE0'}" stroke-width="1" fill="none"/>`;
     S.pileX = px; S.pileY = py;
   } else S.pileX = S.pileY = null;
@@ -647,6 +677,7 @@ function buildFG() {
 }
 /* the red cabin (Falu red, white trim): gable end towards the lake, on a stone plinth with the hedgehog's lair dug in under it */
 function cabinSVG(R, night) {
+  const RI = rng(hashStr('icicles' + W));                // the icicles have their own dice: the rest of the cabin stays put with or without them
   const { x0, x1, fw, dx, dy, top: tp, wb, base, gh, peak, ov, lair } = CAB, f = n => n.toFixed(1);
   let s = '';
   // the long side, receding to the right (mostly beyond the edge of the screen)
@@ -679,7 +710,7 @@ function cabinSVG(R, night) {
     s += `<path d="M${f(peak[0])} ${f(peak[1] - 6)} L${f(peak[0] + dx)} ${f(peak[1] - 6 + dy)} L${f(eR[0] + dx)} ${f(eR[1] + dy - 3)} L${f(eR[0])} ${f(eR[1] - 3)}Z" fill="${sn}" opacity=".92"/>`;
     s += `<path d="M${f(eL[0] - 2)} ${f(eL[1] - 4)} L${f(peak[0])} ${f(peak[1] - 8)} L${f(eR[0] + 2)} ${f(eR[1] - 4)}" stroke="${sn}" stroke-width="${mobile ? 3 : 4.5}" fill="none" stroke-linecap="round" opacity=".95"/>`;
     s += `<rect x="${f(cxm - cwid / 2 - 2)}" y="${f(cym - chh - 6)}" width="${f(cwid + 4)}" height="4" rx="2" fill="${sn}"/>`;
-    if (S.frozen) for (let x = eL[0] + 4; x < peak[0] - 6; x += 5 + R() * 7) { const y = eL[1] + (peak[1] - eL[1]) * (x - eL[0]) / (peak[0] - eL[0]) + 3; s += `<path d="M${f(x)} ${f(y)} l1.4 ${f(4 + R() * 8)} l1.4 ${f(-4 - R() * 5)}Z" fill="#E4EEF4" opacity=".85"/>`; }
+    if (S.frozen) for (let x = eL[0] + 4; x < peak[0] - 6; x += 5 + RI() * 7) { const y = eL[1] + (peak[1] - eL[1]) * (x - eL[0]) / (peak[0] - eL[0]) + 3; s += `<path d="M${f(x)} ${f(y)} l1.4 ${f(4 + RI() * 8)} l1.4 ${f(-4 - RI() * 5)}Z" fill="#E4EEF4" opacity=".85"/>`; }
   }
   // the stone plinth (crawl space) under the house …
   s += `<path d="M${f(x0 - 4)} ${f(wb - 2)} H${f(x1 + 3)} L${f(x1 + dx + 1)} ${f(wb - 2 + dy)} V${f(base + dy)} L${f(x1)} ${f(base)} H${f(x0 - 4)}Z" fill="var(--stone)"/>`;
@@ -743,9 +774,9 @@ function renderStatic() {
   }
   if (S.starK > 0.02) {
     const d = toDays(S.ms), tw = rng(3);
-    for (const st of STARS) {
+    for (const [i, st] of STARS.entries()) {
       const p = altAz(st[0] * 15 * RAD, st[1] * RAD, d, LAT, LON);
-      if (p.alt < 2) continue;
+      if (p.alt < 2 || (RMS.stars && (RMS.gone.has(i) || S.voidK >= 1))) continue;   // rm stars: each one goes as it shoots off
       const x = X(p.az), y = Y(p.alt), m = st[2];
       const a = S.starK * clamp(1.15 - m * 0.2, 0.18, 1) * smooth(2, 10, p.alt) * (0.75 + 0.25 * tw());
       c.fillStyle = `rgba(245,240,225,${a.toFixed(3)})`; c.beginPath(); c.arc(x, y, Math.max(0.55, 1.9 - m * 0.33), 0, 7); c.fill();
@@ -753,7 +784,7 @@ function renderStatic() {
   }
   if (S.moon.alt > -0.5) {
     const mx = X(S.moon.az), my = Y(S.moon.alt), r = mobile ? 8 : 10, f = S.phase.frac;
-    const mA = (smooth(1, -8, S.sun.alt) * 0.75 + 0.25) * (1 - 0.8 * S.cloud);
+    const mA = (smooth(1, -8, S.sun.alt) * 0.75 + 0.25) * (1 - 0.8 * S.cloud) * S.moonK;
     const halo = c.createRadialGradient(mx, my, r, mx, my, r * 7);
     halo.addColorStop(0, `rgba(240,236,220,${0.18 * mA * f})`); halo.addColorStop(1, 'rgba(240,236,220,0)');
     c.fillStyle = halo; c.fillRect(mx - r * 7, my - r * 7, r * 14, r * 14);
@@ -762,8 +793,8 @@ function renderStatic() {
     c.fillStyle = `rgba(246,241,226,${0.95 * mA * (behind(mx, my, r) ? 0.45 : 1)})`; c.beginPath();
     c.arc(0, 0, r, -Math.PI / 2, Math.PI / 2, false); c.ellipse(0, 0, r * Math.abs(1 - 2 * f), r, 0, Math.PI / 2, -Math.PI / 2, f < 0.5); c.fill(); c.restore();
   }
-  if (S.sun.alt > -1) {
-    const y = Y(S.sun.alt), r = mobile ? 10 : 13, col = mix(hex('#FF9C5B'), hex('#FFF4DC'), smooth(0, 14, S.sun.alt)), vis = (1 - S.gloom * 1.4) * (1 - 0.92 * S.cloud);
+  if (S.sunDisk.alt > -1 && S.sunDisk.k > 0.005) {      // (sunDisk: where the sun really is; after rm stars it shrinks to nothing there)
+    const y = Y(S.sunDisk.alt), r = (mobile ? 10 : 13) * S.sunDisk.k, col = mix(hex('#FF9C5B'), hex('#FFF4DC'), smooth(0, 14, S.sunDisk.alt)), vis = (1 - S.gloom * 1.4) * (1 - 0.92 * S.cloud);
     const hg = c.createRadialGradient(sx, y, 0, sx, y, r * 9);
     hg.addColorStop(0, rgba(col, 0.55 * (1 - S.gloom) * (1 - 0.6 * S.cloud))); hg.addColorStop(0.2, rgba(col, 0.2 * (1 - S.gloom))); hg.addColorStop(1, rgba(col, 0));
     c.fillStyle = hg; c.fillRect(sx - r * 9, y - r * 9, r * 18, r * 18);
@@ -789,11 +820,17 @@ function renderStatic() {
   }
   renderForest();
 }
-function renderForest() {
-  const c = fctx; c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, HY + 2);
+function renderForest() { drawForest(fctx, false); if (dry()) drawForest(fdctx, true); }
+function drawForest(c, noWater) {
+  c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, HY + 2);
   const dark = S.night ? hex('#05080C') : hex('#1D2B27');
   const farC = mix(S.hor, mix(S.mid, dark, 0.35), 0.55), nearC = mix(S.hor, dark, S.night ? 0.78 : 0.7), snowy = S.snowGround ? 0.12 : 0;
-  c.fillStyle = rgba(mix(farC, [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.far) spruce(c, t.x, HY - 6 - t.base, t.h, t.w); c.fill(); c.fillRect(0, HY - 7, W, 9);
+  c.fillStyle = rgba(mix(farC, [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.far) spruce(c, t.x, HY - 6 - t.base, t.h, t.w); c.fill();
+  if (noWater) {                                         // the distant water under the far hills and between the islands: silt, in the haze
+    c.fillStyle = rgba(mix(farC, siltCol(), S.night ? 0.25 : 0.5)); c.beginPath(); c.moveTo(-10, HY + 2);
+    for (const t of FOREST.far) c.lineTo(t.x, HY - 5.5 - t.base); c.lineTo(W + 10, HY + 2); c.closePath(); c.fill();
+  }
+  c.fillRect(0, HY - 7, W, 9);
   c.fillStyle = rgba(mix(mix(S.hor, dark, 0.62), [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.isle) spruce(c, t.x, HY - 1, t.h, t.w); c.fill(); c.fillRect(W * 0.435, HY - 3, W * 0.13, 4);
   c.fillStyle = rgba(mix(nearC, [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.near) spruce(c, t.x, HY + 1 - t.base * 0.5, t.h, t.w); c.fill();
   c.beginPath(); c.moveTo(0, HY + 2); for (const t of FOREST.near) c.lineTo(t.x, HY + 1 - t.base * 0.5); c.lineTo(W, HY + 2); c.fill();
@@ -811,11 +848,14 @@ function composeTop(t) {
   const c = tctx; c.setTransform(1, 0, 0, 1, 0, 0);
   c.drawImage(skyC, 0, 0);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (PF.on && S.sun.alt > -10) drawSkyPol(c);              // the polarizing filter: the sky deepens 90° from the sun
   if (S.auroraK > 0) drawAurora(c, t);
+  if (meteors.length) drawMeteors(c);                        // before the forest: it hides their ends, and the lake mirrors them
   if (S.rainbow) drawRainbow(c);
   if (birds.length) drawBirds(c, t);
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.drawImage(forC, 0, 0);
+  if (LAKE.k > 0) { const y0 = Math.floor((HY - 8 - 20 * (mobile ? 0.8 : 1)) * DPR), h0 = Math.ceil((11 + 20 * (mobile ? 0.8 : 1)) * DPR); c.globalAlpha = LAKE.k; c.drawImage(forDC, 0, y0, forDC.width, h0, 0, y0, forDC.width, h0); c.globalAlpha = 1; }   // the far water fades to silt too
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
   if (S.juhannus) { const fx = W * 0.62, fy = HY - 2, fl = 0.7 + 0.3 * Math.sin(t * 9) * Math.sin(t * 5.3);
     const fgr = c.createRadialGradient(fx, fy, 0, fx, fy, 26); fgr.addColorStop(0, `rgba(255,190,110,${0.8 * fl})`); fgr.addColorStop(1, 'rgba(255,160,80,0)');
@@ -842,7 +882,9 @@ function drawAurora(c, t) {
   c.restore();
 }
 /* the rainbow: ONE bow (no secondary) on the 42° circle around the antisolar point — but only its legs are drawn: broad at the
-   horizon, fading into the sky as they climb (SCENE.rainbow). The lake reflects them by itself (it mirrors the sky canvas). */
+   horizon, fading into the sky as they climb (SCENE.rainbow); the apex would stand at 42° − the sun's altitude. The lake reflects them by
+   itself (it mirrors the sky canvas). Its light is ~96% polarized along the arc, so the filter (`filter`) brightens or snuffs out
+   each part of it by where the arc points: at 90° the near-vertical legs glow, at 0° they all but vanish. */
 const BOW = [[43.0, [236, 84, 72]], [42.5, [247, 146, 64]], [42.0, [247, 214, 92]], [41.5, [128, 204, 116]], [41.0, [84, 160, 226]], [40.5, [96, 110, 214]], [40.0, [150, 104, 218]]];
 function drawRainbow(c) {
   const rb = S.rainbow, h = Math.max(0, S.sun.alt) * RAD, az0 = rb.anti * RAD;
@@ -862,9 +904,11 @@ function drawRainbow(c) {
       if (alt < -0.5 || leg < 0.004) { prev = null; continue; }
       const x = X(az), y = Y(Math.max(0, alt)), wk = 1 + RB.baseBoost * (1 - smooth(0, RB.fade[1] * 0.6, alt));
       if (prev && Math.abs(x - prev[0]) < W / 3) {
-        c.strokeStyle = rgba(col, alpha * leg); c.lineWidth = width * wk; c.beginPath(); c.moveTo(prev[0], prev[1]); c.lineTo(x, y); c.stroke();
+        let pol = 1;                                     // through the filter: the bow is ~96% polarized along the arc — Malus, 1 + 0.96 cos 2(χ − θ)
+        if (PF.on) { const daz = ((az - prev[2] + 540) % 360) - 180, chi = Math.atan2(alt - prev[3], daz * Math.cos(alt * RAD)); pol = 1 + 0.96 * Math.cos(2 * (chi - PF.th * RAD)); }
+        c.strokeStyle = rgba(col, Math.min(1, alpha * leg * pol)); c.lineWidth = width * wk; c.beginPath(); c.moveTo(prev[0], prev[1]); c.lineTo(x, y); c.stroke();
       }
-      prev = [x, y];
+      prev = [x, y, az, alt];
     }
   };
   band(41.5, [255, 255, 255], 0.07 * rb.k, lw * 5 * RB.spread);
@@ -887,7 +931,8 @@ function drawFrame(t) {
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
   const LB = H, lakeH = LB - HY, night = S.night;
   const lakeBase = S.frozen ? mix(mix(S.hor, S.mid, .4), [236, 240, 243], night ? 0.08 : 0.5) : mix(S.mid, night ? hex('#07111A') : hex('#35596B'), night ? .55 : .45);
-  if (S.frozen) {
+  if (LAKE.k >= 1) {}                                    // rm water: nothing left to draw but the bed (below)
+  else if (S.frozen) {
     const ig = c.createLinearGradient(0, HY, 0, LB); ig.addColorStop(0, rgba(mix(lakeBase, S.hor, .35))); ig.addColorStop(1, rgba(mix(lakeBase, S.top, .25)));
     c.fillStyle = ig; c.fillRect(0, HY, W, lakeH);
     c.save(); c.globalAlpha = 0.14; c.scale(1, -1); c.drawImage(top, 0, 0, top.width, top.height, 0, -HY * 2, W, HY); c.restore();
@@ -899,6 +944,14 @@ function drawFrame(t) {
       const off = wob * Math.sin(y * 0.19 + t * 1.6) * (0.4 + dy / lakeH * 3.2);
       c.drawImage(top, 0, Math.max(0, sy * DPR - 2 * DPR), top.width, 2 * DPR, off, y, W, 2.2);
     }
+    if (PF.on) {                                         // the filter, as smooth vertical washes: the brown water shows through where the glare is cut, the glare brightens where it's let through
+      const body = waterBody(lakeBase), lit = mix(S.hor, [255, 255, 255], 0.35), cut = c.createLinearGradient(0, HY, 0, LB), add = c.createLinearGradient(0, HY, 0, LB);
+      for (let i = 0; i <= 32; i++) { const y = HY + i / 32 * lakeH, sy = HY - (y - HY) * 1.05, pa = sy < 0 ? 1 : passRefl(Math.sin(altOfY(sy) * RAD), N_WATER);
+        cut.addColorStop(i / 32, rgba(body, clamp(1 - pa, 0, 1))); add.addColorStop(i / 32, rgba(lit, clamp((pa - 1) * 0.3, 0, 1))); }
+      c.fillStyle = cut; c.fillRect(0, HY, W, lakeH);
+      c.globalCompositeOperation = 'screen'; c.fillStyle = add; c.fillRect(0, HY, W, lakeH); c.globalCompositeOperation = 'source-over';
+      drawShallows(c, t);
+    }
     const lg = c.createLinearGradient(0, HY, 0, LB);
     lg.addColorStop(0, rgba(lakeBase, 0.18 + 0.2 * S.cloud)); lg.addColorStop(0.5, rgba(lakeBase, 0.5 + 0.15 * S.cloud)); lg.addColorStop(1, rgba(lakeBase, 0.78));
     c.fillStyle = lg; c.fillRect(0, HY, W, lakeH);
@@ -908,15 +961,17 @@ function drawFrame(t) {
       c.beginPath(); c.moveTo(x + Math.sin(t * .3 + i) * 6, y); c.lineTo(x + l + Math.sin(t * .3 + i) * 6, y); c.stroke(); }
     const glit = (x0, strength, col) => { const gr = rng(Math.floor(t * 6));
       for (let i = 0; i < 70; i++) { const u = Math.pow(gr(), 0.8), y = HY + 2 + u * (lakeH - 30), w = (2 + u * 26) * (0.4 + gr()), x = x0 + (gr() - 0.5) * (6 + u * 90);
-        c.fillStyle = rgba(col, strength * (0.3 + 0.7 * gr()) * (1 - u * 0.5)); c.fillRect(x - w / 2, y, w, 1.3); } };
+        const pa = PF.on ? Math.min(1.6, passRefl(Math.sin(altOfY(HY - (y - HY) * 1.05) * RAD), N_WATER)) : 1;   // glints are reflections too
+        c.fillStyle = rgba(col, Math.min(1, strength * (0.3 + 0.7 * gr()) * (1 - u * 0.5) * pa)); c.fillRect(x - w / 2, y, w, 1.3); } };
     if (S.sun.alt > -0.8) glit(X(S.sun.az), 0.75 * (1 - S.gloom * 1.2) * (1 - 0.9 * S.cloud), mix(hex('#FFB36B'), hex('#FFF6E0'), smooth(0, 15, S.sun.alt)));
-    if (S.moon.alt > 0 && S.sun.alt < -4) glit(X(S.moon.az), 0.5 * S.phase.frac * (1 - S.cloud), [240, 236, 220]);
+    if (S.moon.alt > 0 && S.sun.alt < -4) glit(X(S.moon.az), 0.5 * S.phase.frac * (1 - S.cloud) * S.moonK, [240, 236, 220]);
     if (S.farLit) { c.fillStyle = 'rgba(255,213,138,.35)'; c.fillRect(FOREST.cabin - 6, HY + 4, 3, 12); c.fillRect(FOREST.cabin + 3, HY + 4, 3, 9); }
     if (S.lamp) { const cw = CAB.win; c.fillStyle = 'rgba(255,200,120,.10)'; c.fillRect(cw.x + 4, JET.yn - 2, cw.w - 8, H - JET.yn); }
     if (S.iceOut) drawFloes(c);
   }
-  c.fillStyle = rgba(mix(S.hor, [255, 255, 255], 0.35), night ? 0.12 : 0.35); c.fillRect(0, HY + 1, W, 1);
-  drawRings(c, t);
+  if (LAKE.k > 0) { c.save(); c.globalAlpha = LAKE.k; drawBed(c, t); c.restore(); }   // rm water: the water fades away, the bed fades in
+  c.fillStyle = rgba(mix(S.hor, [255, 255, 255], 0.35), (night ? 0.12 : 0.35) * (1 - LAKE.k)); c.fillRect(0, HY + 1, W, 1);
+  if (LAKE.k < 0.5) drawRings(c, t);
   drawStones(c, t);
   c.globalAlpha = ST[2]; drawJetty(c, t);
   for (const l of falling) { c.save(); c.translate(l.x, l.y); c.rotate(l.a); c.fillStyle = l.c; c.beginPath(); c.ellipse(0, 0, 3.4, 1.7, 0, 0, 7); c.fill(); c.restore(); }
@@ -953,7 +1008,7 @@ function drawJetty(c, t) {
     for (const sgn of [-1, 1]) {
       const x = p.x + sgn * p.w * 0.42;
       c.fillStyle = rgba(woodD); c.fillRect(x - 1.6 / z * 2, p.y, 3.2 / z * 2, ph);
-      if (!S.frozen) { c.fillStyle = rgba(woodD, 0.3); c.fillRect(x - 1.6 / z * 2 + Math.sin(t * 1.6 + x) * 0.8, p.y + ph, 3.2 / z * 2, ph * 0.8); }
+      if (!S.frozen && LAKE.k < 0.5) { c.fillStyle = rgba(woodD, 0.3); c.fillRect(x - 1.6 / z * 2 + Math.sin(t * 1.6 + x) * 0.8, p.y + ph, 3.2 / z * 2, ph * 0.8); }
     }
   }
   const n = jettyPts(1), f = jettyPts(zf), th = 5;
@@ -962,7 +1017,7 @@ function drawJetty(c, t) {
   c.strokeStyle = rgba(woodD, 0.55); c.lineWidth = 1;
   for (let z = 1; z < zf; z += 0.09 * z) { const p = jettyPts(z); c.beginPath(); c.moveTo(p.x - p.w / 2, p.y); c.lineTo(p.x + p.w / 2, p.y); c.stroke(); }
   c.strokeStyle = rgba(light, 0.35); c.beginPath(); c.moveTo(n.x - n.w / 2, n.y); c.lineTo(f.x - f.w / 2, f.y); c.stroke();
-  if (S.frozen) { const hx = f.x + f.w * 0.9, hy = f.y - 2; c.fillStyle = S.night ? '#0A1016' : '#3E5866'; c.beginPath(); c.ellipse(hx, hy, 9 * JET.k * 2, 3 * JET.k * 2, 0, 0, 7); c.fill(); FISHHOLE = [hx, hy]; }
+  if (S.frozen && LAKE.k < 0.5) { const hx = f.x + f.w * 0.9, hy = f.y - 2; c.fillStyle = S.night ? '#0A1016' : '#3E5866'; c.beginPath(); c.ellipse(hx, hy, 9 * JET.k * 2, 3 * JET.k * 2, 0, 0, 7); c.fill(); FISHHOLE = [hx, hy]; }
   const [bx, by] = JET.base, tip = rodTip(t);
   c.strokeStyle = rgba(night ? [120, 110, 95] : [70, 58, 44]); c.lineWidth = 2.2; c.lineCap = 'round';
   c.beginPath(); c.moveTo(bx, by + 4); c.quadraticCurveTo((bx + tip[0]) / 2 - 4, (by + tip[1]) / 2 + 6, tip[0], tip[1]); c.stroke();
@@ -1074,7 +1129,7 @@ function stepFish(t) {
   if (fish.st === 'wait' && fish.bait && t >= fish.nextDip) { fish.st = 'dip'; fish.dipAt = t; rings.push({ x: fish.target[0], y: fish.target[1], t0: t, life: 1.4, s: 2.4, a: 0.9 }); }
   else if (fish.st === 'dip' && t - fish.dipAt > 1.0) { fish.st = 'wait'; fish.dips++; fish.missed = t; if (fish.dips >= 3 && Math.random() < 0.6) fish.bait = false; fish.nextDip = t + 2 + Math.random() * 5.5; }
 }
-function rodClick() { if (fish.st === 'idle') cast(); else if (fish.st === 'wait' || fish.st === 'dip') reel(); }
+function rodClick() { if (dry() && fish.st === 'idle') return; if (fish.st === 'idle') cast(); else if (fish.st === 'wait' || fish.st === 'dip') reel(); }
 $('#rod').addEventListener('click', rodClick);
 /* the door handle: press the lever, then step inside (the merits room) */
 $('#doorHandle').addEventListener('click', e => {
@@ -1103,7 +1158,7 @@ const fullNumber = n => n <= 10 ? FULL[n] : n < 20 ? FULL[n - 10] + 'toist' : n 
 const leipaa = n => n === 1 ? 'vain yks leipä' : `${fullNumber(n)} leipää`;                            // partitive after numbers above one
 const SPLASH = ['loiskis', 'läts', 'löts', 'plums', 'pulahdus', 'molskis', 'polskis'];
 const bestGet = () => RV.store.get('skipBest', null), bestSet = n => RV.store.set('skipBest', n);
-function lakeHit(x, y) { return y > HY + 4 && y < ground(x) - 6 && x < S.skipMaxX && !(JET.poly && inPoly(x, y, JET.poly)); }
+function lakeHit(x, y) { return !dry() && y > HY + 4 && y < ground(x) - 6 && x < S.skipMaxX && !(JET.poly && inPoly(x, y, JET.poly)); }
 function throwStone(x, y) {
   const K = (ground(W / 2) - HY);
   const z1 = K / Math.max(3, y - HY), X1 = (x - W / 2) * z1 / K;
@@ -1276,7 +1331,7 @@ function stepParticles(dt, t) {
     falling.push({ x: BX - 30 + (Math.random() - 0.5) * (mobile ? 60 : 260), y: mobile ? HY * 0.62 : 20 + Math.random() * HY * 0.4, a: Math.random() * 6, v: 16 + Math.random() * 12, c: Math.random() < .7 ? '#D9A33A' : '#BF7430', p: Math.random() * 6 });
   for (let i = falling.length - 1; i >= 0; i--) { const l = falling[i]; l.y += l.v * dt; l.x += Math.sin(t * 1.4 + l.p) * 24 * dt - 10 * dt; l.a += dt * 2; if (l.y > ground(l.x) + 2) falling.splice(i, 1); }
   if (S.swans && S.sun.alt > -4 && S.cloud < 0.7 && !birds.length && Math.random() < dt / 40) { const dir = Math.random() < .5 ? 1 : -1; birds.push({ x: dir > 0 ? -60 : W + 60, y: HY * (0.78 + Math.random() * 0.1), dir, n: 5 + Math.floor(Math.random() * 3) }); }
-  for (let i = birds.length - 1; i >= 0; i--) { const b = birds[i]; b.x += b.dir * 34 * dt; b.y -= 1.5 * dt; if (b.x < -200 || b.x > W + 200) birds.splice(i, 1); }
+  for (let i = birds.length - 1; i >= 0; i--) { const b = birds[i], fl = b.flee ? 4 : 1; b.x += b.dir * 34 * fl * dt; b.y -= (b.flee ? 30 : 1.5) * dt; if (b.x < -200 || b.x > W + 200 || b.y < -60) birds.splice(i, 1); }   // rm birds: off they go, fast
 }
 function drawWx() {
   const c = wctx; c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, H);
@@ -1403,6 +1458,7 @@ function applyGround() {
   const nk = smooth(SCENE.twilight[0], SCENE.twilight[1], S.sun.alt), gc = SCENE.groundColors;
   S.nightK = nk;
   let col = S.snowGround ? mix(hex(gc.snowDay), hex(gc.snowNight), nk) : mix(hex(gc.day), hex(gc.night), nk);
+  if (S.voidK > 0) col = mix(col, [2, 3, 3], 0.75 * S.voidK);
   col = mix(col, [0, 0, 0], 0.16 * S.cloud * (1 - nk));                  // a little duller under a grey sky
   hero.style.setProperty('--ground', rgba(col));
   hogEl.style.setProperty('--inv', nk.toFixed(3));
@@ -1416,8 +1472,8 @@ function tick() {
   const th = themeKey();
   if (th !== lastTheme) { buildFG(); lastTheme = th; $('#mailbox').classList.toggle('snowy', !!S.snowGround); }
   else if (!$('#cabin')) buildFG();
-  Win.set(S.win);
-  const a = S.sun.alt, dim = S.night ? 0.95 : 1 - 0.32 * smooth(4, -7, a) - 0.18 * S.cloud, warm = S.night ? 0 : 0.22 * Math.exp(-Math.pow((a - 2) / 4, 2)) * (1 - S.cloud);
+  Win.set(S.win); applyGlare();
+  const a = S.sun.alt, dim = (S.night ? 0.95 : 1 - 0.32 * smooth(4, -7, a) - 0.18 * S.cloud) * (1 - 0.5 * S.voidK), warm = S.night ? 0 : 0.22 * Math.exp(-Math.pow((a - 2) / 4, 2)) * (1 - S.cloud);
   S.dim = dim;
   const flt = `brightness(${dim.toFixed(3)}) sepia(${warm.toFixed(3)})`;
   const cab = $('#cabin'); if (cab) cab.style.filter = flt;
@@ -1428,7 +1484,7 @@ function tick() {
 }
 /* the on-screen readout of today's shower (in the dock), while it rains and for the rainbow minutes after */
 function wxChip() {
-  const w = S.w, hm = A.hm; if (!w) return RV.wxChip(null);
+  const w = S.w, hm = A.hm; if (!w || dry() || (RMS.snow && w.kind === 'snow')) return RV.wxChip(null);
   const spans = RV.forecast(S.ms), cur = spans.find(s => S.ms >= s[0] && S.ms <= s[1]), word = w.kind === 'snow' ? 'snow' : 'rain';
   if ((w.raining || w.snowing) && cur && RV.opt(w.kind) === 'auto') RV.wxChip(`${word} ${hm(cur[0])}–${hm(cur[1])}`, `It is ${w.raining ? 'raining' : 'snowing'} from ${hm(cur[0])} until about ${hm(cur[1])}. Open the weather report.`);
   else if (w.raining || w.snowing) RV.wxChip(`${word} · by you`, 'It rains because you asked. Open the weather report.');
@@ -1595,7 +1651,7 @@ function curl(tm) {                                      // into a ball, from wh
   setHog('curl', tm); hog.act = null; hog.calm = 0; hog.near = 0;
   play(already ? [K(F.ball, Infinity)] : SEQ.curl());
 }
-function uncurl() { setHog('uncurl'); play(SEQ.uncurl(Math.random() < 0.5), () => (threat() < 6 && !hog.trust ? alert() : think())); }
+function uncurl() { setHog('uncurl'); play(SEQ.uncurl(Math.random() < 0.5), () => (threat() < SCENE.hog.watch && !hog.trust ? alert() : think())); }
 function grabHog() { setHog('held'); hog.act = null; hog.wantSleep = false; play(hog.fr === F.ball ? [K(F.ball, Infinity)] : SEQ.curl()); }
 const friendly = () => false;                           // (was: an apple dragged his way — the apple now only falls from the birch)
 function pose() { return friendly() ? F.air : F.alert; }
@@ -1616,11 +1672,11 @@ function senseHog(dt) {
   if (hog.trust > 0) hog.trust = Math.max(0, hog.trust - dt);
   const d = threat(), fr = friendly(), scary = !fr && !hog.trust;
   if (hog.st === 'sleep') { if (scary && touching()) curl(1.2); return; }          // asleep, only a touch wakes him — straight into a ball
-  if (hog.st === 'curl') { if (scary && d < 1.5) hog.calm = 0; else hog.calm += dt; return; }
+  if (hog.st === 'curl') { if (scary && d < SCENE.hog.flee) hog.calm = 0; else hog.calm += dt; return; }
   if (!AWAKE.includes(hog.st)) return;
-  if (scary && d < 1.5) { curl(1.2); return; }                                    // too close: ball
+  if (scary && d < SCENE.hog.flee) { curl(1.2); return; }                                    // too close: ball
   if (hog.st === 'alert') {
-    if (d < 6) {
+    if (d < SCENE.hog.watch) {
       hog.calm = 0;
       const p = pose(), cur = hog.seq && hog.seq[hog.si];
       if (cur && cur[1] === Infinity) {
@@ -1631,7 +1687,7 @@ function senseHog(dt) {
     return;
   }
   if (!scary && !fr) { hog.near = 0; return; }                                   // just got an apple from you: he trusts you for a bit
-  if (d < 6 && ['idle', 'walk', 'home'].includes(hog.st)) { if ((hog.near += dt) > (fr ? 0.4 : 2)) alert(); }   // lingering nearby: watch it
+  if (d < SCENE.hog.watch && ['idle', 'walk', 'home'].includes(hog.st)) { if ((hog.near += dt) > (fr ? 0.4 : 2)) alert(); }   // lingering nearby: watch it
   else hog.near = 0;
 }
 function arrive() {
@@ -1877,8 +1933,331 @@ RV.hooks.hogJump = (h, d) => {
 };
 RV.hooks.hogStatus = () => hog.st === 'idle' ? ({ stand: 'standing about', blink: 'blinking', air: 'sniffing the air', ground: 'sniffing the ground', turn: 'turning round' })[hog.act] || 'pottering about'
   : ({ walk: hog.next === 'spot' ? 'off to where the apples land' : 'pottering along', home: 'going home with an apple', alert: friendly() ? 'sniffing at your apple' : 'on the alert — keeping an eye on you', curl: 'rolled up in a ball', uncurl: 'unrolling', sleep: 'asleep', wake: 'waking up', held: 'being carried', fall: 'landing', jump: 'jumping!', look: 'glancing back', enter: 'going into his burrow', inside: 'in his burrow', exit: 'coming out' })[hog.st];
-RV.hooks.fish = () => { const was = fish.st; rodClick(); return was === 'idle' ? 'casting from the jetty… type fish again (or click the rod) to reel in — within a second of a dip.' : 'reeling in…'; };
-RV.hooks.skip = () => { const x = W * (mobile ? 0.22 + Math.random() * 0.2 : 0.18 + Math.random() * 0.25), y = HY + (ground(x) - HY) * (0.55 + Math.random() * 0.3); throwStone(Math.min(x, S.skipMaxX - 10), y); return ''; };
+RV.hooks.fish = () => { if (dry() && fish.st === 'idle') return 'no water, no fishing. (the fish are lying right there, but that would be unsporting.)'; const was = fish.st; rodClick(); return was === 'idle' ? 'casting from the jetty… type fish again (or click the rod) to reel in — within a second of a dip.' : 'reeling in…'; };
+RV.hooks.skip = () => { if (dry()) return 'the stone lands in the mud. thunk.'; const x = W * (mobile ? 0.22 + Math.random() * 0.2 : 0.18 + Math.random() * 0.25), y = HY + (ground(x) - HY) * (0.55 + Math.random() * 0.3); throwStone(Math.min(x, S.skipMaxX - 10), y); return ''; };
+
+/* ---------- meteors: ~10 sporadic ones an hour every night, plus the Quadrantids, Perseids and Geminids around their peaks,
+   streaking away from their real radiants (rates, dates and radiants: RV.meteors in site.js). Magnitudes follow the shower's
+   population index r: m = 6.5 + ln U / ln r, so most are faint and a few are fireballs. Drawn into the sky canvas, so the
+   forest hides their ends and the lake mirrors them; they show only as far as the sky is dark (S.starK) — by day only
+   fireballs brighter than about −5 would. ---------- */
+const meteors = []; let METR = null, METR_T = -Infinity, METN = 0;
+const vecAA = (alt, az) => { const h = alt * RAD, a = az * RAD; return [Math.cos(h) * Math.sin(a), Math.cos(h) * Math.cos(a), Math.sin(h)]; };   // east, north, up
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const unit3 = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+const aaOf = v => ({ alt: Math.asin(clamp(v[2], -1, 1)) / RAD, az: ((Math.atan2(v[0], v[1]) / RAD) % 360 + 360) % 360 });
+const meteorVis = m => Math.max(S.starK, clamp((-m - 5) / 4, 0, 1) * (1 - S.cloud)) * clamp(1.3 - m * 0.18, 0.2, 1);
+function spawnMeteor(src, mag, P0) {                     // src: a shower (with its radiant's alt/az now), or null: a sporadic one, its radiant anywhere; P0: where it starts (rm stars)
+  const R = src ? vecAA(src.alt, src.az) : unit3([Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1]);
+  let P = P0 || null, rho = P0 ? Math.acos(clamp(dot3(P0, R), -1, 1)) : 0;
+  if (P0 && (rho < 15 * RAD || rho > 165 * RAD)) rho = 60 * RAD;   // (any direction will do)
+  for (let i = 0; i < 60 && !P; i++) {                   // where it lights up: anywhere from 12° to 80° up (uniform over the sky), not right at the radiant
+    const z = Math.sin(12 * RAD) + Math.random() * (Math.sin(80 * RAD) - Math.sin(12 * RAD)), Q = vecAA(Math.asin(z) / RAD, Math.random() * 360);
+    rho = Math.acos(clamp(dot3(Q, R), -1, 1)); if (rho > 4 * RAD && rho < 160 * RAD) P = Q;
+  }
+  if (!P) return null;
+  const cR = dot3(P, R), T = unit3([P[0] * cR - R[0], P[1] * cR - R[1], P[2] * cR - R[2]]);   // along the great circle, away from the radiant
+  const r = src ? src.r : RV.meteors.SPORADIC.r, v = src ? src.v : 25 + Math.random() * 45;
+  const m = mag != null ? mag : Math.max(-8, 6.5 + Math.log(Math.random() || 1e-9) / Math.log(r));
+  const u = Math.random(), L0 = u < 0.12 ? 50 + 45 * Math.random() : 21 + 30 * Math.pow(Math.random(), 0.8);           // degrees of sky: mostly 15–50°, now and then one across half the sky
+  const L = Math.max(4, L0 * Math.pow(Math.sin(rho), 0.6) * (m < 0 ? 1.25 : 1)) * RAD;                         // foreshortened near the radiant
+  const w = (v / 40) * 98 * RAD * Math.max(0.25, Math.sin(rho));                                               // angular speed, rad/s
+  const mt = { P, T, L, dur: clamp(L / w, 0.3, 1.9), t: 0, m, col: src ? src.col : [252, 248, 240], train: m < -2 };
+  meteors.push(mt); METN++; if (meteors.length > (STARQ.length || RMS.stars ? 500 : 40)) meteors.shift();
+  return mt;
+}
+const STARQ = [];                                        // rm stars: the stars waiting to shoot off, in order of their moment
+function stepMeteors(dt) {
+  const now = performance.now();
+  while (STARQ.length && STARQ[0].at <= now) { const q = STARQ.shift(); RMS.gone.add(q.i); spawnMeteor(null, q.m, q.P); }
+  if (S.ms - METR_T > 6e4 || S.ms < METR_T) { METR = RV.meteors.rates(S.ms); METR_T = S.ms; }
+  if (!reduced() && S.starK > 0.03) {
+    const sdt = dt * RV.speed();                         // lake time: a time-lapse brings them faster
+    for (const s of METR) if (s.hr > 0 && Math.random() < s.hr / 3600 * sdt) spawnMeteor(s);
+    if (Math.random() < RV.meteors.SPORADIC.hr / 3600 * sdt) spawnMeteor(null);
+  }
+  for (let i = meteors.length - 1; i >= 0; i--) { const mt = meteors[i]; mt.t += dt; if (mt.t > mt.dur + (mt.train ? 1.8 : 0)) meteors.splice(i, 1); }
+}
+function drawMeteors(c) {
+  c.save(); c.lineCap = 'round'; c.globalCompositeOperation = 'lighter';
+  for (const mt of meteors) {
+    const vis = meteorVis(mt.m); if (vis < 0.01) continue;
+    const at = s => { const cs = Math.cos(s), sn = Math.sin(s), p = aaOf([mt.P[0] * cs + mt.T[0] * sn, mt.P[1] * cs + mt.T[1] * sn, mt.P[2] * cs + mt.T[2] * sn]); return p.alt < 0.3 ? null : [X(p.az), Y(p.alt)]; };
+    const width = clamp(1.9 - mt.m * 0.3, 1, 5), N = 9;
+    const streak = (s0, s1, a, wk) => { let prev = null;
+      for (let i = 0; i <= N; i++) { const q = at(s0 + (s1 - s0) * i / N); if (q && prev && Math.abs(q[0] - prev[0]) < W / 3) { c.strokeStyle = rgba(mt.col, a(i / N)); c.lineWidth = width * wk(i / N); c.beginPath(); c.moveTo(prev[0], prev[1]); c.lineTo(q[0], q[1]); c.stroke(); } prev = q; }
+      return prev; };
+    if (mt.t <= mt.dur) {
+      const tau = mt.t / mt.dur, head = mt.L * tau, b = Math.pow(Math.sin(Math.PI * clamp(tau, 0.03, 0.97)), 0.6) * vis;   // it brightens, then burns out
+      const hp = streak(Math.max(0, head - mt.L * 0.45), head, u => b * u * u, u => 0.35 + 0.65 * u);
+      if (hp) { const g = width * (mt.m < 0 ? 2.6 - mt.m * 0.9 : 2), rg = c.createRadialGradient(hp[0], hp[1], 0, hp[0], hp[1], g);
+        rg.addColorStop(0, rgba(mt.m < -3 ? [214, 255, 226] : mt.col, Math.min(1, b))); rg.addColorStop(1, rgba(mt.col, 0)); c.fillStyle = rg; c.fillRect(hp[0] - g, hp[1] - g, 2 * g, 2 * g); }
+    } else if (mt.train) {                               // a fireball leaves a glowing train that fades away
+      const f = 1 - (mt.t - mt.dur) / 1.8; streak(mt.L * 0.25, mt.L, u => 0.22 * f * f * vis * Math.sin(Math.PI * u), () => 1.4);
+    }
+  }
+  c.restore();
+}
+RV.hooks.meteor = (key, mag) => {
+  const src = key && key !== 'spo' ? RV.meteors.rates(S.ms).find(s => s.key === key) : null;
+  const mt = spawnMeteor(src, mag); if (!mt) return 'it missed the sky. try again.';
+  needDraw = true;
+  const fm = m => (m < 0 ? '−' : '') + Math.abs(m).toFixed(1), seen = meteorVis(mt.m);
+  let s = `${src ? src.one : 'a sporadic meteor'}, magnitude ${fm(mt.m)}${mt.m <= -4 ? ' — a fireball' : ''}${src ? `, out of ${src.from}` : ''}.`;
+  if (src && src.alt < 0) s += ' <span class="m">(its radiant is below the horizon — so it grazes up from the edge of the sky.)</span>';
+  else if (src && src.zhr < 1) s += ` <span class="m">(out of season — they peak the night of ${src.night} — but here’s one anyway.)</span>`;
+  if (seen < 0.06) s += S.sun.alt > -6 ? ' <span class="m">it fell in daylight; nobody saw it. try </span>' + RV.cmdLink('date night') : S.cloud > 0.6 ? ' <span class="m">above the clouds — take my word for it.</span>' : ' <span class="m">too faint to make out against this sky.</span>';
+  return s;
+};
+
+/* ---------- the polarizing filter over the lake (`filter`, `analyzer`, `polarizer` here): θ = its transmission axis, 0° = horizontal.
+   Water (Fresnel, n = 1.333): a row of the lake is seen as steeply as the sky it mirrors is high; the reflection's s-part
+   (horizontal) and p-part (vertical) differ most at Brewster's angle (~37° down), where the p-part vanishes — so at 90°
+   the glare comes off and you see into the (brownish, Finnish) water. Sky (Rayleigh): degree p ≈ 0.7 sin²γ/(1 + cos²γ),
+   γ from the sun, polarized across the plane of scattering; Malus: × (1 + p cos 2(χ − θ)). The window glass: the same, n = 1.5.
+   All relative to the scene without the filter (as if the camera made up for the half a filter always takes). ---------- */
+const PF = { on: false, th: 90, spin: false }, N_WATER = 1.333, N_GLASS = 1.5;
+try { const s = JSON.parse(sessionStorage.getItem('rv.anLake') || 'null'); if (Array.isArray(s)) { PF.th = +s[0] || 0; PF.on = !!s[1]; } } catch (e) {}
+function fresnel(cosI, n) { const sinT = Math.sqrt(Math.max(0, 1 - cosI * cosI)) / n, cosT = Math.sqrt(Math.max(0, 1 - sinT * sinT)); const rs = (cosI - n * cosT) / (cosI + n * cosT), rp = (n * cosI - cosT) / (n * cosI + cosT); return [rs * rs, rp * rp]; }
+function passRefl(cosI, n) { if (!PF.on) return 1; const [Rs, Rp] = fresnel(Math.max(1e-4, cosI), n), c2 = Math.cos(PF.th * RAD) ** 2; return 2 * (Rs * c2 + Rp * (1 - c2)) / (Rs + Rp); }
+const altOfY = y => 90 * Math.pow(clamp((HY - y) / (HY - 26), 0, 1), 1 / 0.8);   // the inverse of Y()
+const waterBody = lakeBase => S.night ? mix(lakeBase, [4, 8, 10], 0.6) : mix(lakeBase, [70, 56, 34], 0.5);   // humic water: tea-brown when you can see into it
+function drawShallows(c, t) {                            // the stony bottom near the shore, and a pikeperch — only through the filter, and by day
+  const dk = smooth(-6, 6, S.sun.alt) * (1 - 0.6 * S.cloud), y0 = HY + 0.62 * (SHORE - HY), y1 = SHORE + 6;
+  const pa = passRefl(Math.sin(altOfY(HY - ((y0 + y1) / 2 - HY) * 1.05) * RAD), N_WATER), k = dk * clamp(1 - pa, 0, 1);
+  if (k < 0.02) return;
+  const r = rng(41), body = waterBody(mix(S.mid, hex('#35596B'), .45));
+  for (let i = 0; i < 46; i++) { const u = r(), y = y0 + u * (y1 - y0), x = r() * W, s = 2 + 7 * u * (mobile ? 0.7 : 1);
+    c.fillStyle = rgba(mix(body, [150, 132, 104], 0.35 + 0.3 * r()), 0.55 * k); c.beginPath(); c.ellipse(x, y, s * (1 + r()), s * 0.45, 0, 0, 7); c.fill(); }
+  const sw = reduced() ? 0 : t * 0.045, fx = W * (0.36 + 0.22 * Math.sin(sw)), fy = y0 + 0.4 * (y1 - y0) + 3 * Math.sin(sw * 3), dir = Math.cos(sw) >= 0 ? 1 : -1, L = mobile ? 15 : 22;
+  c.save(); c.translate(fx, fy); c.scale(dir, 1); c.fillStyle = rgba([24, 26, 18], 0.4 * k);
+  c.beginPath(); c.ellipse(0, 0, L, L * 0.17, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-L * 0.9, 0); c.lineTo(-L * 1.35, -L * 0.2 + Math.sin(t * 3) * 1.5); c.lineTo(-L * 1.35, L * 0.2 + Math.sin(t * 3) * 1.5); c.fill(); c.restore();
+}
+let POLC = null, POLK = '';
+function drawSkyPol(c) {
+  const key = [PF.th.toFixed(1), S.sun.az.toFixed(1), S.sun.alt.toFixed(1), S.cloud.toFixed(2), W, HY].join('|');
+  if (key !== POLK) {
+    POLK = key; const GX = 72, GY = 22;
+    if (!POLC) { POLC = document.createElement('canvas'); POLC.width = GX; POLC.height = GY; }
+    const g = POLC.getContext('2d'), im = g.createImageData(GX, GY), Sv = vecAA(S.sun.alt, S.sun.az), th = PF.th * RAD;
+    const k = smooth(-10, -1, S.sun.alt) * (1 - 0.85 * S.cloud);          // daylight and twilight; clouds scatter it away
+    for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
+      const az = ((i + 0.5) / GX - 0.5) * 360 + 180, alt = Math.max(0.5, altOfY((j + 0.5) / GY * HY)), a = az * RAD, h = alt * RAD, V = vecAA(alt, az);
+      const cg = dot3(Sv, V), p = 0.7 * (1 - cg * cg) / (1 + cg * cg) * (0.45 + 0.55 * smooth(0, 30, alt)) * k;
+      const E = [Sv[1] * V[2] - Sv[2] * V[1], Sv[2] * V[0] - Sv[0] * V[2], Sv[0] * V[1] - Sv[1] * V[0]];   // across the plane of scattering
+      const chi = Math.atan2(dot3(E, [-Math.sin(h) * Math.sin(a), -Math.sin(h) * Math.cos(a), Math.cos(h)]), dot3(E, [Math.cos(a), -Math.sin(a), 0]));   // on screen: up vs. right
+      const m = p * Math.cos(2 * (chi - th)), o = (j * GX + i) * 4;
+      if (m < 0) { im.data[o] = 8; im.data[o + 1] = 22; im.data[o + 2] = 62; im.data[o + 3] = Math.round(-m * 0.36 * 255); }   // darker, and a deeper blue
+      else { im.data[o] = 255; im.data[o + 1] = 252; im.data[o + 2] = 246; im.data[o + 3] = Math.round(m * 0.14 * 255); }
+    }
+    g.putImageData(im, 0, 0);
+  }
+  c.save(); c.imageSmoothingEnabled = true; c.drawImage(POLC, 0, 0, W, HY + 2); c.restore();
+}
+function applyGlare() {                                  // the window: a faint glare by day; the filter takes it off (seen at ~55°: near Brewster's angle for glass)
+  const base = S.lamp ? 0.02 : S.sun.alt < -4 ? 0.03 : 0.085;
+  $('#win').style.setProperty('--glare', (base * clamp(passRefl(Math.cos(55 * RAD), N_GLASS), 0, 1.6)).toFixed(3));
+}
+function setPF(th, on) {
+  if (th != null) PF.th = ((th % 180) + 180) % 180;
+  if (on != null) PF.on = on;
+  try { sessionStorage.setItem('rv.anLake', JSON.stringify([PF.th, PF.on])); } catch (e) {}
+  POLK = ''; applyGlare(); needDraw = true;
+}
+let pfSaved = 0;
+function stepFilter(dt) { if (!PF.spin) return; PF.th = (PF.th + 12 * dt) % 180; POLK = ''; applyGlare(); if (performance.now() - pfSaved > 1000) { pfSaved = performance.now(); setPF(null, null); } }
+function describePF() {
+  const c2 = Math.cos(PF.th * RAD) ** 2, day = S.sun.alt > -6;
+  const bow = S.rainbow ? (c2 < 0.12 ? ' <span class="m">the rainbow’s legs stand out brighter — its light is polarized along the arc.</span>' : c2 > 0.88 ? ' <span class="m">and the rainbow all but vanishes: its light is polarized along the arc.</span>' : '') : '';
+  return bow ? describePF0(c2, day) + bow : describePF0(c2, day);
+}
+function describePF0(c2, day) {
+  return c2 < 0.12 ? `filter at ${PF.th.toFixed(0)}°: the glare comes off the water — you can see into the lake${day ? ', and the sky deepens away from the sun' : ''}. the window loses its glare too.`
+    : c2 > 0.88 ? `filter at ${PF.th.toFixed(0)}°: the reflections at their strongest${day ? '; the sky pales away from the sun' : ''}. turn it to 90° to take them off.`
+    : `filter at ${PF.th.toFixed(0)}°: somewhere in between. <span class="m">try</span> ${RV.cmdLink('filter 90')} <span class="m">or</span> ${RV.cmdLink('filter turn')}`;
+}
+RV.register('analyzer', a => {
+  const v = (a[0] || '').toLowerCase();
+  if (!v) return [`filter: <span class="a">${PF.on ? PF.th.toFixed(0) + '°' : 'out'}</span>${PF.spin ? ' (turning)' : ''} <span class="m">— filter &lt;deg&gt; | on | off | turn | stop · 0° = horizontal</span>`];
+  if (v === 'off' || v === 'out') { PF.spin = false; setPF(null, false); return ['the filter comes off. the glare is back.']; }
+  if (v === 'on' || v === 'in') { setPF(null, true); return [describePF()]; }
+  if (v === 'turn' || v === 'spin') { PF.spin = true; setPF(null, true); return ['the filter turns slowly — watch the lake. <span class="m">(</span>' + RV.cmdLink('filter stop') + '<span class="m"> holds it.)</span>']; }
+  if (v === 'stop' || v === 'hold') { PF.spin = false; setPF(null, null); return [PF.on ? describePF() : 'the filter is out.']; }
+  const x = parseFloat(v); if (!isFinite(x)) return ['<span class="m">usage: filter &lt;degrees&gt; | on | off | turn | stop</span>'];
+  PF.spin = false; setPF(x, true); return [describePF()];
+}, { help: 'filter &lt;deg&gt;|off|turn — a polarizing filter over the lake (at 90° the glare comes off the water)' });
+
+/* ---------- rm: what really goes. The lake drains (all of the water: rain, snow, ice, clouds, the rainbow, the steam on the window)
+   to a cracked bed with fish flapping about and a lone rubber boot, then fills up again ---------- */
+const BED = { fish: [], boot: null };
+function seedBed() {
+  const r = Math.random, lim = clamp((xLimit() - 20) / W, 0.3, 0.92);      // left of the mailbox
+  BED.boot = { fx: Math.min(lim, mobile ? 0.62 : 0.55), u: 0.62 };
+  BED.fish = (mobile ? ['perch', 'roach', 'pike', 'roach'] : ['perch', 'roach', 'perch', 'pike', 'roach']).map((kind, i, A) =>
+    ({ kind, fx: 0.05 + (i + 0.2 + 0.6 * r()) / A.length * (lim - 0.08), u: 0.38 + r() * 0.5, a: (r() - 0.5) * 0.5, per: 0.9 + r() * 1.7, t0: r() * 3, p: r() * 6, dir: r() < 0.5 ? -1 : 1 }));
+}
+function bedXY(o) { const x = o.fx * W, y = Math.min(HY + o.u * (SHORE + 12 - HY), ground(x) - 6), u = (y - HY) / (SHORE - HY); return [x, y, (0.55 + 1.35 * u) * (mobile ? 0.8 : 1)]; }
+const siltCol = () => [158, 146, 122];                   // dried lake silt: a pale grey-brown
+function drawBed(c, t) {
+  const night = S.night, h = SHORE + 12 - HY, dm = S.dim || 1;
+  const shade = col => night ? mix(col, [10, 12, 15], 0.8) : mix(col, [0, 0, 0], 1 - dm);
+  const g = c.createLinearGradient(0, HY, 0, SHORE + 12);
+  g.addColorStop(0, rgba(shade(mix(S.hor, siltCol(), 0.6)))); g.addColorStop(0.3, rgba(shade([150, 138, 114]))); g.addColorStop(1, rgba(shade([128, 114, 92])));
+  c.fillStyle = g; c.fillRect(0, HY, W, H - HY);
+  const r = rng(77);
+  for (let i = 0; i < 7; i++) { const u = 0.2 + r() * 0.75, y = HY + u * h, x = r() * W, rx = (30 + r() * 90) * (0.3 + u);   // damp patches, darker, where the water stood last
+    c.fillStyle = rgba(shade([112, 100, 80]), 0.35); c.beginPath(); c.ellipse(x, y, rx, rx * (0.07 + 0.08 * u), 0, 0, 7); c.fill(); }
+  for (let i = 0; i < 4; i++) { const u = 0.25 + r() * 0.7, y = HY + u * h, x = r() * W, rx = (12 + r() * 40) * (0.3 + u);       // a few puddles, with a bit of sky in them
+    c.fillStyle = rgba(mix(S.mid, S.hor, 0.5), night ? 0.15 : 0.5); c.beginPath(); c.ellipse(x, y, rx, rx * (0.05 + 0.07 * u), 0, 0, 7); c.fill(); }
+  c.strokeStyle = rgba(shade([98, 86, 68]), 0.38); c.lineCap = 'round';      // cracked into plates: big ones near, smaller with distance
+  for (let j = 1; j < 10; j++) {
+    const u0 = Math.pow(j / 10, 1.6), u1 = Math.pow((j + 1) / 10, 1.6), y0 = HY + u0 * h, y1 = HY + u1 * h, cell = 24 + 150 * u0;
+    c.lineWidth = 0.5 + 1.1 * u0; c.beginPath();
+    c.moveTo(0, y0); for (let x = 14; x <= W + 14; x += 14) c.lineTo(x, y0 + Math.sin(x * 0.03 + j * 2.3) * (0.4 + 2.5 * u0) + Math.sin(x * 0.11 + j) * 0.6 * u0);
+    for (let x = r() * cell; x < W; x += cell * (0.6 + 0.8 * r())) { const xm = x + (r() - 0.5) * cell * 0.35; c.moveTo(x, y0); c.quadraticCurveTo(xm, (y0 + y1) / 2, x + (r() - 0.5) * cell * 0.4, y1); }
+    c.stroke();
+  }
+  for (let i = 0; i < 14; i++) { const u = Math.pow(r(), 0.7), y = HY + 3 + u * (h - 6), x = r() * W, s = 0.8 + 3 * u;      // pebbles
+    c.fillStyle = rgba(shade(mix([128, 126, 120], [92, 90, 86], r())), 0.85); c.beginPath(); c.ellipse(x, y, s * (1 + r()), s * 0.55, 0, 0, 7); c.fill(); }
+  const rr = rng(91);                                     // the boulders the water used to hide: a line where it stood, a little green below it
+  for (let i = 0; i < (mobile ? 4 : 7); i++) {
+    const u = 0.15 + rr() * 0.8, x = rr() * W, y = Math.min(HY + u * h, ground(x) - 4), s = (0.3 + 1.2 * u) * (mobile ? 0.8 : 1), w = (16 + rr() * 26) * s, hh = w * (0.45 + rr() * 0.3);
+    drawRock(c, x, y, w, hh, rr, night);
+  }
+  if (BED.boot) { const [x, y, s] = bedXY(BED.boot); drawBoot(c, x, y, s); }
+  for (const f of BED.fish) { const [x, y, s] = bedXY(f); drawFishBed(c, f, x, y, s, t); }
+}
+function drawRock(c, x, y, w, h, r, night) {
+  const k = [r(), r(), r(), r(), r()], path = () => { c.beginPath(); c.moveTo(x - w / 2, y);
+    c.bezierCurveTo(x - w / 2 - w * 0.04, y - h * (0.6 + 0.2 * k[0]), x - w * 0.2, y - h * (1.05 + 0.1 * k[1]), x + w * (0.05 + 0.1 * k[2]), y - h);
+    c.bezierCurveTo(x + w * 0.35, y - h * (0.95 + 0.1 * k[3]), x + w / 2 + w * 0.05, y - h * 0.45, x + w / 2, y); c.closePath(); };
+  const base = night ? [44, 46, 50] : mix([118, 116, 110], [96, 92, 86], k[4]);
+  c.fillStyle = 'rgba(40,32,22,.28)'; c.beginPath(); c.ellipse(x + w * 0.08, y + 1, w * 0.62, h * 0.16, 0, 0, 7); c.fill();          // its shadow
+  path(); const g = c.createLinearGradient(x - w / 2, y - h, x + w / 2, y); g.addColorStop(0, rgba(mix(base, [255, 255, 255], night ? 0.05 : 0.28))); g.addColorStop(1, rgba(mix(base, [0, 0, 0], 0.3)));
+  c.fillStyle = g; c.fill();
+  c.save(); path(); c.clip();
+  c.fillStyle = night ? 'rgba(30,40,30,.5)' : 'rgba(78,92,58,.55)'; c.fillRect(x - w, y - h * 0.32, w * 2, h * 0.4);                // algae, below the old waterline
+  c.fillStyle = night ? 'rgba(200,210,215,.06)' : 'rgba(235,232,220,.35)'; c.fillRect(x - w, y - h * 0.36, w * 2, Math.max(0.8, h * 0.05));   // and the line itself
+  c.restore();
+}
+function drawBoot(c, x, y, s) {                          // a green rubber boot, standing up as if someone just stepped out of it
+  const n = S.night, rub = n ? '#18221A' : '#30482F', dk = n ? '#0E140F' : '#1C2A1C';
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = 'rgba(30,22,14,.35)'; c.beginPath(); c.ellipse(4, 0.5, 13, 2.2, 0, 0, 7); c.fill();
+  c.rotate(-0.06); c.fillStyle = rub; c.beginPath();
+  c.moveTo(-5.5, -27); c.lineTo(5, -27); c.lineTo(5.5, -7); c.quadraticCurveTo(13.5, -6.5, 15, -2); c.lineTo(15, 0); c.lineTo(-6.5, 0); c.lineTo(-6.2, -8); c.closePath(); c.fill();
+  c.fillStyle = dk; c.beginPath(); c.ellipse(-0.2, -27, 5.3, 1.5, 0, 0, 7); c.fill();                 // the opening
+  c.fillRect(-6.8, -1.8, 22, 1.9);                                                                    // the sole
+  c.fillStyle = n ? 'rgba(160,60,50,.4)' : '#A8433A'; c.fillRect(-5.6, -24, 10.8, 1.6);              // the red band
+  c.strokeStyle = 'rgba(255,255,255,.18)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-3, -23); c.lineTo(-3.4, -8); c.stroke();
+  c.restore();
+}
+function drawFishBed(c, f, x, y, s, t) {                 // flapping about: every so often a flop up and over
+  const red = reduced(), tt = Math.max(0, t - f.t0), n = Math.floor(tt / f.per), ph = tt - n * f.per;
+  const hop = red ? 0 : ph < 0.4 ? Math.sin(ph / 0.4 * Math.PI) : 0, flip = (n % 2 ? -1 : 1) * f.dir;
+  const wig = red ? 0 : hop > 0 ? Math.sin(t * 22 + f.p) : Math.sin(t * 9 + f.p) * (Math.sin(t * 0.9 + f.p) > 0.7 ? 1 : 0);
+  const L = f.kind === 'pike' ? 17 : 11, night = S.night, col = h => rgba(night ? mix(hex(h), [20, 24, 30], 0.7) : hex(h));
+  c.save();
+  c.fillStyle = `rgba(30,22,14,${(0.35 * (1 - hop * 0.6)).toFixed(3)})`; c.beginPath(); c.ellipse(x, y + 1, L * s, 1.8 * s, 0, 0, 7); c.fill();
+  c.translate(x, y - (2.5 + hop * 10) * s); c.rotate(f.a + hop * 0.8 * flip); c.scale(flip * s, s);
+  c.fillStyle = col(f.kind === 'pike' ? '#5E6B42' : '#B8584A'); c.beginPath(); c.moveTo(-L * 0.85, 0); c.lineTo(-L * 1.35, -3.6 + wig * 2.2); c.lineTo(-L * 1.22, wig * 1.5); c.lineTo(-L * 1.35, 3.6 + wig * 2.2); c.closePath(); c.fill();
+  c.fillStyle = col(f.kind === 'perch' ? '#8C9A5A' : f.kind === 'pike' ? '#6F7E4E' : '#C3CBCB'); c.beginPath(); c.ellipse(0, 0, L, f.kind === 'pike' ? 2.6 : 3.8, wig * 0.06, 0, 7); c.fill();
+  c.fillStyle = col(f.kind === 'roach' ? '#E9ECEA' : '#E2DDBF'); c.beginPath(); c.ellipse(0.5, 1.2, L * 0.8, 1.6, 0, 0, Math.PI); c.fill();
+  if (f.kind === 'perch') { c.strokeStyle = 'rgba(40,46,30,.6)'; c.lineWidth = 1; for (const k of [-5, -1.5, 2, 5.5]) { c.beginPath(); c.moveTo(k, -3.4); c.lineTo(k - 0.8, 1.6); c.stroke(); }
+    c.fillStyle = col('#5D6638'); c.beginPath(); c.moveTo(-4, -3.3); c.lineTo(-1, -6.5); c.lineTo(3, -3.6); c.fill(); }
+  if (f.kind === 'pike') { c.fillStyle = 'rgba(230,226,190,.5)'; for (const k of [-10, -6, -2, 2, 6]) { c.beginPath(); c.ellipse(k, -0.6, 1.2, 0.6, 0, 0, 7); c.fill(); } }
+  c.fillStyle = f.kind === 'roach' ? '#B33A2A' : '#E8D88A'; c.beginPath(); c.arc(L * 0.68, -0.8, 1.15, 0, 7); c.fill();
+  c.fillStyle = '#111'; c.beginPath(); c.arc(L * 0.7, -0.8, 0.55, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(20,20,20,.6)'; c.lineWidth = 0.6; c.beginPath(); c.moveTo(L, 0.2); c.lineTo(L - 1.8, 0.4 + Math.abs(Math.sin(t * 5 + f.p)) * 0.9); c.stroke();   // gasping
+  c.restore();
+}
+function stepLake(dt) {
+  if (LAKE.st === 'draining') { LAKE.k = Math.min(1, LAKE.k + dt / 2.6); if (LAKE.k >= 1) { LAKE.st = 'dry'; LAKE.dryUntil = performance.now() + 75e3; } }
+  else if (LAKE.st === 'dry' && performance.now() > LAKE.dryUntil) { LAKE.st = 'filling'; RV.say('<span class="m">…the lake fills up again. the fish forgive you. mostly.</span>'); }
+  else if (LAKE.st === 'filling') { LAKE.k = Math.max(0, LAKE.k - dt / 3.5); if (LAKE.k <= 0) { LAKE.st = 'full'; tick(); } }
+}
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+RV.hooks.rm = what => {
+  const mon = MONTH_NAMES[S.L.month - 1];
+  if (what === 'leaves') {
+    if (RMS.leaves) return 'they’re already on the ground.';
+    if (S.leaves === 'bare') return `rm: cannot remove 'leaves': the birch has none left to give in ${mon}.`;
+    const col = S.leaves === 'mouse' || S.leaves === 'green' ? ['#7C8C4E', '#8A9A55'] : S.leaves === 'turning' ? ['#9AA14A', '#D5A44A'] : ['#D9A33A', '#BF7430'];
+    if (!reduced()) for (let i = 0; i < (mobile ? 45 : 110); i++) falling.push({ x: BX + (Math.random() - 0.5) * (mobile ? 110 : 360), y: (mobile ? HY * 0.3 : 10) + Math.random() * HY * (mobile ? 0.5 : 0.6), a: Math.random() * 6, v: 18 + Math.random() * 22, c: col[Math.random() < 0.5 ? 0 : 1], p: Math.random() * 6 });
+    RMS.leaves = true; tick();
+    return 'the birch lets go of every leaf at once. <span class="m">(it’ll have them back on your next visit — birches are stubborn.)</span>';
+  }
+  if (what === 'snow') {
+    if (RMS.snow) return 'it’s already gone.';
+    if (!S.snowGround && !S.snowing) return `rm: cannot remove 'snow': No such file or directory <span class="m">(not in ${mon}.)</span>`;
+    RMS.snow = true; snow.length = 0; tick();
+    return 'every flake and every drift — gone. <span class="m">(the Finns are impressed. it’s back on your next visit.)</span>';
+  }
+  if (what === 'water') {
+    if (LAKE.st === 'filling') return 'it’s filling up again. give it a moment.';
+    if (LAKE.st !== 'full') return 'rm: cannot remove \'water\': it’s already gone. <span class="m">the fish would like a word.</span>';
+    seedBed(); LAKE.st = 'draining'; LAKE.k = reduced() ? 1 : 0.001; snow.length = 0; drops.length = 0; rings.length = 0;
+    if (fish.st !== 'idle') { fish.st = 'idle'; fish.bob = null; fish.catch = null; rodButton(); }   // the line comes up empty
+    tick();
+    return '<span class="r">what. have. you. done.</span>';
+  }
+  if (what === 'sun') {                                  // the sun shrinks to a point and goes out; the moon goes with it (it only reflected the sun); a moonless night
+    if (RMS.sun || RMS.stars) return 'rm: cannot remove \'sun\': it’s already gone.';
+    const up = S.sun.alt > -0.8, moonUp = S.moonReal.alt > -0.5 && S.phase.frac > 0.03;
+    RMS.sun = performance.now(); tick();
+    setTimeout(() => RV.say('<span class="m">(reload the page to get it back.)</span>'), STARS_FADE * 1000 + 800);
+    return (up ? 'the sun shrinks to a point and goes out.' : 'the sun was below the horizon anyway — now it’s gone for good.')
+      + (moonUp ? ' the moon, with nothing left to reflect, goes dark too.' : '') + (S.auroraK > 0.05 ? ' so does the aurora: no sun, no solar wind.' : '') + (up ? ' night falls — a moonless one.' : ' a moonless night.');
+  }
+  if (what === 'moon') {
+    if (RMS.moon || RMS.sun || RMS.stars) return 'rm: cannot remove \'moon\': it’s already gone.';
+    if (S.moonReal.alt <= -0.5) return 'rm: cannot remove \'moon\': it’s below the horizon right now. <span class="m">(come back when it’s up.)</span>';
+    if (S.phase.frac < 0.03) return 'rm: cannot remove \'moon\': it’s a new moon — there’s nothing up there to remove.';
+    RMS.moon = performance.now(); tick();
+    return `the ${S.phase.frac > 0.96 ? 'full moon' : S.phase.frac < 0.45 ? 'crescent' : 'moon'} fades out of the sky.${S.sun.alt < -6 ? ' the stars come out brighter.' : ' <span class="m">(it was a pale daytime moon anyway.)</span>'} <span class="m">(reload the page to get it back.)</span>`;
+  }
+  if (what === 'stars') {                                // every star in the sky shoots off from where it stands, at its own magnitude — and the sun, a star too, shrinks to nothing
+    if (RMS.stars) return 'rm: cannot remove \'stars\': there are none left. <span class="m">(reload the page for a new universe.)</span>';
+    const d = toDays(S.ms), sunUp = S.sun.alt > -0.8;
+    STARS.forEach((st, i) => { const p = altAz(st[0] * 15 * RAD, st[1] * RAD, d, LAT, LON); if (p.alt < 2) return;
+      STARQ.push({ i, m: st[2], P: vecAA(p.alt, p.az), at: performance.now() + (sunUp ? 900 : 150) + 3800 * Math.sqrt(Math.random()) }); });   // by day they go as the sky darkens
+    STARQ.sort((a, b) => a.at - b.at);
+    const n = STARQ.length; RMS.stars = performance.now(); tick();
+    setTimeout(() => RV.say('<span class="m">the sky is empty. the moon, with nothing left to reflect, goes dark too. it’s very dark out here — only the cabin windows are lit.</span>'), STARS_FADE * 1000 + 1400);
+    setTimeout(() => RV.say('<span class="m">(reload the page for a new universe.)</span>'), STARS_FADE * 1000 + 2600);
+    return `rm: removing ${n} stars from the sky${sunUp ? ' — starting with the nearest one: the sun is a star too' : ''}…`;
+  }
+  if (what === 'birds') {
+    if (!birds.length) return 'rm: no birds in the sky just now. <span class="m">(the swans pass through in spring and in autumn.)</span>';
+    for (const b of birds) b.flee = true; return 'the swans take off, honking indignantly.';
+  }
+  if (what === 'apple') {
+    if (apple.st !== 'tree' || appleEl.hidden) return 'the apple is already off the tree. <span class="m">ask the hedgehog.</span>';
+    dropApple(); return 'the apple drops. the hedgehog will take it from here.';
+  }
+  return null;
+};
+/* rm -rf /: the scene goes piece by piece — the hedgehog, a protected species, stays — then a kernel panic, and the backup */
+let wiping = false;
+RV.hooks.wipe = () => {
+  if (wiping) return ['<span class="m">rm: already in progress. it’s a big lake.</span>'];
+  wiping = true; hero.classList.add('wiping'); hogEl.style.setProperty('--inv', '1');   // his night look: pale lines, so he shows in the void
+  const fgg = n => [...fg.querySelectorAll('.st-' + n)];
+  const steps = [
+    [300, fgg('birch').concat([$('#apple')]), "removed '/birch' <span class=\"m\">(and the apple on it)</span>"],
+    [750, fgg('house').concat([$('#win'), $('#winGlow'), $('#mailbox'), $('#doorHandle')]), "removed '/mökki' <span class=\"m\">(and the sauna. that one hurts.)</span>"],
+    [1200, [cv, wxc, $('#rod')], "removed '/sky', '/stars', '/lake' <span class=\"m\">(and everything in it)</span>"],
+    [1650, fgg('land').concat([$('#feet')]), "removed '/ground'"],
+    [2100, [$('#heroText')], "removed '/home/vlad/index.html'"]
+  ];
+  for (const [ms, els, msg] of steps) setTimeout(() => { els.filter(Boolean).forEach(e => e.classList.add('rm-gone')); RV.say(msg); }, ms);
+  setTimeout(() => { RV.say("removed '/bin/bash' <span class=\"m\">(the shell you are typing into)</span>"); RV.disintegrate(2600, 0.5); }, 2600);   // the dock and the terminal start coming apart
+  setTimeout(() => RV.say('<span class="r">rm: cannot remove \'/hedgehog\': Operation not permitted</span> <span class="m">(protected species)</span>'), 3400);
+  setTimeout(() => RV.say('<span class="r">Kernel panic — not syncing: no lake found</span>'), 5000);
+  setTimeout(() => { hero.querySelectorAll('.rm-gone').forEach(e => e.classList.remove('rm-gone')); RV.reintegrate(); RV.say('<span class="m">…rebooting from the backup. there is always a backup.</span>'); }, 6600);
+  setTimeout(() => { hero.classList.remove('wiping'); applyGround(); wiping = false; RV.say('the lake is read-only. nice try, though.'); }, 7400);
+  return ["rm: descending into '/'…"];
+};
 
 /* ---------- the note on the birch: "check this out" (from SITE.psst in data.js) — off unless SCENE.note ---------- */
 const POOL = SITE.psst;
@@ -1939,12 +2318,13 @@ function loop(now) {
   stepReveal(now);
   const dt = Math.min(0.04, (now - lastT) / 1000); lastT = now;
   const t = now / 1000;
+  if ([RMS.stars, RMS.sun, RMS.moon].some(t => t && now - t < STARS_FADE * 1000 + 600) && now - lastTick > 100) { lastTick = now; tick(); }   // rm stars / sun / moon: the light drains away
   if (now - lastTick > (RV.speed() > 1 ? 1000 : S.w && S.w.sinceEnd < 12 ? 4000 : 20000)) { lastTick = now; tick(); }
   updateHog(dt);
   stepApple(dt);
   if (visible) {
-    stepParticles(dt, t); stepStones(t); stepFish(t);
-    const busy = stones.length || fish.st !== 'idle' || rings.length || puffs.length || drops.length || snow.length;
+    stepParticles(dt, t); stepStones(t); stepFish(t); stepMeteors(dt); stepLake(dt); stepFilter(dt);
+    const busy = stones.length || fish.st !== 'idle' || rings.length || puffs.length || drops.length || snow.length || meteors.length || STARQ.length || LAKE.k > 0 || PF.spin;
     const animate = !reduced() || busy || needDraw;
     if (animate && now - lastDraw > 30) { drawFrame(t); drawWx(); lastDraw = now; needDraw = false; }
   }
@@ -1983,7 +2363,8 @@ const HOOKS = {
   throwAt: (x, y) => throwStone(x, y), lakeHit: (x, y) => lakeHit(x, y),
   poisson: n => { const a = []; for (let i = 0; i < n; i++) a.push(poissonSkips()); return a; },
   chantWord, leipaa,
-  recheck: () => tick(), win: Win
+  recheck: () => tick(), win: Win,
+  get meteors() { return { live: meteors.length, total: METN, mags: meteors.map(m => +m.m.toFixed(1)) }; }, get lake() { return { ...LAKE }; }, get filter() { return { ...PF }; }
 };
 Object.defineProperties(window.__rv, Object.getOwnPropertyDescriptors(HOOKS));   // keep the getters live
 })();

@@ -122,6 +122,27 @@ function dayInfo(ms) {
   return { rise, set, len, max };
 }
 RV.astro = { RAD, DAY, LAT, LON, toDays, altAz, sunPos, moonPos, moonPhase, local, tzOff, localMidnight, fromLocal, hm, dayInfo };
+/* ---- meteor showers: the big three. Each peaks on a fixed date; its ZHR (meteors an hour for a radiant overhead and a sky
+   down to magnitude 6.5) climbs and falls off around the peak as 10^(−B·|Δdays|), over a week or so either side. The radiant
+   drifts east day by day; the rate we see is ZHR × sin(radiant altitude). r: population index — each magnitude fainter,
+   r times as many meteors. v: entry speed, km/s (fast ones are short and quick). Plus ~10/h sporadic meteors, every night. ---- */
+const SHOWERS = [
+  { key: 'qua', name: 'Quadrantids', one: 'a Quadrantid', from: 'Boötes', night: '3–4 Jan', peak: [1, 3.9], zhr: 110, ra: 230.1, dec: 48.5, dra: 1.3, ddec: -0.15, up: 0.25, down: 0.3, r: 2.1, v: 41, col: [238, 242, 255] },
+  { key: 'per', name: 'Perseids', one: 'a Perseid', from: 'Perseus', night: '12–13 Aug', peak: [8, 12.9], zhr: 100, ra: 48.2, dec: 58.0, dra: 1.4, ddec: 0.12, up: 0.18, down: 0.25, r: 2.2, v: 59, col: [255, 244, 222] },
+  { key: 'gem', name: 'Geminids', one: 'a Geminid', from: 'Gemini', night: '13–14 Dec', peak: [12, 14.3], zhr: 120, ra: 112.3, dec: 32.5, dra: 1.0, ddec: -0.2, up: 0.2, down: 0.3, r: 2.6, v: 35, col: [246, 246, 255] }
+];
+const SPORADIC = { key: 'spo', name: 'sporadic', hr: 10, r: 3.0 };
+function meteorRates(ms) {
+  const d = toDays(ms), y = new Date(ms).getUTCFullYear();
+  return SHOWERS.map(s => {
+    let dpk = Infinity;                                  // days since the nearest peak (negative: before it)
+    for (const yy of [y - 1, y, y + 1]) { const dd = (ms - (Date.UTC(yy, s.peak[0] - 1, 1) + (s.peak[1] - 1) * DAY)) / DAY; if (Math.abs(dd) < Math.abs(dpk)) dpk = dd; }
+    const zhr = Math.abs(dpk) > 10 ? 0 : s.zhr * Math.pow(10, -(dpk < 0 ? s.up : s.down) * Math.abs(dpk));
+    const dd = clamp(dpk, -10, 10), ra = s.ra + s.dra * dd, dec = s.dec + s.ddec * dd, p = altAz(ra * RAD, dec * RAD, d);
+    return Object.assign({}, s, { zhrMax: s.zhr, dpk, zhr, alt: p.alt, az: p.az, hr: zhr * Math.max(0, Math.sin(p.alt * RAD)) });
+  });
+}
+RV.meteors = { SHOWERS, SPORADIC, rates: meteorRates };
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const when = ms => { const L = local(ms); return `${L.weekday} ${L.day} ${MON[L.month - 1]} ${L.year}, ${hm(ms)}`; };
 RV.when = when;
@@ -462,7 +483,7 @@ collatztree/tree_ui.js	46847
 data.js	22533
 favicon.ico	829
 google6c75a693b5d196cc.html	53
-index.html	152208
+index.html	199356
 mandelburger/.mandelburger-publish	187
 mandelburger/css/app.css	14540
 mandelburger/index.html	17235
@@ -518,8 +539,8 @@ old/assets/js/secondary.js	2655
 old/favicon.ico	6164
 old/index.html	4520
 research.html	82781
-site.css	11710
-site.js	81313`;
+site.css	13411
+site.js	106323`;
 // the underside stays under the ice: never listed, never found, never opened from here
 const SECRET = [/^old\//, /^second\.html$/, /^Okiya\.html$/, /^Geisha(_old)?\.html$/, /okiya/i, /^assets\/html\/(Recaman|Heart|Mandelbrot|Dice)\.html$/, /^assets\/js\/(recaman|heart|mandelbrot|dice|secondary)\.js$/, /^assets\/images\/recaman\.png$/];
 const FS = { files: new Map(), dirs: new Map([['', { d: new Set(), f: new Set() }]]), hidden: 0 };
@@ -686,7 +707,9 @@ const MAN = {
   weather: ['weather                  today’s showers over the lake, to the minute', 'rain on|off|auto · snow on|off|auto · aurora on|off|auto', 'weather clear · weather auto', 'rainbow                  what a rainbow needs (and, when the sun is right, a shower)'],
   motion: ['motion reduced|full|auto   calm the animations (auto follows your system setting)'],
   window: ['window clear|steam|frost|auto   the cabin window (sauna steam, winter frost)'],
-  smoke: ['smoke on|off|auto   the chimney (sauna evenings on odd days of the year; all winter)']
+  smoke: ['smoke on|off|auto   the chimney (sauna evenings on odd days of the year; all winter)'],
+  meteor: ['meteor                  a meteor from anywhere in the sky (a sporadic one)', 'meteor per|gem|qua      one from the radiant of the Perseids, Geminids or Quadrantids', 'meteor [per] -3         …of magnitude −3 (smaller is brighter; below about −5 it shows even by day)', 'meteors                 the showers: peak nights, rates right now, how far off',
+    '<span class="m">Every night ~10 sporadic meteors an hour; around the peaks the showers climb to a ZHR of 100–120, coming from their real radiants. Only visible once the sky is dark — and clear.</span>']
 };
 MAN.hog = MAN.hedgehog;
 const HELP = () => {
@@ -700,13 +723,14 @@ const HELP = () => {
     '<span class="hd">the lake</span> <span class="m">(remembered on every page)</span>',
     `  hog on|off|come|sleep|wake|roll|speed &lt;x&gt; · ${cmdLink('fish')} · ${cmdLink('skip')} · ${cmdLink('luck')}`,
     `  ${cmdLink('weather')} · rain|snow|aurora on|off|auto · ${cmdLink('rainbow')} · ${cmdLink('sky')}`,
+    `  ${cmdLink('meteor')} [per|gem|qua] [mag] · ${cmdLink('meteors')} <span class="m">(the showers, and when)</span>`,
     `  window clear|steam|frost|auto · smoke on|off|auto · ${cmdLink('sauna')}`,
     '<span class="hd">time</span>',
     `  ${cmdLink('date')} · date -s &lt;when&gt; <span class="m">(19:30 · 24.12. · joulu · juhannus · +3h)</span> · date --speed 600 · ${cmdLink('date --reset')}`,
     '<span class="hd">comfort</span>',
     `  motion reduced|full|auto · ${cmdLink('settings')} · ${cmdLink('reset')} · ${cmdLink('clear')} · ${cmdLink('history')} · man &lt;cmd&gt;`,
     ...(extraHelp.length ? ['<span class="hd">this page</span>', ...extraHelp.map(h => '  ' + h)] : []),
-    `<span class="m">and: ${cmdLink('whoami')}, ${cmdLink('man vlad')}, ${cmdLink('fortune')}, sudo …, ${cmdLink('uname')}, ${cmdLink('ping')}. tab completes, ↑ recalls.</span>`
+    `<span class="m">and: ${cmdLink('whoami')}, ${cmdLink('man vlad')}, ${cmdLink('fortune')}, ${cmdLink('apod')}, sudo …, ${cmdLink('uname')}, ${cmdLink('ping')}. tab completes, ↑ recalls.</span>`
   ];
 };
 const extraHelp = [];
@@ -821,6 +845,163 @@ RV.descend = function (cx, cy) {       // the iris closing on the hedgehog's bur
   setTimeout(() => { location.href = ROOT + 'old/index.html'; }, RV.reduced() ? 150 : 1150);
 };
 
+/* ---- rm · kill · curl: mischief, met with paperwork. A few things by the lake can really be removed (hooks on the home page). ---- */
+const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const IS_HOG = /^(hog|hedgehog|siili|the-?hedgehog)$/, IS_ME = /^(vlad|me|vladislav|loktev|vlad-?loktev|author|owner|admin|webmaster)$/;
+function protectedHog(cmd) {
+  const out = [`<span class="r">${cmd}: permission denied — hedgehogs are a protected species in Finland.</span>`];
+  if (RV.opt('hog') === 'on') { const r = hookHome('hog', 'roll'); if (r && !/busy/.test(r)) out.push('<span class="m">(he heard that. he’s rolled up into a ball.)</span>'); }
+  return out;
+}
+const reported = () => ['<span class="r">the attempt has been reported to the authorities.</span>', '<span class="m">(the hedgehog saw everything.)</span>'];
+const atLake = what => [`<span class="m">${what} — </span>${cmdLink('cd ~')}<span class="m"> first.</span>`];
+// things in the scene that can't be removed, and why
+const RM_SAY = [
+  [/^(house|cabin|mökki|mokki|cottage)$/, k => `rm: cannot remove '${k}': Device or resource busy <span class="m">— the sauna is still warm.</span>`],
+  [/^(lake|järvi|jarvi)$/, k => `rm: cannot remove '${k}': a lake is a hole in the ground with ideas. <span class="m">you can’t delete a hole. (the water in it, on the other hand…)</span>`],
+  [/^(ice|jää|jaa)$/, k => RV.env(RV.now()).frozen ? `rm: cannot remove '${k}': it’s frozen in place. <span class="m">(it is water, though.)</span>` : `rm: cannot remove '${k}': No such file or directory <span class="m">— the lake isn’t frozen in ${MONTH_FULL[local(RV.now()).month - 1]}.</span>`],
+  [/^(sauna|kiuas)$/, k => `rm: cannot remove '${k}': there are about three million of them in Finland. <span class="m">you’d be at it all week.</span>`],
+  [/^(sky|taivas|heaven)$/, k => `rm: cannot remove '${k}': Device or resource busy <span class="m">(${sunPos(RV.now()).alt < -6 ? 'the stars are using it' : 'the birds are using it'}).</span>`],
+  [/^(jetty|pier|dock|laituri)$/, k => `rm: cannot remove '${k}': it’s holding up the fishing rod. <span class="m">and possibly a fish.</span>`],
+  [/^(birch|tree|koivu)$/, k => `rm: cannot remove '${k}': the apple grows on it. <span class="m">(yes, on the birch.)</span>`],
+  [/^(mailbox|postbox|postilaatikko|mail)$/, k => `rm: cannot remove '${k}': it’s how people reach me. <span class="m">try </span>${cmdLink('contact')}<span class="m"> instead.</span>`],
+  [/^(clouds?|pilvet|pilvi)$/, () => `rm: clouds aren’t files, they’re weather. <span class="m">try </span>${cmdLink('weather clear')}`],
+  [/^(aurora|revontulet|northern-?lights)$/, k => `rm: cannot remove '${k}': it’s a hundred kilometres up and made of solar wind. <span class="m">rm isn’t rated for that. (</span>${cmdLink('aurora off')}<span class="m"> is.)</span>`],
+  [/^(fish|kala|kuha|perch|ahven|pike|hauki)$/, k => `rm: the ${k === 'fish' || k === 'kala' ? 'fish are' : k + ' is'} under the water, safe and sound. <span class="m">(unless someone removes the water.)</span>`],
+  [/^(smoke|chimney|savu)$/, () => `rm: the chimney has its own switch: ${cmdLink('smoke off')}`],
+  [/^(window|ikkuna)$/, k => `rm: cannot remove '${k}': someone is looking out of it.`],
+  [/^(universe|maailmankaikkeus)$/, k => `rm: cannot remove '${k}': still expanding — <span class="m">the end keeps moving away.</span>`],
+  [/^(black-?holes?|bh|kerr|schwarzschild)$/, () => 'rm: cannot remove a black hole. information is conserved. <span class="m">(probably. it’s complicated.)</span>'],
+  [/^(boots?|saapas|saappaat)$/, k => `rm: cannot remove '${k}': No such file or directory <span class="m">(yet).</span>`],
+  [/^(lorem|ipsum|lorem-?ipsum)$/, () => 'rm: not even the lorem ipsum. <span class="m">especially not of the dolor variety.</span>'],
+  [/^(time|aika)$/, () => `rm: time can’t be removed, only killed. <span class="m">(or simulated: </span>${cmdLink('date --speed 600')}<span class="m">)</span>`]
+];
+// …and things that really go (the home page does the removing; elsewhere they're just down by the lake)
+const RM_DO = [[/^(leaves|leaf|foliage|folliage|lehdet|lehti|crown)$/, 'leaves', 'the leaves are on the birch, down by the lake'], [/^(snow|lumi|snowpiles?|drifts?|hanget)$/, 'snow', 'the snow is down by the lake'],
+  [/^(water|vesi|h2o)$/, 'water', 'the water is down by the lake'], [/^(birds?|swans?|joutsen(et)?)$/, 'birds', 'the birds fly over the lake'], [/^(apple|omena)$/, 'apple', 'the apple hangs on the birch, down by the lake'],
+  [/^(stars?|tähdet|tahdet)$/, 'stars', 'the stars you can remove are over the lake'], [/^(sun|aurinko)$/, 'sun', 'the sun you can remove shines over the lake'], [/^(moon|kuu)$/, 'moon', 'the moon you can remove hangs over the lake']];
+const DIR_SAY = { research: 'years of work. absolutely not.', about: 'it’s about me. I’d rather stay.', merits: 'they were hard-earned.', assets: 'those are the assets. the liabilities are kept elsewhere.',
+  collatztree: 'nobody has proved that removing it would ever terminate.', cygx2: 'the swan objects. loudly.', mandelburger: 'for most parameters there is no smooth way to do that.' };
+let wipingText = false;
+/* rm /bin/bash: the dock and the terminal come apart in random patches — a mask over each, punched full of holes a few at a time */
+let DIS = null;
+const MASKP = ['maskImage', 'webkitMaskImage', 'maskSize', 'webkitMaskSize', 'maskRepeat', 'webkitMaskRepeat'];
+RV.disintegrate = (ms = 2000, upTo = 0.7) => {            // in four bites; the holes snap to a character grid: the terminal is 80 columns wide
+  RV.reintegrate();
+  const ow = out && out.getBoundingClientRect().width, cw = (ow || innerWidth * 0.6) / 80, chh = cw * 2;   // one cell: a character, twice as tall as wide
+  const items = [dock, out].filter(Boolean).map(el => {
+    const r = el.getBoundingClientRect(), c = document.createElement('canvas'), w = Math.max(8, Math.ceil(r.width)), h = Math.max(8, Math.ceil(r.height));
+    c.width = w; c.height = h; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+    const cols = Math.ceil(w / cw), rows = Math.ceil(h / chh), gone = new Uint8Array(cols * rows);
+    return { el, c, g, cols, rows, gone, n: 0 };
+  });
+  let stage = 0;
+  const step = () => {
+    stage++;
+    for (const it of items) {
+      const want = Math.floor(it.cols * it.rows * upTo * [0, 0.12, 0.35, 0.65, 1][stage]);
+      for (let guard = 0; it.n < want && guard < 20000; guard++) {
+        const i = Math.floor(Math.random() * it.cols), jr = Math.floor(Math.random() * it.rows);
+        const pw = 1 + Math.floor(Math.pow(Math.random(), 2) * 7), ph = Math.random() < 0.7 ? 1 : 2;   // a run of characters, now and then two lines
+        for (let a = i; a < Math.min(it.cols, i + pw); a++) for (let b = jr; b < Math.min(it.rows, jr + ph); b++) if (!it.gone[b * it.cols + a]) { it.gone[b * it.cols + a] = 1; it.n++; }
+        const x0 = Math.round(i * cw), y0 = Math.round(jr * chh);
+        it.g.clearRect(x0, y0, Math.round((i + pw) * cw) - x0, Math.round((jr + ph) * chh) - y0);
+      }
+      const url = `url(${it.c.toDataURL()})`;
+      Object.assign(it.el.style, { maskImage: url, webkitMaskImage: url, maskSize: '100% 100%', webkitMaskSize: '100% 100%', maskRepeat: 'no-repeat', webkitMaskRepeat: 'no-repeat' });
+    }
+    if (stage < 4 && DIS) DIS.timer = setTimeout(step, ms / 4);
+  };
+  DIS = { items, timer: 0 }; step();
+};
+RV.reintegrate = () => { if (!DIS) return; clearTimeout(DIS.timer); for (const it of DIS.items) for (const p of MASKP) it.el.style[p] = ''; DIS = null; };
+function rmOut(a) {
+  const rec = a.some(x => /^-[a-zA-Z]*r/i.test(x) || x === '--recursive'), force = a.some(x => /^-[a-zA-Z]*f/.test(x) || x === '--force');
+  const targets = a.filter(x => !x.startsWith('-'));
+  if (!targets.length) return [rec || force ? 'rm: missing operand. <span class="m">you were about to do something reckless, weren’t you?</span>' : 'rm: missing operand. <span class="m">(phew.)</span>'];
+  const out = [];
+  for (const t of targets) {
+    if (/^(\/|\/\*|\*|~|~\/|~\/\*|\.|\.\/|\.\/\*|\.\.|\.\*|\/\.\*|\$HOME|\/home|\/home\/vlad)$/.test(t)) {             // the whole lake
+      if (!rec) { out.push(`rm: cannot remove '${esc(t)}': Is a directory <span class="m">(add -r if you’re feeling lucky.)</span>`); continue; }
+      const r = hookHome('wipe'); if (r) return out.concat(r);
+      if (wipingText) return out.concat(['<span class="m">rm: already in progress. it’s a big site.</span>']);
+      wipingText = true;
+      ['removing research.html…', 'removing about.html…', 'removing the lake…', 'removing /bin/bash… <span class="m">(the shell you are typing into)</span>', '<span class="r">rm: cannot remove \'hedgehog\': Operation not permitted</span>'].forEach((l, i) => setTimeout(() => { print(l, 'o'); if (i === 3) RV.disintegrate(1800, 0.45); }, 400 + i * 450));
+      setTimeout(() => { wipingText = false; RV.reintegrate(); print('…just kidding. the whole site is read-only. <span class="m">(it’s more dramatic at the lake, though.)</span>', 'o'); }, 3900);
+      return out.concat(["rm: descending into '/'…"]);
+    }
+    const k = t.toLowerCase().replace(/^(~\/|\.\/|\/)+/, '').replace(/\/+$/, '');
+    if (IS_HOG.test(k)) { out.push(...protectedHog('rm')); continue; }
+    if (IS_ME.test(k)) { out.push(...reported()); continue; }
+    if (/\.burrow/.test(k)) { out.push('<span class="r">rm: .burrow: Permission denied</span> <span class="m">(it belongs to the hedgehog.)</span>'); continue; }
+    const act = RM_DO.find(([re]) => re.test(k));
+    if (act && !onHome()) {                              // away from the lake: there may be nothing of the sort to remove this time of year
+      const L = local(RV.now()), mon = MONTH_FULL[L.month - 1];
+      if (act[1] === 'leaves' && (L.md >= 1105 || L.md < 501)) { out.push(`rm: cannot remove '${esc(k)}': the birch has none left to give in ${mon}.`); continue; }
+      if (act[1] === 'snow' && !RV.snowSeason(L) && !RV.weather().snowing) { out.push(`rm: cannot remove '${esc(k)}': No such file or directory <span class="m">(not in ${mon}.)</span>`); continue; }
+    }
+    if (act) { const r = hookHome('rm', act[1]); out.push(...(r == null ? atLake(act[2]) : [r])); continue; }
+    const say = RM_SAY.find(([re]) => re.test(k));
+    if (say) { out.push(say[1](esc(k))); continue; }
+    const p = resolve(t);
+    if ((p == null || (!isFile(p) && !isDir(p))) && PAGES[k]) { const pg = PAGES[k].split(/[.#]/)[0]; out.push(`<span class="r">rm: cannot remove '${esc(t)}': Read-only file system</span>${DIR_SAY[pg] ? ' <span class="m">— ' + DIR_SAY[pg] + '</span>' : ''}`); continue; }   // a page
+    if (p != null && isFile(p)) { out.push(`<span class="r">rm: cannot remove '${esc(t)}': Read-only file system</span>`); continue; }
+    if (p != null && isDir(p)) {
+      if (!rec) { out.push(`rm: cannot remove '${esc(t)}': Is a directory`); continue; }
+      const top = p.split('/')[0].toLowerCase();
+      out.push(`<span class="r">rm: cannot remove '${esc(t.replace(/\/+$/, ''))}/': Read-only file system</span> <span class="m">${DIR_SAY[top] ? '— ' + DIR_SAY[top] : '(the hedgehog is sitting on it.)'}</span>`); continue;
+    }
+    out.push(`rm: cannot remove '${esc(t)}': No such file or directory`);
+  }
+  return out;
+}
+function killOut(a) {
+  if (a.includes('-l') || a.includes('-L')) return ['HUP INT QUIT ILL TRAP ABRT BUS FPE KILL USR1 SEGV USR2 PIPE ALRM TERM … APPLE', '<span class="m">(the hedgehog only responds to APPLE.)</span>'];
+  const targets = a.filter(x => !/^-/.test(x)).map(x => x.toLowerCase());
+  if (!targets.length) return ['kill who? no, wait — don’t tell me. <span class="m">I don’t want to become an accomplice.</span>'];
+  return targets.flatMap(k => IS_HOG.test(k) ? protectedHog('kill') : IS_ME.test(k) ? reported()
+    : k === '1' || k === 'init' || k === 'systemd' ? ['kill: (1): that’s init — and here, init is the lake. <span class="m">the lake persists.</span>']
+    : /^(mosquito(es)?|hyttynen|hyttyset|gnats?|midges?)$/.test(k) ? ['finally, a reasonable request. <span class="m">(there are no mosquitoes here — it’s a website. one of its best features.)</span>']
+    : /^(fish|kala|kuha|perch|pike)$/.test(k) ? [`kill: leave the fish alone. <span class="m">catching is another matter: </span>${cmdLink('fish')}`]
+    : /^(vim|vi|nvim)$/.test(k) ? ['kill vim: the only reliable way out. respect.']
+    : /^(time|aika)$/.test(k) ? [`killing time? <span class="m">throw a stone: </span>${cmdLink('skip')}`]
+    : /^\d+$/.test(k) ? [`kill: (${esc(k)}): No such process <span class="m">(there’s only one process here, and it’s a lake.)</span>`]
+    : [`kill: ${esc(k)}: no such process <span class="m">(or it’s hiding under the jetty.)</span>`]);
+}
+function curlOut(a) {
+  const url = a.find(x => !x.startsWith('-')), host = url && !IS_HOG.test(url.toLowerCase()) ? url.replace(/^[a-z]+:\/\//i, '').split(/[\/?#]/)[0] : null;
+  const lead = host ? [`<span class="r">curl: (6) Could not resolve host: ${esc(host)}</span> <span class="m">— the lake is offline. curling the hedgehog instead.</span>`] : [];
+  if (RV.opt('hog') === 'off') return lead.concat([`<span class="r">curl: (7) Failed to connect to hedgehog: he’s away.</span> ${cmdLink('hog on')}`]);
+  const r = hookHome('hog', 'roll');
+  if (r == null) return lead.concat([`<span class="r">curl: (7) Failed to connect to hedgehog port 80: he’s down by the lake.</span> ${cmdLink('cd ~')}`]);
+  if (/busy/.test(r)) return lead.concat([`curl: (28) Operation timed out <span class="m">— ${esc(r)}</span>`]);
+  return lead.concat(['HTTP/1.1 200 OK', '<span class="m">content-type: hedgehog/ball — he has curled.</span>']);
+}
+function meteorOut(a) {
+  let key = null, mag = null;
+  for (const w of a) {
+    const k = w.toLowerCase().slice(0, 3), x = parseFloat(w.replace('−', '-'));
+    if (['per', 'gem', 'qua', 'spo'].includes(k)) key = k; else if (isFinite(x)) mag = x;
+    else return ['<span class="m">usage: meteor [per|gem|qua] [magnitude] — e.g. </span>' + cmdLink('meteor gem -2')];
+  }
+  if (mag != null && (mag < -12 || mag > 6.5)) return ['<span class="m">a magnitude between −12 (a superbolide) and 6.5 (barely there), please.</span>'];
+  const r = hookHome('meteor', key, mag);
+  return r == null ? atLake('meteors fall over the lake') : [r];
+}
+function meteorsOut() {
+  const ms = RV.now(), R = meteorRates(ms), sun = sunPos(ms), mo = moonPos(ms), ph = moonPhase(ms);
+  const lines = ['<span class="hd">meteors over the lake</span>'];
+  for (const s of R) {
+    const name = cmdLink('meteor ' + s.key, s.name.padEnd(12));
+    if (s.zhr >= 0.5) lines.push(`  ${name} ZHR <span class="a">${Math.round(s.zhr)}</span> <span class="m">(${s.dpk < -0.5 ? 'peak in ' + Math.round(-s.dpk) + ' d' : s.dpk > 0.5 ? 'peak ' + Math.round(s.dpk) + ' d ago' : 'peak tonight'})</span> · radiant ${s.alt > 0 ? s.alt.toFixed(0) + '° up' : 'below the horizon'} → about <span class="a">${Math.round(s.hr)}</span>/h now`);
+    else { const days = s.dpk < 0 ? -s.dpk : 365.25 - s.dpk; lines.push(`  ${name} <span class="m">peaks the night of ${s.night}, ZHR ~${s.zhrMax} — in ${Math.round(days)} days</span>`); }
+  }
+  lines.push(`  ${cmdLink('meteor', 'sporadic'.padEnd(12))} about ${SPORADIC.hr}/h, every night, from anywhere`);
+  const w = RV.weather(ms);
+  lines.push('<span class="m">' + (sun.alt > -6 ? 'right now it’s light out: they fall unseen. ' + cmdLink('date night') : w.raining || w.snowing ? 'right now it’s overcast: they fall above the clouds.' : mo.alt > 10 && ph.frac > 0.6 ? 'right now the moon is bright: only the brighter ones show.' : 'right now the sky is dark: keep looking up.') + '</span>');
+  return lines;
+}
+
 /* ================= the commands ================= */
 const PAGES = { research: 'research.html', about: 'about.html', merits: 'merits.html', papers: 'research.html#papers', talks: 'research.html#talks', plates: 'research.html#plate1', figures: 'research.html#plate1',
   interests: 'research.html#interests', path: 'research.html#path', career: 'research.html#path', contact: 'about.html#contact', contacts: 'about.html#contact', bio: 'about.html', wall: 'merits.html', certificates: 'merits.html', cabin: 'merits.html', lake: 'index.html' };
@@ -907,29 +1088,45 @@ const C = {
   exit: () => { setTimeout(() => { panel(out, false); if (narrow()) cliMode(false); input.blur(); }, 900); return ['moi moi! <span class="m">(there is no exit from the lake — only the sauna.)</span>']; },
   whoami: () => ['a visitor — a welcome one.', '<span class="m">(vlad is the astrophysicist. the hedgehog is in charge.)</span>'],
   who: () => ['vlad      lake       (probably fishing)', 'hedgehog  shore      (definitely not fishing)', 'guest     here'],
-  sudo: (a, raw) => { const r = raw.replace(/^\s*sudo\s*/, ''); if (/make me a sandwich/i.test(r)) return ['okay. one voileipä — throw it at the lake and count the leipää.']; if (/^rm\b/.test(r)) return ['<span class="r">nice try. the hedgehog is sitting on that.</span>']; return ['<span class="r">guest is not in the sudoers file. this incident will be reported to the hedgehog.</span>']; },
-  rm: () => ['<span class="r">rm: read-only lake.</span> <span class="m">nothing here gets deleted, not even the lorem ipsum.</span>'],
+  sudo: (a, raw) => { const r = raw.replace(/^\s*sudo\s*/, ''); if (/make me a sandwich/i.test(r)) return ['okay. one voileipä — throw it at the lake and count the leipää.'];
+    const w = r.split(/\s+/).filter(Boolean), c = (w[0] || '').toLowerCase();
+    if (c === 'rm' || c === 'rmdir') return rmOut(w.slice(1)); if (c === 'kill' || c === 'killall' || c === 'pkill') return killOut(w.slice(1));   // sudo changes nothing here
+    return ['<span class="r">guest is not in the sudoers file. this incident will be reported to the hedgehog.</span>']; },
+  rm: a => rmOut(a),
+  kill: a => killOut(a),
+  curl: a => curlOut(a),
+  meteor: a => meteorOut(a),
+  meteors: () => meteorsOut(),
+  apod: () => openURL('https://apod.nasa.gov/apod/astropix.html', 'today’s Astronomy Picture of the Day (NASA)'),
   vim: () => ['you are now inside vim. <span class="m">(just kidding. type :q anyway, for old times’ sake)</span>'],
   ':q': () => ['you have escaped vim. few can say that.'],
+  ':q!': () => ['fled without saving. respect.'],
+  ':wq': () => ['saved and quit. <span class="m">(saved what? nothing was open. vim is like that.)</span>'],
+  ':wq!': () => ['saved by force and quit. bold.'],
+  ':x': () => ['like :wq, but for people who know things.'],
+  zz: () => ['ZZ — the veteran’s exit. the hedgehog nods.'],
+  ':qa!': () => ['every buffer abandoned. vim weeps quietly.'],
+  ':w': () => ['written. <span class="m">you’re still in vim, though.</span>'],
+  esc: () => ['normal mode. <span class="m">(you were never in vim to begin with.)</span>'],
   moi: () => ['moi! <span class="m">(hello in Finnish. “moi moi” is goodbye. yes, really.)</span>'],
   fortune: () => { const f = SITE.fortunes, p = SITE.psst; if (Math.random() < 0.45) { const x = f[Math.floor(Math.random() * f.length)]; return (x[0] ? [`<b lang="fi">${esc(x[0])}</b>`] : []).concat([esc(x[1])]); } return [SITE.md(p[Math.floor(Math.random() * p.length)].text)]; },
   uptime: () => ['up since 2013 (astronomy), load average: polarized, turbulent, rotating.'],
   ping: () => ['pong · 0.04 ms · from a lake at 60.45° N (it’s all in your browser)'],
   uname: () => ['Lakeside 6.0-birch #1 SMP PREEMPT hedgehog-powered aarch64 GNU/Mökki'],
   lorem: () => ['ipsum — especially of the dolor variety, but sit amet.'],
-  climb: () => ['6b, confidently. anything above: “projecting”.'],
   piano: () => ['♪ … (progressively losing this skill) …'],
   sisu: () => ['sisu: running… (it doesn’t stop; that’s the point)'],
   apple: () => [onHome() ? '<span class="m">the apple grows on the birch (yes, on the birch). knock it down: it rolls off the roof, bounces off the mailbox and lands on the same spot every time. hedgehogs, as everyone knows, carry apples home on their backs — when one lands on them.</span>' : '<span class="m">the apple is on the birch, by the lake.</span>'],
   // the underside: undocumented. a hole in the ice, and down you go.
   avanto: () => { dive(); return []; }
 };
-const ALIAS = { photos: 'gallery', ll: 'ls', dir: 'ls', less: 'cat', more: 'cat', emacs: 'vim', nano: 'vim', vi: 'vim', hei: 'moi', hello: 'moi', hi: 'moi', terve: 'moi', guitar: 'piano', polarizer: 'analyzer', filter: 'analyzer', hedgehog: 'hog', logout: 'exit', quit: 'exit', now: 'time', cls: 'clear', xdg: 'open' };
-const HIDDEN = new Set(['avanto', ':q', 'who', 'lorem', 'climb', 'piano', 'sisu', 'apple', 'uptime', 'revontulet', 'forecast', 'effects', 'time', 'almanac', 'interests', 'career', 'contacts', 'bio', 'wall', 'certificates', 'cabin', 'lake', 'figures']);
+const ALIAS = { photos: 'gallery', ll: 'ls', dir: 'ls', less: 'cat', more: 'cat', emacs: 'vim', nano: 'vim', vi: 'vim', hei: 'moi', hello: 'moi', hi: 'moi', terve: 'moi', guitar: 'piano', polarizer: 'analyzer', filter: 'analyzer', hedgehog: 'hog', logout: 'exit', quit: 'exit', now: 'time', cls: 'clear', xdg: 'open',
+  rmdir: 'rm', unlink: 'rm', killall: 'kill', pkill: 'kill', 'tähdenlento': 'meteor', shootingstar: 'meteor', wget: 'curl' };
+const HIDDEN = new Set(['avanto', ':q', ':q!', ':wq', ':wq!', ':x', 'zz', ':qa!', ':w', 'esc', 'curl', 'who', 'lorem', 'piano', 'sisu', 'apple', 'uptime', 'revontulet', 'forecast', 'effects', 'time', 'almanac', 'interests', 'career', 'contacts', 'bio', 'wall', 'certificates', 'cabin', 'lake', 'figures']);
 for (const k of Object.keys(PAGES)) if (!C[k]) C[k] = () => openOut(k);
 for (const k of Object.keys(EXT)) if (!C[k]) C[k] = () => openURL(EXT[k][0], EXT[k][1]);
 for (const e of SITE.explorers) if (!C[e.key]) C[e.key] = () => go(e.href, e.title);
-C.analyzer = () => ['the polarizing filter lives on the research page, over the plates. ' + cmdLink('cd research')];
+C.analyzer = () => ['the polarizing filter goes over the plates on the research page, and over the lake at home. ' + cmdLink('cd research') + ' · ' + cmdLink('cd ~')];
 C.plate = () => ['the plates are on the research page. ' + cmdLink('cd research')];
 /* pages add their own commands: RV.register('name', fn(args, raw) → lines, { help: 'shown under “this page”', hidden }) */
 RV.register = (name, fn, o = {}) => { C[name] = fn; if (o.hidden) HIDDEN.add(name); else HIDDEN.delete(name); if (o.help) extraHelp.push(o.help); };
@@ -964,7 +1161,8 @@ async function run(line, fromClick, quiet) {
 RV.run = run;
 function commonPrefix(arr) { if (!arr.length) return ''; let p = arr[0]; for (const s of arr) while (!s.toLowerCase().startsWith(p.toLowerCase())) p = p.slice(0, -1); return p; }
 const SUB = { hog: ['on', 'off', 'come', 'sleep', 'wake', 'roll', 'speed', 'status'], date: ['-s', '--speed', '--reset', 'dawn', 'sunrise', 'morning', 'noon', 'afternoon', 'evening', 'sunset', 'dusk', 'night', 'midnight'], weather: ['clear', 'auto'], rain: ['on', 'off', 'auto'], snow: ['on', 'off', 'auto'], aurora: ['on', 'off', 'auto'],
-  smoke: ['on', 'off', 'auto'], window: ['clear', 'steam', 'frost', 'auto'], motion: ['reduced', 'full', 'auto'], man: ['vlad', 'hedgehog', 'sauna', 'date', 'luck', 'ls', 'cd', 'weather'], analyzer: ['on', 'off', 'turn', '0', '45', '90', '135'], plate: ['1', '2', '3'], luck: ['reset'] };
+  smoke: ['on', 'off', 'auto'], window: ['clear', 'steam', 'frost', 'auto'], motion: ['reduced', 'full', 'auto'], man: ['vlad', 'hedgehog', 'sauna', 'date', 'luck', 'ls', 'cd', 'weather'], analyzer: ['on', 'off', 'turn', 'stop', '0', '45', '90', '135'], plate: ['1', '2', '3'], luck: ['reset'], meteor: ['per', 'gem', 'qua'] };
+SUB.filter = SUB.polarizer = SUB.analyzer;
 function complete() {
   const v = input.value, parts = v.split(/\s+/), last = parts[parts.length - 1];
   let cands = [];
