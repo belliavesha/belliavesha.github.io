@@ -156,7 +156,7 @@ html.rv-reduced .chant{animation:none;opacity:.9}
 .hog{position:absolute;left:0;top:0;z-index:4;width:var(--hs,64px);height:var(--hs,64px);cursor:grab;touch-action:none;will-change:transform;-webkit-tap-highlight-color:transparent}
 .hog:active{cursor:grabbing}
 .hog[hidden]{display:none}
-.hog .spr{position:absolute;inset:0;background:url(assets/images/hog_sprites.png) no-repeat;background-size:800% 800%;background-position:var(--bp,0 0);transform-origin:50% 50%}
+.hog .spr{position:absolute;inset:0;background:url(assets/images/hog_sprites.png) no-repeat;background-size:800% 800%;background-position:var(--bp,0 0);transform-origin:50% 87.5%}
 /* after dusk he fades into his lightness-inverted self (negative + 180° hue): still brown and orange, but black eyes turn white.
    --inv (0 by day → 1 at night) is set from the sun's altitude in tick(); see SCENE.twilight */
 .hog .spr::before{content:"";position:absolute;inset:0;background:url(assets/images/hog_sprites.png) no-repeat;background-size:800% 800%;background-position:var(--bp,0 0);
@@ -1500,6 +1500,8 @@ function planPath(a, b) {
   return [[mx, my], b];
 }
 const lairFront = () => [BUR - HB * 0.12, Math.min(hogYMax(BUR), CAB.base + HB * 0.92)];   // where he stops to glance back, just in front of the hole
+// inside the hole: his feet on its floor, shrunk until his back view (0.56 × 0.63 of a cell, measured off the sheet) fits under the arch
+const lairIn = () => { const L = CAB.lair; return { y: CAB.base + 1, sc: clamp(Math.min(0.83 * L.ry / (0.562 * HB), 1.25 * L.rx / (0.633 * HB)), 0.3, 0.7) }; };
 function homePath() {                                    // to the lair under the house: along the ground in front of the mailbox and the house
   const lair = lairFront();
   if (hog.x < MB.left - HB * 0.2 && hog.y < lair[1] - 3) { const w = [MB.left - HB * 0.6, lair[1]]; return planPath([hog.x, hog.y], w).concat([lair]); }
@@ -1679,13 +1681,14 @@ function updateHog(dt) {
     case 'jump': stepJump(); break;
     case 'fall': stepSeq(dt); hog.vy += 1400 * dt; hog.y = Math.min(hog.floor, hog.y + hog.vy * dt); if (hog.y >= hog.floor) { hog.vy = 0; curl(hog.carrying ? 0.6 : 1.3); } break;
     case 'enter': {                                      // into the lair: his back to us, (5,0), shrinking into the dark
-      const p = clamp(hog.ft / 1.3, 0, 1), [fx, fy] = lairFront(), y1 = CAB.base - HB * 0.12;
-      hog.fr = F.back; hog.x = fx + (BUR - fx) * p; hog.y = fy + (y1 - fy) * p; hog.sc = 1 - 0.35 * p; hog.op = 1 - smooth(0.45, 1, p);
+      const p = clamp(hog.ft / 1.3, 0, 1), [fx, fy] = lairFront(), to = lairIn(), e = smooth(0, 1, p);
+      hog.fr = F.back; hog.x = fx + (BUR - fx) * e; hog.y = fy + (to.y - fy) * e; hog.sc = 1 - (1 - to.sc) * e; hog.op = 1 - smooth(0.6, 1, p);   // fades only once he's in the dark
       if (p >= 1) { setHog('inside', 30); hog.op = 0; openBurrow(true); }
       break;
     }
     case 'inside': if ((hog.tm -= dt) <= 0) { openBurrow(false); hog.carrying = false; hogEl.classList.remove('carrying'); hog.x = BUR; hog.y = lairFront()[1]; hog.dir = -1; setHog('exit', 0.8); } break;
-    case 'exit': { const p = clamp(hog.ft / 0.8, 0, 1); hog.op = p; hog.sc = 0.65 + 0.35 * p; hog.x = BUR - HB * 0.5 * p; hog.fr = RUNF[Math.floor(hog.ft * 8) % RUNFN]; if (p >= 1) { hog.op = 1; hog.sc = 1; hog.fr = F.stand; think(); setTimeout(respawnApple, 1500); } break; }
+    // out of the hole the way he went in: from its floor, small, to the ground in front
+    case 'exit': { const p = clamp(hog.ft / 0.8, 0, 1), from = lairIn(), e = smooth(0, 1, p), fy = lairFront()[1]; hog.op = smooth(0, 0.4, p); hog.sc = from.sc + (1 - from.sc) * e; hog.x = BUR - HB * 0.5 * e; hog.y = from.y + (fy - from.y) * e; hog.fr = RUNF[Math.floor(hog.ft * 8) % RUNFN]; if (p >= 1) { hog.op = 1; hog.sc = 1; hog.fr = F.stand; think(); setTimeout(respawnApple, 1500); } break; }
   }
   renderHog();
 }

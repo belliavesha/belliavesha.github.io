@@ -301,10 +301,11 @@ function initDock() {
   });
   $('#rvWhere').textContent = location.pathname.split('/').pop() || 'index.html';
   if (window.visualViewport) {      // keep the dock above an on-screen keyboard
-    const vv = window.visualViewport, kb = () => { const k = Math.max(0, innerHeight - vv.height - vv.offsetTop); document.documentElement.style.setProperty('--rv-kb', (k > 60 ? k : 0) + 'px'); };
+    const vv = window.visualViewport, kb = () => { const k = Math.max(0, innerHeight - vv.height - vv.offsetTop), st = document.documentElement.style; st.setProperty('--rv-kb', (k > 60 ? k : 0) + 'px'); st.setProperty('--rv-vvh', vv.height + 'px'); };   // the keyboard's height, and the height still visible above it
+    kb();
     vv.addEventListener('resize', kb); vv.addEventListener('scroll', kb);
   }
-  addEventListener('resize', () => { panel(pop, false); placePop(); });
+  addEventListener('resize', () => { if (pop.classList.contains('on')) panel(pop, false); placePop(); });   // only the pop-over: a keyboard that resizes the window must not close the terminal
   restoreLog(); prompt(); status(); setInterval(status, 20000);
   RV.onChange(p => { if (p.clock || p.all) status(); });
 }

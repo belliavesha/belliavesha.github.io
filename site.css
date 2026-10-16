@@ -11,6 +11,8 @@
   --rv-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --rv-h: 46px;
   --rv-kb: 0px;               /* on-screen keyboard offset (set from visualViewport) */
+  --rv-vvh: 100vh;            /* the height still visible (above the keyboard), set from visualViewport */
+  --rv-glide: .26s cubic-bezier(.2,.8,.3,1);   /* the dock and the terminal ride up with the keyboard */
   --rv-gap: 12px;
   --rv-reserve: calc(var(--rv-h) + var(--rv-gap) + 26px + env(safe-area-inset-bottom, 0px));
 }
@@ -22,6 +24,7 @@
 .rv-dock{
   position:fixed;z-index:95;left:50%;
   bottom:calc(var(--rv-gap) + env(safe-area-inset-bottom, 0px) + var(--rv-kb));
+  transition:bottom var(--rv-glide);
   transform:translateX(-50%);
   display:flex;align-items:center;gap:2px;height:var(--rv-h);padding:5px;
   max-width:calc(100vw - 20px);
@@ -81,9 +84,9 @@
   border:1px solid rgba(255,255,255,.08);border-radius:18px;
   box-shadow:0 22px 50px -24px rgba(0,0,0,.7);
   font:400 13px/1.6 var(--rv-mono);
-  opacity:0;visibility:hidden;transition:opacity .2s ease,transform .2s ease,visibility 0s .2s;
+  opacity:0;visibility:hidden;transition:opacity .2s ease,transform .2s ease,visibility 0s .2s,bottom var(--rv-glide);
 }
-.rv-panel.on{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .2s ease,transform .2s ease}
+.rv-panel.on{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .2s ease,transform .2s ease,bottom var(--rv-glide)}
 /* the terminal: liquid glass — the scene shows through, only lightly blurred; a lit top edge and a thin bright rim */
 .rv-out{
   background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.03) 38%,rgba(255,255,255,0) 70%),rgba(21,23,25,.056);
@@ -176,7 +179,11 @@
   .rv-panel.on{transform:none}
   .rv-chips{display:flex}
   .rv-log{max-height:min(42vh,360px)}
+  /* never taller than the space between the top of the screen and the dock (the keyboard included): the header stays in view, the log scrolls */
+  .rv-out{display:flex;flex-direction:column;max-height:calc(var(--rv-vvh) - var(--rv-h) - 2 * var(--rv-gap) - 10px - env(safe-area-inset-bottom, 0px) - 8px)}
+  .rv-out .rv-out-head,.rv-out .rv-chips{flex:none}
+  .rv-out .rv-log{flex:1 1 auto;min-height:0}
 }
-@media (prefers-reduced-motion:reduce){ .rv-panel,.rv-toast,.rv-cli input{transition:none} .rv-dive{transition:none} }
+@media (prefers-reduced-motion:reduce){ .rv-panel,.rv-toast,.rv-cli input,.rv-dock{transition:none} .rv-dive{transition:none} }
 html.rv-reduced .rv-panel,html.rv-reduced .rv-toast{transition:none}
 @media print{.rv-dock,.rv-panel,.rv-toast{display:none!important}}
