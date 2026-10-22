@@ -107,14 +107,6 @@ html.rv-reduced .tab.torn{animation:none;opacity:.3}
 .act:hover{background:#EDCFB5;color:var(--ink)}
 .act:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
 .act:focus-visible{outline:2px solid var(--ink);outline-offset:2.7px}
-dialog.err{border:0;padding:10.8px;width:min(504px,calc(100vw - 28.8px));background:#f9dee4;border-radius:5.4px;box-shadow:0 27px 54px -18px rgba(20,20,40,.55),0 0 0 1px rgba(43,49,66,.2);color:#1e2439}
-dialog.err::backdrop{background:rgba(30,32,48,.35)}
-.err-img{position:relative;aspect-ratio:16/9;background:#3b4150 url(assets/images/wha.png) center/cover no-repeat;border-radius:2.7px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:16.2px 18px}
-.err-msg{margin:0;max-width:17em;font-family:var(--serif);font-size:clamp(18px,3.2vw,24.3px);line-height:1.22;font-weight:600;color:#d5e083;text-shadow:0 2px 5.4px rgba(0,0,0,.55),0 0 2px rgba(0,0,0,.4)}
-.err-t{margin:0 0 5.4px;font-family:var(--sc);font-size:11.7px;letter-spacing:.2em;color:#d5e083;opacity:.85;text-shadow:0 1px 2.7px rgba(0,0,0,.6)}
-.err-b{align-self:flex-end;font-family:var(--sc);font-weight:700;letter-spacing:.1em;font-size:13.5px;background:#1e2439;color:#95d5b7;border:0;border-radius:2.7px;padding:6.3px 14.4px 7.2px;cursor:pointer;box-shadow:0 5.4px 12.6px -5.4px rgba(0,0,0,.6)}
-.err-b:hover{background:#2a3150}
-.err-b:focus-visible{outline:2px solid #95d5b7;outline-offset:2px}
 </style>
 </head>
 <body data-page="about">
@@ -181,15 +173,11 @@ dialog.err::backdrop{background:rgba(30,32,48,.35)}
   </footer>
 </main>
 
-<dialog class="err" id="err" aria-labelledby="errMsg">
-  <div class="err-img">
-    <div><p class="err-t">Error</p><p class="err-msg" id="errMsg">An error occurred. Maybe you did something wrong? Maybe it is God. Who knows? Not you.</p></div>
-    <button type="button" class="err-b" id="errOk" autofocus>Try again</button>
-  </div>
-</dialog>
+
 
 <script src="data.js"></script>
 <script src="site.js"></script>
+<script src="fifty.js"></script>
 <script>
 /* revontuli · about. Prose, route and tabs from data.js; the frontispiece engraved with the research page's burin. */
 (() => {
@@ -220,12 +208,6 @@ $$('.tab').forEach(a => a.addEventListener('click', e => {
   setTimeout(() => { a.classList.remove('torn'); a.classList.add('regrow'); setTimeout(() => a.classList.remove('regrow'), 700); }, 4200);
 }));
 RV.register('tear', () => { const a = $$('.tab').find(x => !x.classList.contains('torn')); if (!a) return ['no tabs left. give them a few seconds to grow back.']; a.scrollIntoView({ block: 'center' }); a.click(); return ['rrrip.']; }, { hidden: true });
-
-/* ---------- the legacy $50 ---------- */
-const dlg = $('#err');
-$('#get50').addEventListener('click', () => { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); });
-$('#errOk').addEventListener('click', () => { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); });
-dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 
 /* ---------- the frontispiece: the photo, re-engraved in ink-blue on a peach plate ----------
    The still is frame 01 of the nod sequence; the nod stays off until the photo is replaced. */

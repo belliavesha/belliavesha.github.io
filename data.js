@@ -160,7 +160,7 @@ window.SITE = {
   /* ---------- About: plain prose, one string per paragraph ---------- */
   about: [
     'Ahoj, I`m Vlad! ',
-    'Since October 2026 I am a postdoctoral researcher at the [Astronomical Institute of the Czech Academy of Sciences](https://astro.cas.cz/), working on speactral and timing modelling of X-ray binaries and their connection to relativistic plasma physics as a member of [WG4 of EXPAND COST Action](https://expand-plasma.eu/wg4.html). More personal history [below](page:about.html#route).',
+    'Since October 2026 I am a postdoctoral researcher at the [Astronomical Institute of the Czech Academy of Sciences](https://astro.cas.cz/), working on spectral and timing modelling of X-ray binaries and their connection to relativistic plasma physics as a member of [WG4 of EXPAND COST Action](https://expand-plasma.eu/wg4.html). More personal history [below](page:about.html#route).',
     'Broadly, I work on black hole and neutron star X-ray binaries, and I try to bridge what we observe with what our models predict: radiative transfer and Comptonization in hot atmospheres, numerical simulations of magnetized plasma turbulence, and ray-tracing of polarized X-rays and more. More about my scientific projects, papers, slides and career is on the [research page](page:research.html).',
     'In my free time I like to relax in a sauna by a lake about once a week. Since recently I started going bouldering (currently I climb 6a confidently). Besides astrophysics I have some recreational interests in maths, as you may observe in some not so secret corner of this site. I also enjoy playing the piano, the guitar/ukulele, and other random instruments although I am progressively losing those skills.'
   ],

@@ -1224,6 +1224,7 @@ function onBounce(s, i) {           // i = index of the touch that just happened
   if (chantEl) { chantEl.remove(); chantEl = null; }
   say('skip', s.pts[last], big, '', 4200);
   window.__rv.lastSkip = { skips: n, text: big, best: bestGet() };
+  RV.store.set('skipLast', n);                           // (the $50 claim form on the About page checks this)
 }
 /* a stone sliding on the ice leaves one continuous scratch with feather-like barbs either side — big where it lands fast,
    finer as it slows and recedes — drawn as it goes, then slowly fading (SCENE.iceTrail) */

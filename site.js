@@ -378,7 +378,7 @@ CygX2/snail_math.mjs	2222
 CygX2/style.css	9104
 CygX2/swan_math.mjs	2653
 README.md	45
-about.html	24728
+about.html	22846
 assets/images/alive_2/frame01.jpg	22279
 assets/images/alive_2/frame02.jpg	30861
 assets/images/alive_2/frame03.jpg	45745
@@ -482,8 +482,9 @@ collatztree/tree_math.js	10324
 collatztree/tree_ui.js	46847
 data.js	22533
 favicon.ico	829
+fifty.js	82776
 google6c75a693b5d196cc.html	53
-index.html	199356
+index.html	199467
 mandelburger/.mandelburger-publish	187
 mandelburger/css/app.css	14540
 mandelburger/index.html	17235
@@ -540,7 +541,7 @@ old/favicon.ico	6164
 old/index.html	4520
 research.html	82781
 site.css	13411
-site.js	106323`;
+site.js	106338`;
 // the underside stays under the ice: never listed, never found, never opened from here
 const SECRET = [/^old\//, /^second\.html$/, /^Okiya\.html$/, /^Geisha(_old)?\.html$/, /okiya/i, /^assets\/html\/(Recaman|Heart|Mandelbrot|Dice)\.html$/, /^assets\/js\/(recaman|heart|mandelbrot|dice|secondary)\.js$/, /^assets\/images\/recaman\.png$/];
 const FS = { files: new Map(), dirs: new Map([['', { d: new Set(), f: new Set() }]]), hidden: 0 };
