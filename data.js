@@ -33,27 +33,29 @@ window.SITE = {
 
   /* ---------- "psst — have a look": the note on the birch (and `fortune`) ---------- */
   psst: [
-    { text: 'An X-ray pulsar whose polarization angle refuses to behave: [the 4U 1538-52 paper](pdf:2025_AA_Loktev_4U1538.pdf).' },
-    { text: 'Ray-tracing a Kerr black hole’s disc, minus the ray-tracing bill: [<span class="sc">artpol</span>](pdf:2023_Loktev_ARTPOL.pdf).' },
-    { text: 'Polarized images of accretion flows with pen, paper and a few clever approximations: [the Schwarzschild paper](pdf:2022_AA_Loktev_Pol_Schwarzschild.pdf).' },
+    { text: '4U 1538-52: An X-ray pulsar whose polarization angle refuses to behave. See [the paper](pdf:2025_AA_Loktev_4U1538.pdf) or the [talk at EAS 2025](pdf:EAS_4U1538.pdf)' },
+    { text: 'Ray-tracing a Kerr black hole’s disc, minus the ray-tracing part: [<span class="sc">artpol</span> paper](pdf:2023_Loktev_ARTPOL.pdf) and [the Mondragone slides about it](pdf:Mondragone2022Loktev.pdf)'},
+    { text: 'Simple formulae to build an image of an accretion flow in the Schwarzschild metric: see the appendix of [my paper](pdf:2022_AA_Loktev_Pol_Schwarzschild.pdf).' },
     { text: 'Spin a neutron star fast enough and it squashes. [Here’s what that does to its polarized light](pdf:2020_AA_Loktev_oblate_pol.pdf).' },
-    { text: 'A beats B, B beats C, C beats A. [A note on the best intransitive dice](pdf:Random_variable_regular_tournaments.pdf).' },
-    { text: '[Slides from Cork (EAS 2025)](pdf:EAS_4U1538.pdf): new IXPE results on 4U 1538-52.' },
-    { text: '[More slides from Cork](pdf:EAS_WMNS.pdf), on modelling the polarization of accreting millisecond pulsars.' },
-    { text: 'A whole PhD in one short talk, for exact-science students: [the EXACTUS 2024 slides](pdf:Loktev_EXACTUS.pdf).' },
+    { text: 'Spin a pulsar to see how [the magnetosphere guides the polarization of light passing through ](page:research.html#plate3) or see the talk on [how it absolutely doesn`t in observations](pdf:EAS_4U1538.pdf)' },
+    { text: '[Slides from Cork (EAS 2025)](pdf:EAS_WMNS.pdf), on modelling the polarization of accreting millisecond pulsars.' },
+    { text: '[the EXACTUS 2024 slides](pdf:Loktev_EXACTUS.pdf): A whole PhD in one short talk, for exact-science students.' },
     { text: '[The award-winning poster](pdf:HEPROVIII_poster.pdf): plasma turbulence that refuses to cool down.' },
     { text: '[Slides from Český Krumlov](pdf:LoktevBohemianWorkshop.pdf): fast polarimetry of discs around Kerr black holes.' },
     { text: 'Lunchtime at the Flatiron: [what polarized X-rays say about Cyg X-1](https://youtu.be/q4jBUg_biYk) (recording).' },
     { text: 'An improvised COSPAR talk on millisecond pulsars — [recorded, stand-in and all](https://youtu.be/Af5i6FJOBj0).' },
-    { text: 'COSPAR 2022, the fast track: polarimetric images of black hole discs. [See all the talks](page:research.html#talks).' },
-    { text: '[The Mondragone slides](pdf:Mondragone2022Loktev.pdf): imaging Kerr black holes with a Schwarzschild trick.' },
+    { text: '[See all the talks](page:research.html#talks).' },
+    // { text: '[The Mondragone slides](pdf:Mondragone2022Loktev.pdf): imaging Kerr black holes with a Schwarzschild trick.' },
     { text: 'Everything on two pages, more or less: [my CV](pdf:CV_Loktev.pdf).' },
     { text: 'Trace the Z-track of Cyg X-2 with a draggable swan — or a snail. [The state explorer](CygX2/) has cygnets too.' },
     { text: 'Grow your own Collatz tree, with rules of your choosing: [the tree visualizer](collatztree/).' },
     { text: 'For which parameters does f(θ + T) = F(f(θ), θ) have a smooth solution? A Mandelbrot set for functional equations: [Mandelburger](mandelburger/).' },
-    { text: 'Every paper, in order: [my publications on ADS](' + ADS + ').' },
-    { text: 'Code, experiments and odd little tools: [my GitHub](https://github.com/belliavesha).' },
-    { text: 'Turn a black hole’s spin up to 0.8 and watch its disc change: [Plate II](page:research.html#plate2).' }
+    { text: 'See [my publications on ADS](' + ADS + ').' },
+    { text: 'Code, experiments and odd little tools on [my GitHub](https://github.com/belliavesha).' },
+    { text: 'A beats B, B beats C, C beats A. [A note on the best intransitive dice](pdf:Random_variable_regular_tournaments.pdf).' },
+    { text: 'Turn a black hole’s spin up to 0.8 and watch its disc change: [Plate II](page:research.html#plate2).' },
+    { text: 'Does $50 giveaway sound too good to be true? Perchance, because it is. [Just fill in the form on my about-me page](page:about.html#contact).' },
+    
   ],
 
   /* ---------- Research, chapter I ---------- */
@@ -213,7 +215,16 @@ window.SITE = {
     ['', 'Hedgehogs, as everyone knows, carry apples home on their backs.'],
     ['', 'Apples, as everyone knows, grow on birch trees any time of the year.'],
     ['Без труда не выловишь и рыбку из пруда', 'Nothing comes without effort'],
-    ['И рыбку съесть, и в воду не лезть', 'He who would catch fish must not mind getting wet']
+    ['И рыбку съесть, и в воду не лезть', 'He who would catch fish must not mind getting wet'],
+    ['All black holes are alike', 'Each neutron star is neutron in its own way'],
+    ['', 'Zero is a positive emotion'],
+    ['', 'Finland does not actually exist and is merely a fishing coordinate reserved by the UN'],
+    ['', 'All non-black things are not ravens'],
+    ['Cll models are wrong', 'But some of them are useful'],
+    ['', 'Socrates was mortal before God was dead'],
+    ['Correlation doesn`t imply causation - People imply causations', 'Therefore, people are not correlation'],
+    ['', 'the moon landing was staged on Mars'],
+    ['', 'this statement is false'],
   ]
 };
 

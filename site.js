@@ -482,7 +482,7 @@ collatztree/tree_math.js	10324
 collatztree/tree_ui.js	46847
 data.js	22533
 favicon.ico	829
-fifty.js	82776
+fifty.js	90563
 google6c75a693b5d196cc.html	53
 index.html	199467
 mandelburger/.mandelburger-publish	187
