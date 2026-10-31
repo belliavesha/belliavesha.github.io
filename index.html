@@ -36,6 +36,7 @@ document.documentElement.style.setProperty('--z', heroZoom());
   --bark:#F1EDE4; --bark-mark:#2A2926; --limb:#2A2926; --twig:#5B4636; --hole:#2A241E; --grass:#7A8752;
   --falu:#9B3A33; --falu-2:#7C2C27; --trim:#F2EEE6; --roof:#2B2C2E; --stone:#8C8A84; --post:#6B5A48;
   --mb-red:#AE3A31; --mb-red-2:#8E2D26; --mb-white:#F3F1EC; --mb-roof:#2C2F34;
+  --pencil:#2A221D; --pencil-hi:#FFFDF6;                /* lyijykynä: the graphite of the outlines and hatching, and the light pencil */
   --sky-ink:#16222A; --scrim-c:#EEF2F4; --scrim-a:0;
   --serif:"Fraunces","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   color-scheme:light;
@@ -46,6 +47,7 @@ html[data-light="night"]{
   --bark:#C9C3B6; --bark-mark:#1A1A1A; --limb:#5E5A55; --twig:#57514B; --hole:#030507; --grass:#4E5A3E;
   --falu:#4E2421; --falu-2:#3A1A18; --trim:#A9A396; --roof:#0B0E11; --stone:#3F4448; --post:#3A322A;
   --mb-red:#4F2320; --mb-red-2:#3C1917; --mb-white:#9C988F; --mb-roof:#0D1013;
+  --pencil:#040608; --pencil-hi:#C8D2DC;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -75,6 +77,13 @@ button{font:inherit;color:inherit}
 .hero.ready .fg .ground{transition:fill 18s linear}
 @keyframes footfade{from{opacity:.55}to{opacity:0}}
 #wx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+/* lyijykynä: the pencil layers. .st-lake (in the foreground SVG): hatching on the lake and the horizon line — static vector, so it costs
+   nothing per frame (a static canvas would be re-uploaded every frame) · .paper: the sketchbook's grain over the whole picture ·
+   .win-sk: pencil lines round Vlad's window */
+.fg .st-lake{opacity:calc(var(--st1) * var(--lake-k,1))}
+.paper{position:absolute;inset:0;z-index:4;pointer-events:none;background-repeat:repeat;opacity:calc(var(--st1) * var(--paper-k,.5))}
+.paper[hidden]{display:none}
+.win-sk{position:absolute;z-index:3;left:0;top:0;pointer-events:none;overflow:visible;opacity:var(--st2)}
 
 .hero-text{position:absolute;z-index:3;left:max(24px,5.5cqw);top:clamp(64px,12cqh,128px);width:min(600px,calc(100% - 48px));color:var(--sky-ink)}
 .hero.ready .hero-text{transition:color 1.5s ease}
@@ -209,7 +218,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
 .win .glass::after{content:'';position:absolute;inset:0;background:rgba(236,240,244,var(--glare,.085));pointer-events:none;transition:background .35s ease}
 /* rm -rf /: the scene goes piece by piece — all but the hedgehog */
 .hero.wiping{background:#040506}
-.hero.wiping #sky,.hero.wiping #wx,.hero.wiping .fg g,.hero.wiping .win,.hero.wiping .win-glow,.hero.wiping .mailbox,.hero.wiping .door-h,.hero.wiping .rod,.hero.wiping .apple,.hero.wiping .hero-text{transition:opacity .5s ease}
+.hero.wiping #sky,.hero.wiping .paper,.hero.wiping .win-sk,.hero.wiping #wx,.hero.wiping .fg g,.hero.wiping .win,.hero.wiping .win-glow,.hero.wiping .mailbox,.hero.wiping .door-h,.hero.wiping .rod,.hero.wiping .apple,.hero.wiping .hero-text{transition:opacity .5s ease}
 .hero .rm-gone{opacity:0!important;pointer-events:none}
 </style>
 </head>
@@ -236,6 +245,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
       alt="" width="448" height="608" decoding="async"><div class="tint"></div><div class="refl"></div><canvas id="fog" aria-hidden="true"></canvas></div>
     <span class="sill" aria-hidden="true"></span>
   </div>
+  <svg class="win-sk" id="winSk" aria-hidden="true"></svg>
   <a class="mailbox" id="mailbox" href="about.html#contact" aria-label="The mailbox — how to reach me (contact)">
     <!-- <span class="tip" aria-hidden="true">@ contact</span> -->
     <svg viewBox="0 0 60 100" aria-hidden="true">
@@ -279,6 +289,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
     <div class="note-b"><button type="button" id="noteNext">another?</button><button type="button" id="noteClose" aria-label="Let the wind take this note">let it go ×</button></div>
   </aside>
   <button class="pin-only" id="pinOnly" type="button" hidden aria-label="Pin a new note to the birch"></button>
+  <div class="paper" id="paper" aria-hidden="true"></div>
   <div class="say" id="skipSay" aria-live="polite"></div>
   <div class="say" id="fishSay" aria-live="polite"></div>
 </main>
@@ -286,6 +297,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <g id="appleArt">
     <path d="M17 9.5c-3-2.2-8.5-1.8-10 3.2-1.6 5.3 2 13.8 6.6 14.8 1.4.3 2.3-.4 3.4-.4s2 .7 3.4.4c4.6-1 8.2-9.5 6.6-14.8-1.5-5-7-5.4-10-3.2z" fill="#A8323F"/>
+    <path d="M17.3 9.2c-3.2-2-8.3-1.4-9.8 3.4-1.5 5.1 1.8 13.6 6.3 14.7 1.4.3 2.4-.3 3.5-.3s1.9.8 3.4.5c4.7-1.2 8-9.4 6.4-14.9-1.4-4.6-6.4-5.3-9.6-3.6" fill="none" stroke="#3A1416" stroke-opacity=".6" stroke-width=".9" stroke-linecap="round"/>
     <path d="M11 12.5c-1.4 1.4-1.8 3.6-1.4 5.4" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" stroke-linecap="round"/>
     <path d="M17 10c0-2.4.6-4.4 2-6" fill="none" stroke="#4A3A28" stroke-width="1.6" stroke-linecap="round"/>
     <path d="M18.6 6.4c2.3-2.4 5.7-2.3 7.2-1.2-1.4 2.6-4.6 3.4-7.2 1.2z" fill="#667345"/>
@@ -299,6 +311,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
    hedgehog, cabin, jetty, rain & rainbow); chimney-smoke puffs after pikeperch. */
 (() => {
 'use strict';
+const BOOT0 = performance.now();
 /* the psst sentence in the hero text: one of SITE.psst, picked fresh on each visit (filled before the first layout) */
 { const P = SITE.psst; document.getElementById('psstText').innerHTML = SITE.md(P[Math.floor(Math.random() * P.length)].text); }
 const $ = (s, r = document) => r.querySelector(s);
@@ -428,9 +441,358 @@ const SCENE = {
   apple: { dropX: 0.08, hang: 0.28, g: 1400, missStay: 20, regrow: 3, roofBounce: 0.3 },
   //       hangs above the roof at this ÷ front width from the left wall · this far above the roof ÷ house height · gravity px/s² · s on the grass if it misses · s to grow a new one · how much of its speed it keeps bouncing off the roof (0 = none)
   iceTrail: { life: 7, barb: 1 },   // stones on ice: s the scratch stays · feather-barb size
-  note: false                   // the "psst — have a look" note pinned to the birch
+  // lyijykynä — the pencil look (documented in DESIGN.md). Everything is drawn once per layout / theme change, never per frame.
+  sketch: {
+    on: true,                   // false: the old flat vector look (every pencil layer is skipped)
+    wobble: 1.1,                // px: how far a pencil line wanders off the straight (bigger: shakier hand)
+    overshoot: 4.5,             // px: how far strokes run past a corner (both ends, randomly 20–100 % of this)
+    passes: 2,                  // strokes per edge: 1 = one clean line, 2 = the sketchy double line
+    line: 1.7,                  // px: width of the main pencil line (the second pass is 0.6 × this)
+    ink: 0.72,                  // opacity of the outlines (the colour is --pencil in the CSS, day and night)
+    hatch: 0.3,                 // opacity of the graphite hatching in the shadows (cabin side, eaves, plinth, trunk, jetty)
+    hatchGap: 4.2,              // px between hatch strokes
+    fill: 0.55,                 // strength of the coloured-pencil stroke texture inside shapes (0 = flat fills)
+    sky: 0.55,                  // strength of the long pencil strokes layered in the sky (kaunotar: the sky only — the lake mirrors a clean sky)
+    lake: 0,                    // strength of the horizontal hatching on the water / ice (kaunotar: off — the water read too much like the sky)
+    mailbox: false,             // kaunotar: pencil outlines and hatching on the mailbox (off: it stays a clean little painted box)
+    broadleaf: 0.16,            // kaunotar: share of the near shore's trees that are broadleaf crowns (aspen, birch) in the season's colour
+    forest: 0.5,                // the far shore: outline and stroke texture of the spruce silhouettes
+    grain: 0.32                 // opacity of the paper grain over the whole picture
+  },
+  stars: { boost: 1.5 },        // kaunotar: stars and meteors are drawn this many magnitudes brighter than they are (the pencil-scratched night sky swallowed the faint ones); `meteor 4` now looks as `meteor 2.5` did
+  litter: [7, 10],              // kaunotar: how many loose birch leaves lie on the grass under the birch, by the mailbox (none on snow; the old leaf pile is gone)
+  note: false,                  // the "psst — have a look" note pinned to the birch
+  perf: {                       // kaunotar: how much the scene asks of the machine
+    res: 1.5,                   // canvas pixels per screen pixel, at most (sky, lake, weather). 2 = full retina sharpness; the soft sky and water look the same at 1.5
+    slowRes: 1,                 // … and on a machine that can't keep up (see slowFps): one canvas pixel per screen pixel
+    fps: 30,                    // the canvas (water, weather, jetty) is redrawn at most this often
+    slowFps: 20,                // … and this often on a slow machine: if, after the first seconds, frames take longer than ~45 ms, the scene steps down once (res and fps)
+    auto: true                  // false: never step down
+  }
 };
 const pk = a => Array.isArray(a) ? a[mobile ? 1 : 0] : a;
+
+/* ---------- lyijykynä: the pencil — hand-drawn lines, graphite hatching, coloured-pencil texture and paper (SCENE.sketch) ----------
+   Everything here is generated once: the textures at boot; the lines and hatching in layout() / buildFG() / renderStatic() (i.e. on a
+   resize, a theme change or the 20-s tick), from seeded dice so that a line stays put for a given window size and date. Nothing runs
+   per frame: the per-frame loop only blits the cached jetty. */
+const SK = SCENE.sketch;
+const PERF = { res: SCENE.perf.res, fps: SCENE.perf.fps, slow: false };   // kaunotar: the live settings (they step down once on a slow machine)
+if (/[?&]sketch=0\b/.test(location.search)) SK.on = false;   // ?sketch=0: the same page without the pencil (for comparing)
+const f1 = n => n.toFixed(1);
+let PR = rng(1);                                         // the pencil's own dice (never the scene's R: with the pencil off, the scene is unchanged)
+const skSeed = key => { PR = rng(hashStr('pencil' + key + W + H)); };
+// a smooth line through points (midpoint quadratics): the polyline's corners vanish, its wobble stays
+function smoothD(P) {
+  let d = `M${f1(P[0][0])} ${f1(P[0][1])}`;
+  if (P.length < 3) return d + `L${f1(P[P.length - 1][0])} ${f1(P[P.length - 1][1])}`;
+  for (let i = 1; i < P.length - 1; i++) d += `Q${f1(P[i][0])} ${f1(P[i][1])} ${f1((P[i][0] + P[i + 1][0]) / 2)} ${f1((P[i][1] + P[i + 1][1]) / 2)}`;
+  const l = P[P.length - 1]; return d + `L${f1(l[0])} ${f1(l[1])}`;
+}
+// one pencil stroke from a to b: it runs a little past both ends and strays off the straight — a slow bow, a wander and a slight tremor
+function strokePts(ax, ay, bx, by, amp = SK.wobble, os = SK.overshoot, seg = 16) {
+  const R = PR, dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+  const lk = Math.min(1, L / 25), o0 = os * (0.2 + 0.8 * R()) * lk, o1 = os * (0.2 + 0.8 * R()) * lk;
+  const j0 = (R() - .5) * amp * 0.8, j1 = (R() - .5) * amp * 0.8;
+  const sx = ax - ux * o0 + nx * j0, sy = ay - uy * o0 + ny * j0, ex = bx + ux * o1 + nx * j1, ey = by + uy * o1 + ny * j1, LL = L + o0 + o1;
+  const n = Math.max(2, Math.min(40, Math.round(LL / seg)));
+  const a = amp * Math.min(1, LL / 40), bow = (R() - .5) * 2 * amp * Math.min(1.6, LL / 120), ph = R() * 6.283, fr = 0.8 + R() * 2.2;
+  const P = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, off = bow * Math.sin(t * Math.PI) + a * 0.5 * Math.sin(ph + t * fr * Math.PI) * Math.sin(t * Math.PI) + (i && i < n ? (R() - .5) * a * 0.35 : 0);
+    P.push([sx + (ex - sx) * t + nx * off, sy + (ey - sy) * t + ny * off]);
+  }
+  return P;
+}
+const pline = (ax, ay, bx, by, amp, os, seg) => smoothD(strokePts(ax, ay, bx, by, amp, os, seg));
+// a pencil line round a polygon (closed) or along a polyline: each edge its own stroke, so they cross at the corners
+function pedges(P, closed, amp, os) {
+  let d = ''; const n = P.length;
+  for (let i = 0; i < (closed ? n : n - 1); i++) { const a = P[i], b = P[(i + 1) % n]; d += pline(a[0], a[1], b[0], b[1], amp, os); }
+  return d;
+}
+// a long curve (the shore, the trunk, a burrow): its points nudged sideways by a slow wander, drawn as one stroke
+function pcurve(P, amp = SK.wobble) {
+  const R = PR, ph = R() * 6.283, ph2 = R() * 6.283, n = P.length; let s = 0;
+  return smoothD(P.map((p, i) => {
+    if (i) s += Math.hypot(p[0] - P[i - 1][0], p[1] - P[i - 1][1]);
+    const a = P[Math.max(0, i - 1)], b = P[Math.min(n - 1, i + 1)], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const o = amp * (0.6 * Math.sin(ph + s / 41) + 0.4 * Math.sin(ph2 + s / 13) + (R() - .5) * 0.3);
+    return [p[0] - (b[1] - a[1]) / L * o, p[1] + (b[0] - a[0]) / L * o];
+  }));
+}
+// graphite: one path element per pass
+const ink = (d, w = 1, op = 1, col = 'var(--pencil)') => d ? `<path d="${d}" fill="none" stroke="${col}" stroke-width="${(SK.line * w).toFixed(2)}" stroke-opacity="${Math.min(1, SK.ink * op).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/>` : '';
+// the sketchy outline: SCENE.sketch.passes strokes round a shape, the second thinner and fainter
+function sketchPoly(P, closed = true, o = {}) {
+  if (!SK.on) return '';
+  const amp = SK.wobble * (o.amp ?? 1), os = SK.overshoot * (o.os ?? 1), w = o.w ?? 1, op = o.op ?? 1;
+  let s = ink(pedges(P, closed, amp, os), w, op, o.col);
+  if (SK.passes > 1) s += ink(pedges(P, closed, amp * 1.5, os * 0.6), w * 0.6, op * 0.6, o.col);
+  return s;
+}
+function sketchCurve(P, o = {}) {
+  if (!SK.on) return '';
+  const amp = SK.wobble * (o.amp ?? 1), w = o.w ?? 1, op = o.op ?? 1;
+  let s = ink(pcurve(P, amp), w, op, o.col);
+  if (SK.passes > 1) s += ink(pcurve(P, amp * 1.6), w * 0.6, op * 0.55, o.col);
+  return s;
+}
+// a fill whose edges waver a little (subdivided every ~22 px), so the colour and the pencil line never quite register
+function wpoly(P, amp = 0.7) {
+  if (!SK.on) return 'M' + P.map(p => f1(p[0]) + ' ' + f1(p[1])).join(' L') + 'Z';
+  const out = [], n = P.length;
+  for (let i = 0; i < n; i++) {
+    const a = P[i], b = P[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, m = Math.max(1, Math.round(L / 22)), nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L;
+    for (let k = 0; k < m; k++) { const t = k / m, o = k ? (PR() - .5) * 2 * amp * SK.wobble : 0; out.push([a[0] + (b[0] - a[0]) * t + nx * o, a[1] + (b[1] - a[1]) * t + ny * o]); }
+  }
+  return 'M' + out.map(p => f1(p[0]) + ' ' + f1(p[1])).join(' L') + 'Z';
+}
+let skClip = 0;
+const clipDef = d => { const id = 'skc' + (++skClip); return [id, `<clipPath id="${id}"><path d="${d}"/></clipPath>`]; };
+// graphite hatching inside a shape: near-parallel strokes at ang°, each slightly bowed and tilted, now and then broken; clipped to the shape
+function hatch(clipD, bb, o = {}) {
+  if (!SK.on || SK.hatch <= 0) return '';
+  const R = PR, ang = (o.ang ?? 62) * RAD, gap = SK.hatchGap * (o.gap ?? 1), ux = Math.cos(ang), uy = Math.sin(ang), nx = -uy, ny = ux;
+  const cx = (bb[0] + bb[2]) / 2, cy = (bb[1] + bb[3]) / 2, rad = Math.hypot(bb[2] - bb[0], bb[3] - bb[1]) / 2 + 4;
+  let d = '';
+  for (let s = -rad; s <= rad; s += gap * (0.7 + R() * 0.6)) {
+    const px = cx + nx * s, py = cy + ny * s, tl = (R() - .5) * 0.07, vx = ux + nx * tl, vy = uy + ny * tl;
+    let t = -rad - R() * 8;
+    while (t < rad) {
+      const t1 = Math.min(rad + 6, t + (o.len || 2 * rad) * (0.45 + R() * 0.75)), bw = (R() - .5) * 2.4;
+      const x0 = px + vx * t, y0 = py + vy * t, x1 = px + vx * t1, y1 = py + vy * t1;
+      d += `M${f1(x0)} ${f1(y0)}Q${f1((x0 + x1) / 2 + nx * bw)} ${f1((y0 + y1) / 2 + ny * bw)} ${f1(x1)} ${f1(y1)}`;
+      t = t1 + gap * (0.6 + R() * 2.4);
+    }
+  }
+  const [id, def] = clipDef(clipD);
+  return `${def}<path clip-path="url(#${id})" d="${d}" fill="none" stroke="${o.col || 'var(--pencil)'}" stroke-width="${((o.w ?? 0.7) * SK.line).toFixed(2)}" stroke-opacity="${(SK.hatch * (o.op ?? 1)).toFixed(3)}" stroke-linecap="round"/>`;
+}
+// strokes hanging off the line a→b, all heading along dir (the shadow under an eave, at the foot of a wall, below a bank)
+function fringe(a, b, dir, len, o = {}) {
+  if (!SK.on || SK.hatch <= 0) return '';
+  const R = PR, L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, gap = SK.hatchGap * (o.gap ?? 1), dl = Math.hypot(dir[0], dir[1]), ux = dir[0] / dl, uy = dir[1] / dl;
+  let d = '';
+  for (let s = R() * gap; s < L; s += gap * (0.7 + R() * 0.6)) {
+    const t = s / L, x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t, l = len * (0.3 + 0.7 * Math.pow(R(), 0.6)), tl = (R() - .5) * 0.14;
+    d += `M${f1(x)} ${f1(y)}l${f1((ux - uy * tl) * l)} ${f1((uy + ux * tl) * l)}`;
+  }
+  return `<path d="${d}"${o.clip ? ` clip-path="url(#${o.clip})"` : ''} fill="none" stroke="${o.col || 'var(--pencil)'}" stroke-width="${((o.w ?? 0.7) * SK.line).toFixed(2)}" stroke-opacity="${(SK.hatch * (o.op ?? 1)).toFixed(3)}" stroke-linecap="round"/>`;
+}
+// fringe along a polyline
+const fringeP = (P, dir, len, o) => P.slice(1).map((p, i) => fringe(P[i], p, dir, len, o)).join('');
+// the coloured-pencil texture over a shape (patterns skTexA/B/C/G, made in makeTextures)
+let TEXK = 1;                                            // set per build: the texture's light strokes glare on dark night colours, so it is fainter then
+const tex = (d, id = 'skTexA', op = 1) => SK.on && SK.fill > 0 ? `<path d="${d}" fill="url(#${id})" opacity="${Math.min(1, SK.fill * op * TEXK).toFixed(2)}"/>` : '';
+
+/* the textures, made once at boot: a tile of coloured-pencil strokes (for the SVG as patterns, for the canvases via skPat) and the paper */
+const SKT = {};
+function makeTextures() {
+  const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  // short parallel strokes, light and dark, wrapped round the edges so the tile repeats seamlessly; 160 scene px, drawn at 2×
+  const T = 160, k = 2, c = mk(T * k, T * k), x = c.getContext('2d'), R = rng(1789);
+  x.scale(k, k); x.lineCap = 'round';
+  for (let i = 0; i < 760; i++) {
+    const px = R() * T, py = R() * T, a = (-58 + (R() - .5) * 12) * RAD, L = 5 + R() * 15, light = R() < .52, ddx = Math.cos(a) * L, ddy = Math.sin(a) * L;
+    x.strokeStyle = light ? `rgba(255,255,255,${(.12 + R() * .26).toFixed(3)})` : `rgba(0,0,0,${(.07 + R() * .17).toFixed(3)})`; x.lineWidth = .45 + R() * .9;
+    for (const ox of [-T, 0, T]) for (const oy of [-T, 0, T]) {
+      const x0 = px + ox, y0 = py + oy;
+      if (Math.max(x0, x0 + ddx) < -2 || Math.min(x0, x0 + ddx) > T + 2 || Math.max(y0, y0 + ddy) < -2 || Math.min(y0, y0 + ddy) > T + 2) continue;
+      x.beginPath(); x.moveTo(x0, y0); x.lineTo(x0 + ddx, y0 + ddy); x.stroke();
+    }
+  }
+  Object.assign(SKT, { tile: c, T, k });
+  const NS = 'http://www.w3.org/2000/svg', defs = $('#appleArt').parentNode, ims = [];
+  for (const [id, rot] of [['skTexA', -30], ['skTexB', -64], ['skTexC', 46], ['skTexG', -26]]) {   // the same strokes, turned four ways (A, G: near-upright — along the boards, like grass)
+    const p = document.createElementNS(NS, 'pattern'); p.id = id;
+    for (const [a, v] of [['patternUnits', 'userSpaceOnUse'], ['width', T], ['height', T], ['patternTransform', `rotate(${rot})`]]) p.setAttribute(a, v);
+    const im = document.createElementNS(NS, 'image');
+    for (const [a, v] of [['width', T], ['height', T], ['preserveAspectRatio', 'none']]) im.setAttribute(a, v);
+    p.appendChild(im); defs.appendChild(p); ims.push(im);
+  }
+  // PNG-encoded off the main thread (toBlob); the patterns fill in as soon as it is ready (well within the reveal)
+  const toURL = (cv, then) => cv.toBlob ? cv.toBlob(b => then(b ? URL.createObjectURL(b) : cv.toDataURL())) : then(cv.toDataURL());
+  toURL(c, url => ims.forEach(im => im.setAttribute('href', url)));
+  // the paper: the tooth (fine light and dark specks) and a few fibres; 220 scene px
+  const G = 220, g = mk(G, G), gx = g.getContext('2d'), im = gx.createImageData(G, G), Rg = rng(4242);
+  for (let i = 0; i < G * G; i++) {
+    const v = (Rg() + Rg() + Rg()) / 3 - 0.5, o = i * 4, light = v > 0;     // ~gaussian
+    const a = Math.min(1, Math.abs(v) * (light ? 0.42 : 0.34) * (Rg() < 0.2 ? 2.4 : 1));
+    im.data[o] = im.data[o + 1] = im.data[o + 2] = light ? 255 : 30; im.data[o + 3] = Math.round(a * 255);
+  }
+  gx.putImageData(im, 0, 0); gx.lineCap = 'round';
+  for (let i = 0; i < 46; i++) {
+    const x0 = Rg() * G, y0 = Rg() * G, a = Rg() * 6.283, L = 4 + Rg() * 14;
+    gx.strokeStyle = Rg() < .6 ? `rgba(255,255,255,${(.10 + Rg() * .14).toFixed(3)})` : `rgba(40,30,20,${(.05 + Rg() * .07).toFixed(3)})`; gx.lineWidth = .5;
+    for (const ox of [-G, 0, G]) for (const oy of [-G, 0, G]) { gx.beginPath(); gx.moveTo(x0 + ox, y0 + oy); gx.quadraticCurveTo(x0 + ox + Math.cos(a) * L / 2 + 1.5, y0 + oy + Math.sin(a) * L / 2, x0 + ox + Math.cos(a) * L, y0 + oy + Math.sin(a) * L); gx.stroke(); }
+  }
+  const paper = $('#paper'); paper.style.backgroundSize = `${G}px ${G}px`;
+  toURL(g, url => { paper.style.backgroundImage = `url(${url})`; });
+}
+// the stroke tile as a canvas pattern, in scene px (the context carries the DPR), turned by rot° from its own −58°
+function skPat(c, rot = 0, sc = 1) {
+  const p = c.createPattern(SKT.tile, 'repeat');
+  if (p.setTransform) p.setTransform(new DOMMatrix().rotate(rot).scale(sc / SKT.k));
+  return p;
+}
+// canvas version of a pencil stroke (the same points as the SVG one)
+function cstroke(c, P) {
+  c.moveTo(P[0][0], P[0][1]);
+  for (let i = 1; i < P.length - 1; i++) c.quadraticCurveTo(P[i][0], P[i][1], (P[i][0] + P[i + 1][0]) / 2, (P[i][1] + P[i + 1][1]) / 2);
+  c.lineTo(P[P.length - 1][0], P[P.length - 1][1]);
+}
+function cedges(c, P, closed, amp, os) { const n = P.length; for (let i = 0; i < (closed ? n : n - 1); i++) { const a = P[i], b = P[(i + 1) % n]; cstroke(c, strokePts(a[0], a[1], b[0], b[1], amp, os)); } }
+const PENCIL = () => S.night ? [4, 6, 8] : [42, 34, 29];
+
+/* the sky: long, gently tilted coloured-pencil strokes in clusters, light and dark, grey on clear — laid over the sky with soft-light in
+   renderStatic(), so they take on whatever colour the sky has (and the lake mirrors them). Made once per layout. */
+let SKYS = null, skyJob = 0;
+// they wait for an idle moment (≤ 250 ms), so they never hold up the first picture or a resize; meanwhile the old ones are stretched to fit
+function skySoon() {
+  FSK = null;                                            // (the forest is rebuilt with the layout: its cached pencil with it, below)
+  if (!SK.on) { SKYS = null; return; }
+  const job = ++skyJob, run = () => { if (job !== skyJob) return; const t = performance.now(); buildSkyStrokes(); buildForestSketch(); TIMING.sky = performance.now() - t; renderStatic(); needDraw = true; TIMING.idle = performance.now() - t; };
+  if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 250 }); else setTimeout(run, 60);
+}
+function buildSkyStrokes() {
+  SKYS = null;
+  if (!SK.on || SK.sky <= 0) return;   // (and the forest's cache: buildForestSketch, run in the same idle job)
+  SKYS = document.createElement('canvas'); SKYS.width = Math.round(W * DPR); SKYS.height = Math.round((HY + 2) * DPR);
+  const c = SKYS.getContext('2d'), R = rng(hashStr('sky' + W + HY)); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.lineCap = 'butt';
+  // (each stroke on its own: one big multi-stroke path per style rasterizes a canvas-sized coverage mask, which in software is 2–3× slower)
+  const n = Math.round(W * HY / (mobile ? 1700 : 2600));
+  for (let i = 0; i < n; i++) {                          // patches of hatching: a few near-parallel strokes laid side by side, as a hand fills in a sky
+    const cx = R() * (W + 200) - 100, cy = Math.pow(R(), 0.85) * HY, a = (-3 + (R() - .5) * 7) * RAD, m = 3 + (R() * 6 | 0), L = (40 + R() * 130) * (mobile ? 0.6 : 1), light = R() < .64;
+    const ux = Math.cos(a), uy = Math.sin(a), sp = 2.2 + R() * 1.8;   // (near-level: slanted strokes over a whole sky read as rain)
+    for (let j = 0; j < m; j++) {
+      const l = L * (0.6 + 0.5 * R()), ox = cx - uy * j * sp + ux * (R() - .5) * 24, oy = cy + ux * j * sp + uy * (R() - .5) * 24, bw = (R() - .5) * 2.5;
+      const al = (light ? .24 + R() * .4 : .14 + R() * .28), v = light ? 255 : 0;
+      c.strokeStyle = `rgba(${v},${v},${v},${al.toFixed(2)})`; c.lineWidth = .6 + R() * 1.3;
+      c.beginPath(); c.moveTo(ox, oy); c.quadraticCurveTo(ox + ux * l / 2 - uy * bw, oy + uy * l / 2 + ux * bw, ox + ux * l, oy + uy * l); c.stroke();
+    }
+  }
+}
+
+/* the jetty, drawn in pencil once per tick into its own small canvas: wavering posts and deck, plank lines, outlines, hatching on the
+   dark edge; the loop only blits it (and draws the posts' wobbling reflections, the rod, the line and the bobber, as before) */
+let JETC = null; const JBB = {};
+function buildJetty() {
+  if (!SK.on || !W) { JETC = null; return; }
+  const zf = 1 / JET.k, n = jettyPts(1), f = jettyPts(zf), th = 5;
+  const x0 = Math.floor(Math.min(n.x - n.w / 2, f.x - f.w / 2) - 12), x1 = Math.ceil(Math.max(n.x + n.w / 2, f.x + f.w * 0.9 + 22) + 12);
+  const y0 = Math.floor(f.y - 12), y1 = Math.ceil(n.y + JET.post / 1.15 + 14);
+  Object.assign(JBB, { x0, y0, w: x1 - x0, h: y1 - y0 });
+  if (!JETC) JETC = document.createElement('canvas');
+  JETC.width = Math.round(JBB.w * DPR); JETC.height = Math.round(JBB.h * DPR);
+  const c = JETC.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, -x0 * DPR, -y0 * DPR); c.clearRect(x0, y0, JBB.w, JBB.h);
+  const sv = PR; PR = rng(hashStr('jetty' + W + H));
+  const night = S.night, dm = S.dim || 1, wood = night ? hex('#2B2926') : mix(hex('#8A7862'), [0, 0, 0], 1 - dm), woodD = night ? hex('#1A1917') : mix(hex('#5E513F'), [0, 0, 0], 1 - dm), light = S.snowGround ? (night ? [180, 190, 200] : [246, 248, 250]) : night ? hex('#3A3733') : hex('#A8977F');
+  const pen = PENCIL(), pa = night ? 0.75 : 1;
+  const wq = (P, amp) => { c.beginPath(); const Q = []; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; for (let k = 0; k < 3; k++) { const t = k / 3, o = k ? (PR() - .5) * amp : 0, L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; Q.push([a[0] + (b[0] - a[0]) * t - (b[1] - a[1]) / L * o, a[1] + (b[1] - a[1]) * t + (b[0] - a[0]) / L * o]); } } c.moveTo(Q[0][0], Q[0][1]); for (const q of Q) c.lineTo(q[0], q[1]); c.closePath(); };
+  // the posts
+  c.lineCap = 'round';
+  for (let z = 1.15; z <= zf + 0.01; z += (zf - 1.15) / 3) {
+    const p = jettyPts(z), ph = JET.post / z * (S.frozen ? 0.4 : 1);
+    for (const sgn of [-1, 1]) {
+      const x = p.x + sgn * p.w * 0.42, hw = 1.6 / z * 2, P = [[x - hw, p.y], [x + hw, p.y], [x + hw * 0.9, p.y + ph], [x - hw * 1.05, p.y + ph]];
+      c.fillStyle = rgba(woodD); wq(P, 0.8); c.fill();
+      c.strokeStyle = rgba(pen, 0.5 * SK.ink * pa); c.lineWidth = 0.8 * SK.line; c.beginPath(); cedges(c, [P[1], P[2], P[3], P[0]], false, SK.wobble * 0.5, 1.5); c.stroke();
+    }
+  }
+  // the deck: its dark front edge, then the boards
+  const N0 = [n.x - n.w / 2, n.y], N1 = [n.x + n.w / 2, n.y], F0 = [f.x - f.w / 2, f.y], F1 = [f.x + f.w / 2, f.y];
+  const edge = [N0, F0, F1, N1, [N1[0], N1[1] + th], [F1[0], F1[1] + th * JET.k], [F0[0], F0[1] + th * JET.k], [N0[0], N0[1] + th]];
+  c.fillStyle = rgba(woodD); wq(edge, 1); c.fill();
+  const top = [N0, F0, F1, N1];
+  c.save(); c.fillStyle = rgba(S.snowGround ? mix(wood, light, 0.7) : wood); wq(top, 1.2); c.fill(); c.clip();
+  if (SK.fill > 0) { c.globalAlpha = SK.fill * 0.9; c.fillStyle = skPat(c, 58 + Math.atan2(F0[1] - N0[1], F0[0] - N0[0]) / RAD); c.fillRect(x0, y0, JBB.w, JBB.h); c.globalAlpha = 1; }
+  // plank joints: wavering pencil lines, a little uneven in weight
+  c.lineCap = 'round';
+  for (let z = 1; z < zf; z += 0.09 * z) {
+    const p = jettyPts(z);
+    c.strokeStyle = rgba(night ? [0, 0, 0] : mix(woodD, pen, 0.5), (0.4 + PR() * 0.35) * pa); c.lineWidth = (0.7 + PR() * 0.6) * SK.line * Math.min(1, 1.6 / z + 0.2);
+    c.beginPath(); cstroke(c, strokePts(p.x - p.w / 2, p.y, p.x + p.w / 2, p.y, SK.wobble * 0.5 / Math.sqrt(z), 0)); c.stroke();
+  }
+  c.restore();
+  // hatching on the dark front edge and a few grain lines along the boards
+  c.save(); wq(edge, 0); c.clip();
+  c.strokeStyle = rgba(pen, SK.hatch * 1.2 * pa); c.lineWidth = 0.6 * SK.line; c.beginPath();
+  for (let u = 0; u <= 1; u += 0.012 + PR() * 0.01) { const x = N1[0] + (F1[0] - N1[0]) * u, y = N1[1] + (F1[1] - N1[1]) * u, h = th * (1 - u * (1 - JET.k)); c.moveTo(x - 1, y - 0.5); c.lineTo(x + 1.5, y + h + 1); }
+  c.stroke(); c.restore();
+  // outlines: the two long sides and the ends, overshooting at the corners
+  c.strokeStyle = rgba(pen, SK.ink * 0.9 * pa); c.lineWidth = SK.line; c.beginPath(); cedges(c, [N0, F0, F1, N1], false, SK.wobble, SK.overshoot * 0.8); c.stroke();
+  c.lineWidth = SK.line * 0.6; c.strokeStyle = rgba(pen, SK.ink * 0.5 * pa); c.beginPath(); cedges(c, [[N1[0], N1[1] + th], [F1[0], F1[1] + th * JET.k], F0, N0], false, SK.wobble * 1.4, SK.overshoot * 0.5); c.stroke();
+  c.strokeStyle = rgba(light, 0.35); c.lineWidth = 1; c.beginPath(); cstroke(c, strokePts(N0[0] + 1, N0[1] + 0.5, F0[0] + 1, F0[1] + 0.5, SK.wobble * 0.6, 0)); c.stroke();
+  if (S.frozen && LAKE.k < 0.5) { const hx = f.x + f.w * 0.9, hy = f.y - 2; c.fillStyle = S.night ? '#0A1016' : '#3E5866'; c.beginPath(); c.ellipse(hx, hy, 9 * JET.k * 2, 3 * JET.k * 2, 0, 0, 7); c.fill(); c.strokeStyle = rgba(pen, SK.ink * 0.7); c.lineWidth = 0.8; c.stroke(); FISHHOLE = [hx, hy]; }
+  PR = sv;
+}
+
+/* the lake in pencil: horizontal strokes, light and dark, sparse and short by the far shore, longer and denser near ours; the horizon
+   drawn in graphite. Part of the foreground SVG (built with it, on a layout or a theme change), clipped round the jetty. The strokes are
+   bucketed by colour, weight and strength, so it is a dozen path elements, not hundreds. */
+function lakeSketch() {
+  if (!SK.on) return '';
+  const R = rng(hashStr('lake' + W + H)), night = S.night, frozen = S.frozen, y0 = HY + 3, y1 = SHORE + 8, k = SK.lake;
+  const hi = frozen ? (night ? '#BECDDC' : '#FFFFFF') : night ? '#AABED2' : '#FAFCFF', dk = frozen ? (night ? '#000000' : '#465A69') : night ? '#040608' : '#2A221D';
+  const B = {};
+  const n = k > 0 ? Math.round(W / (mobile ? 2.2 : 3.2)) : 0;   // (kaunotar: SK.lake = 0 — no hatching on the water, just the horizon line)
+  for (let i = 0; i < n; i++) {
+    const u = Math.pow(R(), 0.8), y = y0 + u * (y1 - y0), L = (10 + R() * 70) * (0.25 + 1.5 * u) * (mobile ? 0.7 : 1), x = R() * (W + L) - L, light = R() < (night ? 0.55 : 0.5);
+    const a = (light ? (night ? 0.10 : 0.16) : (night ? 0.18 : 0.11)) * (0.4 + 0.9 * R()) * (0.45 + 0.75 * u) * k * 1.6, lw = (0.5 + R() * 0.8) * (0.6 + 0.7 * u);
+    const key = (light ? 'h' : 'd') + Math.min(5, Math.round(a / 0.04)) + '|' + (lw < 0.8 ? 0.6 : lw < 1.15 ? 1 : 1.4);
+    B[key] = (B[key] || '') + `M${f1(x)} ${f1(y)}Q${f1(x + L / 2)} ${f1(y + (R() - .5) * 1.4)} ${f1(x + L)} ${f1(y + (R() - .5) * 1.2)}`;
+  }
+  let s = '';
+  for (const key in B) { const [cw, w] = key.split('|'), lv = +cw.slice(1); if (!lv) continue; s += `<path d="${B[key]}" fill="none" stroke="${cw[0] === 'h' ? hi : dk}" stroke-opacity="${(lv * 0.04).toFixed(2)}" stroke-width="${w}" stroke-linecap="round"/>`; }
+  // the horizon: graphite where the far shore meets the water
+  const sv = PR; PR = rng(hashStr('horizon' + W)); let hz = '';
+  for (let x = -20; x < W + 20; x += 260 + PR() * 160) hz += pline(x, HY + 1.2, x + 300 + PR() * 120, HY + 1.2, SK.wobble * 0.6, 6);
+  PR = sv;
+  s += `<path d="${hz}" fill="none" stroke="${dk}" stroke-opacity="${((night ? 0.35 : 0.42) * Math.min(1, Math.max(k, 0.6) * 1.5)).toFixed(2)}" stroke-width="${(SK.line * 0.8).toFixed(2)}" stroke-linecap="round"/>`;
+  if (!n) return s;                                       // (nothing on the water: no need for the clip round the jetty)
+  // keep the jetty clear (it stands in the water, on the canvas below): an even-odd clip with the jetty and its posts cut out
+  const zf = 1 / JET.k, N = jettyPts(1), F = jettyPts(zf), pd = JET.post / 1.15 + 5;
+  const hole = [[F.x - F.w / 2 - 4, F.y - 4], [F.x + F.w / 2 + 4, F.y - 4], [F.x + F.w / 2 + 4, F.y + JET.post / zf + 4], [N.x + N.w / 2 + 4, N.y + pd], [N.x - N.w / 2 - 4, N.y + pd]];
+  const id = 'skLake' + (++skClip);
+  return `<clipPath id="${id}"><path clip-rule="evenodd" d="M-10 ${HY - 4}H${W + 10}V${H}H-10Z M${hole.map(p => f1(p[0]) + ' ' + f1(p[1])).join(' L')}Z"/></clipPath><g clip-path="url(#${id})">${s}</g>`;
+}
+
+/* Vlad's window (an HTML element above the foreground): pencil lines round its frame, glazing bars and sill, in a small SVG laid over it */
+function sketchWindow() {
+  const sv = $('#winSk'), cw = CAB.win;
+  if (!SK.on) { sv.innerHTML = ''; return; }
+  const M = 14, X0 = cw.x - 5 - M, Y0 = cw.y - 5 - M, w = cw.w + 10 + 2 * M, h = cw.h + 10 + 2 * M + 8;
+  Object.assign(sv.style, { left: X0 + 'px', top: Y0 + 'px', width: w + 'px', height: h + 'px' });
+  sv.setAttribute('viewBox', `${X0} ${Y0} ${w} ${h}`);
+  skSeed('win');
+  const ox = cw.x - 5, oy = cw.y - 5, ow = cw.w + 10, oh = cw.h + 10, cy = oy + 0.3 * oh, mx = ox + ow / 2;
+  const rect = (x, y, ww, hh) => [[x, y], [x + ww, y], [x + ww, y + hh], [x, y + hh]];
+  let s = sketchPoly(rect(ox, oy, ow, oh), true, { op: 1.1 });
+  s += sketchPoly(rect(cw.x, cw.y, cw.w, cw.h), true, { op: 0.55, w: 0.8, os: 0.4 });
+  for (const y of [cy, cy + 5]) s += ink(pline(cw.x, y, cw.x + cw.w, y, SK.wobble * 0.6, 1.5), 0.75, 0.6);
+  for (const x of [mx - 2.5, mx + 2.5]) s += ink(pline(x, cw.y, x, cw.y + cw.h, SK.wobble * 0.6, 1.5), 0.75, 0.6);
+  s += sketchPoly(rect(ox - 7, oy + oh, ow + 14, 6), true, { op: 1, os: 0.7 });
+  s += fringe([ox - 4, oy + oh + 7], [ox + ow + 6, oy + oh + 7], [-0.25, 1], 9, { op: 0.9 });     // the sill's shadow on the wall
+  sv.innerHTML = s;
+}
+
+/* the mailbox (inline SVG, viewBox 60 × 100): pencil outlines and a little shading, added under its snow cap; made per layout */
+function sketchMailbox() {
+  const svg = $('#mailbox svg'); let g = svg.querySelector('.mb-sk');
+  if (!SK.on || !SK.mailbox) { if (g) g.remove(); return; }
+  if (!g) { g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'mb-sk'); svg.insertBefore(g, svg.querySelector('.snowcap')); }
+  skSeed('mailbox');
+  const u = MB.h / 100, o = { w: 1 / u, amp: 0.5 / u, os: 0.35 / u };   // scene px → viewBox units
+  let s = sketchPoly([[.5, 31.6], [30, 4.5], [59.5, 31.6]], false, o);                       // the roof
+  s += sketchPoly([[4.6, 36.8], [30, 13.4], [55.4, 36.8]], false, { ...o, op: 0.6 });          // the fascia's lower edge
+  s += sketchPoly([[11, 36], [11, 70], [49, 70], [49, 36]], false, o);                       // the box
+  s += sketchPoly([[18.5, 42], [41.5, 42], [41.5, 64], [18.5, 64]], true, { ...o, op: 0.55, w: 0.7 / u });   // the flap
+  for (const px of [17.5, 38]) s += sketchPoly([[px, 70], [px, 99], [px + 4.6, 99], [px + 4.6, 70]], false, { ...o, op: 0.7, w: 0.8 / u });   // the posts
+  s += hatch('M40 36H49V70H40Z', [40, 36, 49, 70], { ang: 64, gap: 0.6 / u, w: 0.6 / u, op: 0.9 });   // its shaded right side
+  s += fringe([12, 37.5], [48, 37.5], [0.2, 1], 6, { gap: 0.6 / u, w: 0.6 / u, op: 0.8 });             // the shadow under the fascia
+  g.innerHTML = s;
+}
 
 /* ---------- scene geometry ---------- */
 const hero = $('#home'), cv = $('#sky'), ctx = cv.getContext('2d'), fg = $('#fg');
@@ -453,10 +815,12 @@ const xLimit = () => MB.left - HB * 0.45;
 const roofY = x => CAB.top - (x - CAB.x0) * CAB.gh / (CAB.fw / 2) - (mobile ? 3.5 : 5);
 const textBox = () => { const r = $('#heroText').getBoundingClientRect(); return `${Math.round(r.width)}×${Math.round(r.height)}`; };
 let laidOutText = '';
+const TIMING = { start: 0, boot: performance.now() };                             // (test hook: __rv.timing — ms spent in the last layout, buildFG, sky strokes, renderStatic)
 function layout() {
+  TIMING.start = performance.now();
   SC = window.heroZoom ? heroZoom() : 1; document.documentElement.style.setProperty('--z', SC);   // the scene's zoom (see <head>)
   W = hero.clientWidth; H = hero.clientHeight; mobile = W < 700;                                   // in scene px (unaffected by the scale)
-  DPR = Math.min(2, window.devicePixelRatio || 1) * SC;                                             // canvas px per scene px: still one per screen pixel
+  DPR = Math.min(PERF.res, window.devicePixelRatio || 1) * SC;                                     // canvas px per scene px (kaunotar: at most SCENE.perf.res per screen pixel)
   const htr = $('#heroText').getBoundingClientRect(), hrr = hero.getBoundingClientRect();
   HY = Math.round(Math.min(H * SCENE.horizonMax, Math.max(H * pk(SCENE.horizon), (htr.bottom - hrr.top) / SC + SCENE.textGap)));
   SHORE = Math.round(Math.max(H * pk(SCENE.shore), HY + 60));
@@ -499,9 +863,15 @@ function layout() {
   // where stones may be skipped: the open water left of the mailbox and the house
   S.skipMaxX = Math.min(CAB.x0, MB.left) - (mobile ? 4 : 10);
   for (const [c, h] of [[cv, H], [top, HY + 2], [skyC, HY + 2], [forC, HY + 2], [forDC, HY + 2], [wxc, H]]) { c.width = Math.round(W * DPR); c.height = Math.round(h * DPR); }
+  topDirty = true;
+  const t0 = performance.now();
+  const t1 = performance.now();
   fg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   planApple();
-  buildClouds(); buildForest(); buildFG(); placeThings(); placeNote();
+  buildClouds(); buildForest();
+  { const ts = performance.now(); buildForestMasks(); if (SK.on) { buildSkyStrokes(); buildForestSketch(); } else { SKYS = null; FSK = null; } TIMING.sky = performance.now() - ts; }   // kaunotar: made with the layout (was: in idle time, then a second renderStatic)
+  const t2 = performance.now(); buildFG(); const t3 = performance.now(); placeThings(); placeNote();
+  TIMING.fg = t3 - t2; TIMING.layout = performance.now() - t0 + (t0 - TIMING.start);
   hog.x = clamp(hog.x || W * 0.45, 30, W - 40);
   if (hog.y) hog.y = clamp(hog.y, hogYMin(hog.x), hogYMax(hog.x));
   appleRelayout();
@@ -524,12 +894,14 @@ function placeThings() {
   Object.assign(dh.style, { left: CAB.door.x + 4 + 'px', top: CAB.wb - CAB.door.h * 0.5 - hh / 2 + 'px', width: hw + 'px', height: hh + 'px' });
   const b = $('#burrow'), L = CAB.lair;
   Object.assign(b.style, { left: L.x - L.rx * 1.2 + 'px', top: CAB.base - L.ry - 6 + 'px', width: L.rx * 2.4 + 'px', height: L.ry + 10 + 'px' });
+  sketchWindow(); sketchMailbox();                       // lyijykynä
 }
 const inPoly = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) if ((P[i][1] > y) !== (P[j][1] > y) && x < (P[j][0] - P[i][0]) * (y - P[i][1]) / (P[j][1] - P[i][1]) + P[i][0]) c = !c; return c; };
 
 /* ---------- the birch: a silver birch, grown procedurally — long arching limbs and hanging curtains of twigs ---------- */
 function birchSVG(R, night, topY, gy, tx, tww, textBox) {
-  const out = { limbs: [], twigs: [], leaves: [], snow: [] };
+  const out = { limbs: [], twigs: new Map(), leaves: new Map(), snow: [] };   // (kaunotar: twigs and leaves are pooled by look into a handful of <path>s — ~2,000 elements fewer to parse, style and paint)
+  const pool = (m, key, d) => { const a = m.get(key); if (a) a.push(d); else m.set(key, [d]); };
   const sc = mobile ? 0.62 : 1;
   const RL = rng(hashStr('leaves' + W + S.md)), RS = rng(hashStr('snow' + W));   // leaves and snow have their own dice: with or without them, the same branches
   const leafCol = () => { const r = RL(); return S.leaves === 'mouse' ? '#A9BD5E' : S.leaves === 'green' ? (night ? '#56643A' : (r < .5 ? '#7C8C4E' : '#8A9A55')) : S.leaves === 'turning' ? (r < .5 ? '#9AA14A' : '#D5A43B') : (r < .75 ? '#D9A33A' : '#BF7430'); };   // same random draws by day and by night: the tree keeps its shape
@@ -542,7 +914,9 @@ function birchSVG(R, night, topY, gy, tx, tww, textBox) {
     return pts;
   };
   const path = pts => 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
-  const stroke = (pts, w0, w1, op) => { const n = pts.length - 1, seg = 4; let s = ''; for (let k = 0; k < seg; k++) { const a = Math.floor(k * n / seg), b = Math.floor((k + 1) * n / seg); const w = w0 + (w1 - w0) * (k + .5) / seg; s += `<path d="${path(pts.slice(a, b + 1))}" stroke="var(--limb)" stroke-opacity="${op}" stroke-width="${w.toFixed(2)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`; } return s; };
+  const stroke = (pts, w0, w1, op) => { const n = pts.length - 1, seg = 4; let s = ''; for (let k = 0; k < seg; k++) { const a = Math.floor(k * n / seg), b = Math.floor((k + 1) * n / seg); const w = w0 + (w1 - w0) * (k + .5) / seg; s += `<path d="${path(pts.slice(a, b + 1))}" stroke="var(--limb)" stroke-opacity="${op}" stroke-width="${w.toFixed(2)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`; }
+    if (SK.on) s += `<path d="${smoothD(pts.map(p => [p[0] + (PR() - .5) * 1.3, p[1] + (PR() - .5) * 1.3]))}" stroke="var(--pencil)" stroke-opacity="${(op * 0.55).toFixed(2)}" stroke-width="${(0.45 * SK.line).toFixed(2)}" fill="none" stroke-linecap="round"/>`;   // lyijykynä: the second, sketchier pass
+    return s; };
   // curtains of hanging twigs along a limb (mostly on its outer, drooping half)
   const curtain = (pts, side, density, reach) => {
     const n = pts.length - 1;
@@ -551,14 +925,16 @@ function birchSVG(R, night, topY, gy, tx, tww, textBox) {
       const px = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, py = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f;
       const L = reach * (0.45 + 0.75 * R()) * (0.55 + 0.6 * t), sway = side * (3 + R() * 9) * sc, drift = (R() - .4) * 10 * sc;
       const ex = px + sway * 0.4 + drift, ey = py + L;
-      out.twigs.push(`<path d="M${px.toFixed(1)} ${py.toFixed(1)} q${sway.toFixed(1)} ${(L * 0.3).toFixed(1)} ${(ex - px).toFixed(1)} ${L.toFixed(1)}" stroke="var(--twig)" stroke-opacity="${(0.28 + R() * 0.3).toFixed(2)}" stroke-width="${(0.55 + R() * .35).toFixed(2)}" fill="none"/>`);
+      const tOp = 0.28 + R() * 0.3, tW = 0.55 + R() * .35;   // (the same dice as before; the look is rounded to one of 3 × 2 pools)
+      pool(out.twigs, `${(Math.min(2, Math.floor((tOp - 0.28) / 0.1)) * 0.1 + 0.33).toFixed(2)}|${tW < 0.72 ? '0.62' : '0.82'}`, `M${px.toFixed(1)} ${py.toFixed(1)}q${sway.toFixed(1)} ${(L * 0.3).toFixed(1)} ${(ex - px).toFixed(1)} ${L.toFixed(1)}`);
       if (leafy && !(S.leaves === 'falling' && RL() < .55)) {
         const nl = Math.round((S.leaves === 'mouse' ? 3 : 6) * (0.6 + 0.7 * L / reach));
         for (let j = 0; j < nl; j++) {
           const u = (j + 0.6 + RL() * 0.4) / (nl + 0.4), q = 1 - u;
           const lx = q * q * px + 2 * q * u * (px + sway) + u * u * ex + (RL() - .5) * 3, ly = q * q * py + 2 * q * u * (py + L * 0.3) + u * u * ey;
           const sz = (S.leaves === 'mouse' ? 1.4 : 2.1 + RL() * 1.4) * (mobile ? 0.85 : 1);
-          out.leaves.push(`<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="${(sz * .62).toFixed(1)}" ry="${sz.toFixed(1)}" transform="rotate(${(RL() * 70 - 35).toFixed(0)} ${lx.toFixed(1)} ${ly.toFixed(1)})" fill="${leafCol()}" opacity="${night ? .75 : .92}"/>`);
+          const rot = Math.round(RL() * 70 - 35), col = leafCol(), rx = sz * .62, a = rot * RAD, ux = rx * Math.cos(a), uy = rx * Math.sin(a), A = `A${rx.toFixed(1)} ${sz.toFixed(1)} ${rot} 0 1 `;
+          pool(out.leaves, col, `M${(lx + ux).toFixed(1)} ${(ly + uy).toFixed(1)}${A}${(lx - ux).toFixed(1)} ${(ly - uy).toFixed(1)}${A}${(lx + ux).toFixed(1)} ${(ly + uy).toFixed(1)}Z`);   // the same rotated ellipse, as two arcs
         }
       }
     }
@@ -606,7 +982,10 @@ function birchSVG(R, night, topY, gy, tx, tww, textBox) {
     const pts = grow2(tx(y0), y0, side, 8 + R() * 14, 40 + R() * 40, LL * 0.33 * (0.6 + R() * 0.6), 10, 0.3);
     out.limbs.push(stroke(pts, 1, 0.45, 0.5)); curtain(pts, side, 4, (mobile ? 36 : 80) * ck);
   }
-  return `<g id="twigs">${out.twigs.join('')}${out.leaves.join('')}</g>${out.limbs.join('')}${out.snow.join('')}`;
+  let tw = '';
+  for (const [k, ds] of out.twigs) { const [op, w] = k.split('|'); tw += `<path d="${ds.join('')}" stroke="var(--twig)" stroke-opacity="${op}" stroke-width="${w}" fill="none"/>`; }
+  for (const [col, ds] of out.leaves) tw += `<path d="${ds.join('')}" fill="${col}" fill-opacity="${night ? .75 : .92}"${SK.on ? ` stroke="var(--pencil)" stroke-opacity=".38" stroke-width=".45"` : ''}/>`;   // lyijykynä: each leaf outlined
+  return `<g id="twigs">${tw}</g>${out.limbs.join('')}${out.snow.join('')}`;
 }
 
 /* ---------- foreground: the birch (behind the house), the ground, the cabin with the hedgehog's lair under it ---------- */
@@ -616,6 +995,7 @@ function buildFG() {
   const textBottom = (htr.bottom - hrr.top) / SC;
   const R = rng(hashStr('fg' + W + S.md)), RF = rng(hashStr('fallen' + W + S.md)), RP = rng(hashStr('pile' + W));   // RF, RP: for what comes and goes (rm leaves, rm snow)
   const night = document.documentElement.dataset.light === 'night', f = n => n.toFixed(1);
+  skSeed('fg' + S.md); TEXK = night ? 0.5 : 1;          // lyijykynä: the pencil's dice for this foreground
   // the ground, from the water line down; its colour (--ground) follows the sun, see applyGround()
   let d = `M0 ${H + 2}`;
   for (let x = 0; x <= W + 6; x += 6) d += ` L${x} ${ground(x).toFixed(1)}`;
@@ -636,6 +1016,16 @@ function buildFG() {
     const x = left ? tx(y) - w / 2 : tx(y) + w / 2 - ml, th = R() < 0.25 ? 2 + R() * 2.5 : 0.8 + R() * 1.2;
     marks.push(`<path d="M${x.toFixed(1)} ${y.toFixed(1)} q${(ml / 2).toFixed(1)} ${(R() - .5).toFixed(1)} ${ml.toFixed(1)} 0" stroke="var(--bark-mark)" stroke-width="${th.toFixed(1)}" stroke-linecap="round" fill="none" opacity="${(0.55 + R() * 0.35).toFixed(2)}"/>`);
   }
+  // lyijykynä: the trunk in pencil — contours (the shaded right one darker) and short curved strokes that round it off
+  let trunkSk = '';
+  if (SK.on) {
+    const LP = [], RP = [];
+    for (let y = topY - 4; y <= gy + 10; y += 8) { LP.push([tx(y) - tww(y) / 2, y]); RP.push([tx(y) + tww(y) / 2, y]); }
+    trunkSk = sketchCurve(LP, { amp: 0.5, op: 0.5, w: 0.85 }) + sketchCurve(RP, { amp: 0.5, op: 0.95, w: 1.1 });
+    let hd = '';
+    for (let y = topY + 2; y < gy; y += 2.4 + PR() * 1.8) { const w = tww(y), xr = tx(y) + w / 2, l = w * (0.16 + PR() * 0.3); hd += `M${f(xr - 0.4)} ${f(y)}q${f(-l / 2)} ${f(0.5 + l * 0.1)} ${f(-l)} ${f(1 + PR() * 1.2)}`; }
+    trunkSk += `<path d="${hd}" fill="none" stroke="var(--pencil)" stroke-width="${(0.6 * SK.line).toFixed(2)}" stroke-opacity="${Math.min(1, SK.hatch * 1.25).toFixed(2)}" stroke-linecap="round"/>`;
+  }
   // the twig the apple hangs from (an apple on a birch: don't ask)
   const [hx, hy] = APPLE.hang, ty0 = Math.max(topY + 8, hy - 34), sx0 = tx(ty0), tipx = hx + 1.5, tipy = hy - 12;
   APPLE.twig = [tipx, tipy];
@@ -648,79 +1038,162 @@ function buildFG() {
   for (let x = 8; x < W; x += 16 + R() * 34) {
     if (avoid(x)) continue;
     const y = ground(x) + 1, k = R();
-    if (!S.snowGround && S.leaves !== 'bare' && k < 0.55) det += `<path d="M${x} ${y} q-2 -7 -5 -9 M${x} ${y} q0 -8 1 -12 M${x} ${y} q2 -6 6 -8" stroke="var(--grass)" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
     if (S.flowers && k > 0.78) det += `<circle cx="${x + 4}" cy="${y - 9}" r="2.4" fill="#D8B13A"/><path d="M${x + 4} ${y} v-7" stroke="var(--grass)" stroke-width="1"/>`;
     if (S.blueberries && k > 0.6 && k < 0.8) det += `<path d="M${x} ${y} q3 -6 8 -8" stroke="var(--grass)" stroke-width="1.2" fill="none"/><circle cx="${x + 3}" cy="${y - 4}" r="2.3" fill="#3B4A7E"/><circle cx="${x + 7}" cy="${y - 6}" r="2" fill="#34426F"/>`;
     if (S.lingon && k > 0.84) det += `<circle cx="${x}" cy="${y - 3}" r="2.1" fill="var(--berry)"/><circle cx="${x + 4}" cy="${y - 4}" r="1.9" fill="var(--berry)"/>`;
-    if (S.fallen && k < 0.5) det += `<ellipse cx="${x + 6}" cy="${y + 3}" rx="3.2" ry="1.6" fill="${S.fallenCol[RF() < .6 ? 0 : 1]}" transform="rotate(${(RF() * 50 - 25).toFixed(0)} ${x + 6} ${y + 3})" opacity=".9"/>`;
     if (S.snowGround && k < 0.25) det += `<path d="M${x} ${y + 4} q10 -3 20 0" stroke="${night ? '#2B3947' : '#C9D3DA'}" stroke-width="1.4" fill="none" opacity=".8"/>`;
   }
   for (let i = 0, n = mobile ? 9 : 26; i < n; i++) {
     const x = 10 + R() * Math.max(10, MB.left - 24), y0 = ground(x) + 16, y = y0 + R() * Math.max(4, H - SCENE.hog.dockGap + 20 - y0), k = R(), sc = 0.8 + 0.5 * (y - y0) / (H - y0);
     if (S.snowGround) { if (k < 0.5) det += `<path d="M${f(x)} ${f(y)} q${f(12 * sc)} -3 ${f(24 * sc)} 0" stroke="${night ? '#2B3947' : '#D2DBE1'}" stroke-width="1.4" fill="none" opacity=".75"/>`; }
-    else if (S.leaves !== 'bare' || k < 0.4) det += `<path d="M${f(x)} ${f(y)} q${f(-2 * sc)} ${f(-7 * sc)} ${f(-5 * sc)} ${f(-9 * sc)} M${f(x)} ${f(y)} q0 ${f(-8 * sc)} ${f(sc)} ${f(-12 * sc)} M${f(x)} ${f(y)} q${f(2 * sc)} ${f(-6 * sc)} ${f(6 * sc)} ${f(-8 * sc)}" stroke="var(--grass)" stroke-width="1.1" fill="none" stroke-linecap="round" opacity=".85"/>`;
-    if (S.fallen && k > 0.6) det += `<ellipse cx="${f(x + 8)}" cy="${f(y + 2)}" rx="3.2" ry="1.6" fill="${S.fallenCol[k > .8 ? 0 : 1]}" opacity=".85"/>`;
+    // (kaunotar: the three-bladed grass tufts are gone — the pencil grass texture does the job)
   }
-  // the leaf pile he sleeps in during the cold months
+  // kaunotar: no leaf pile any more (he sleeps where he is) — instead a few loose birch leaves lie on the grass under the birch, by the mailbox
   let pile = '';
-  if (S.pile) {
-    const pw = mobile ? 22 : 30, sx = APPLE.spot ? APPLE.spot[0] - HB * 2.6 : W * 0.3;
-    const px = clamp(sx, pw + 8, Math.max(pw + 8, xLimit() - pw)), py = hogYMin(px) + 0.35 * (hogYMax(px) - hogYMin(px));
-    pile = `<path d="M${f(px - pw)} ${f(py + 2)} Q${f(px)} ${f(py - pw * 0.9)} ${f(px + pw)} ${f(py + 2)}Z" fill="${S.snowGround ? (night ? '#1A2530' : '#FBF9F4') : '#A87545'}"/>`;
-    for (let i = 0; i < 12; i++) { const a = RP() * Math.PI, rr = pw * (0.3 + RP() * 0.6); const lx = px + Math.cos(a) * rr, ly = py - Math.sin(a) * rr * 0.75; if (S.snowGround && RP() < .7) continue; pile += `<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="3.6" ry="1.8" fill="${['#C08A45', '#8E5B2E', '#D9A33A'][i % 3]}" transform="rotate(${(RP() * 180).toFixed(0)} ${lx.toFixed(1)} ${ly.toFixed(1)})"/>`; }
-    if (S.snowGround) pile += `<path d="M${f(px - pw + 3)} ${f(py)} Q${f(px)} ${f(py - pw * 0.8)} ${f(px + pw - 3)} ${f(py)}" stroke="${night ? '#33434F' : '#D4DCE0'}" stroke-width="1" fill="none"/>`;
-    S.pileX = px; S.pileY = py;
-  } else S.pileX = S.pileY = null;
-  fg.innerHTML = `<g class="st-birch">${crown}<path d="M${Lp}L${Rr}Z" fill="var(--bark)"/>${marks.join('')}${twig}</g>` +
-    `<g class="st-land"><path class="ground" d="${d}" fill="var(--ground, var(--paper))" style="filter:drop-shadow(0 -1px 2px rgba(0,0,0,.14))"/>${pile}${det}</g>` +
-    `<g class="st-house">${cabinSVG(R, night)}</g><g id="feet"></g>`;
+  S.pileX = S.pileY = null;
+  if (!S.snowGround && SCENE.litter) {                    // (the only leaves on the ground: the old scatter along the shore is gone too)
+    const RL2 = rng(hashStr('litter' + W + S.md)), [n0, n1] = SCENE.litter, n = (n0 + Math.floor(RL2() * (n1 - n0 + 1))) * (RMS.leaves ? 4 : 1);   // (rm leaves: they all came down)
+    const cols = S.fallen ? S.fallenCol : S.leaves === 'bare' ? ['#9A7650', '#7E6043'] : ['#D9A33A', '#C9A83A'];   // the birch's own colours, as they fall (yellowed in summer, brown in a snowless winter)
+    const half = MB.w * 3.2, x0 = MB.cx - half, x1 = Math.min(MB.cx + half, CAB.x0 - 3), y1 = H - 4;
+    let ld = '';
+    for (let i = 0; i < n; i++) {                         // around the mailbox, spread evenly from the water's edge down to the bottom; the same leaf as falls from the birch
+      const x = x0 + RL2() * (x1 - x0), yt = ground(x) + 5, y = yt + RL2() * Math.max(4, y1 - yt), a = RL2() * 360, col = cols[RL2() < 0.6 ? 0 : 1];
+      ld += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="3.4" ry="1.7" transform="rotate(${a.toFixed(0)} ${f(x)} ${f(y)})" fill="${col}"/>`;
+    }
+    pile = ld;
+  }
+  // lyijykynä: the ground in pencil — a stroke texture over the grass (or snow), the water line drawn in graphite, the bank shaded below it
+  let landSk = '', shadowSk = '';
+  if (SK.on) {
+    const SP = []; for (let x = -12; x <= W + 12; x += 10) SP.push([x, ground(x) + 0.5]);
+    const sn = S.snowGround;                             // snow: a level, fainter texture (upright strokes would read as grass) and a softer water line
+    landSk = tex(d, sn ? 'skTexC' : 'skTexG', sn ? 0.55 : 0.8) + sketchCurve(SP, { amp: 0.9, op: sn ? 0.5 : 0.8, w: 1.05 }) + fringeP(SP.filter((p, i) => i % 3 === 0), sn ? [-0.6, 1] : [-0.3, 1], sn ? 8 : 11, { op: sn ? 0.35 : 0.55, gap: 0.95 });
+    shadowSk = fringe([CAB.x0 - 12, CAB.base + 1], [W + 6, CAB.base + 1], [-0.6, 1], 13, { op: 1.1, gap: 0.8 }) +   // the cabin's shadow on the grass
+      fringe([MB.left + MB.w * 0.1, MB.base + 2], [MB.left + MB.w * 0.85, MB.base + 2], [-0.5, 1], 6, { op: 0.9, gap: 0.8 });   // and the mailbox's
+  }
+  fg.innerHTML = `<g class="st-lake">${lakeSketch()}</g><g class="st-birch">${crown}<path d="M${Lp}L${Rr}Z" fill="var(--bark)"/>${marks.join('')}${trunkSk}${twig}</g>` +
+    `<g class="st-land"><path class="ground" d="${d}" fill="var(--ground, var(--paper))"${SK.on ? '' : ' style="filter:drop-shadow(0 -1px 2px rgba(0,0,0,.14))"'}/>${landSk}${pile}${det}</g>` +
+    `<g class="st-house">${shadowSk}${cabinSVG(R, night)}</g><g id="feet"></g>`;
 }
 /* the red cabin (Falu red, white trim): gable end towards the lake, on a stone plinth with the hedgehog's lair dug in under it */
 function cabinSVG(R, night) {
   const RI = rng(hashStr('icicles' + W));                // the icicles have their own dice: the rest of the cabin stays put with or without them
   const { x0, x1, fw, dx, dy, top: tp, wb, base, gh, peak, ov, lair } = CAB, f = n => n.toFixed(1);
+  const on = SK.on;                                      // lyijykynä: with the pencil off, exactly the old flat drawing
+  // a straight line: pencil (wavering, overshooting, of uneven weight) or the old hairline
+  const bl = (ax, ay, bx, by, op, w = 1, col = '#000', amp = 0.45, os = 1.2) => on
+    ? `<path d="${pline(ax, ay, bx, by, SK.wobble * amp, SK.overshoot * os / 4.5, 34)}" stroke="${col === '#000' ? 'var(--pencil)' : col}" stroke-opacity="${(op * (1.1 + PR() * 0.9)).toFixed(3)}" stroke-width="${(w * SK.line * (0.65 + PR() * 0.45)).toFixed(2)}" fill="none" stroke-linecap="round"/>`
+    : `<path d="M${f(ax)} ${f(ay)} L${f(bx)} ${f(by)}" stroke="${col}" stroke-opacity="${op}" stroke-width="${w}"/>`;
   let s = '';
-  // the long side, receding to the right (mostly beyond the edge of the screen)
-  s += `<path d="M${f(x1)} ${f(tp)} L${f(x1 + dx)} ${f(tp + dy)} L${f(x1 + dx)} ${f(wb + dy)} L${f(x1)} ${f(wb)}Z" fill="var(--falu-2)"/>`;
-  for (let i = 1; i < 7; i++) { const x = x1 + dx * i / 7; s += `<path d="M${f(x)} ${f(tp + dy * i / 7)} V${f(wb + dy * i / 7)}" stroke="#000" stroke-opacity=".13" stroke-width="1"/>`; }
+  // the long side, receding to the right (mostly beyond the edge of the screen) — in shadow: hatched
+  const sideP = [[x1, tp], [x1 + dx, tp + dy], [x1 + dx, wb + dy], [x1, wb]], sideD = wpoly(sideP);
+  s += `<path d="${sideD}" fill="var(--falu-2)"/>`;
+  for (let i = 1; i < 7; i++) { const x = x1 + dx * i / 7; s += bl(x, tp + dy * i / 7, x, wb + dy * i / 7, .13); }
+  if (on) s += tex(sideD, 'skTexB', 0.8) + hatch(sideD, [x1, tp + dy, x1 + dx, wb], { ang: 66, op: 1.1 }) + hatch(sideD, [x1, tp + dy, x1 + dx, wb], { ang: -28, op: 0.45, gap: 1.7 });
   const sx = x1 + dx * 0.38, sw = dx * 0.34, swy = tp + dy * 0.38 + fw * 0.12;
   s += `<path d="M${f(sx)} ${f(swy)} l${f(sw)} ${f(dy * 0.34)} v${f(fw * 0.2)} l${f(-sw)} ${f(-dy * 0.34)}Z" fill="${S.lamp ? '#E8B86A' : night ? '#141B22' : '#33424B'}" stroke="var(--trim)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  s += sketchPoly([[sx - 1.5, swy - 1.5], [sx + sw + 1.5, swy + dy * 0.34 - 1.5], [sx + sw + 1.5, swy + dy * 0.34 + fw * 0.2 + 1.5], [sx - 1.5, swy + fw * 0.2 + 1.5]], true, { op: 0.8, os: 0.5 });
   // the gable front
-  s += `<path d="M${f(x0)} ${f(wb)} V${f(tp)} L${f(peak[0])} ${f(peak[1])} L${f(x1)} ${f(tp)} V${f(wb)}Z" fill="var(--falu)"/>`;
-  for (let x = x0 + 7; x < x1 - 3; x += 7 + R() * 1.5) { const yt = x < peak[0] ? tp - (x - x0) / (fw / 2) * gh : tp - (x1 - x) / (fw / 2) * gh; s += `<path d="M${f(x)} ${f(yt + 3)} V${f(wb)}" stroke="#000" stroke-opacity=".12" stroke-width="1"/>`; }
-  s += `<path d="M${f(peak[0] - fw * 0.06)} ${f(tp - gh * 0.28)} h${f(fw * 0.12)} v${f(-gh * 0.24)} h${f(-fw * 0.12)}Z" fill="${S.lamp ? '#D9A45C' : night ? '#0E141A' : '#2A363E'}" stroke="var(--trim)" stroke-width="2"/>`;
+  const frontP = [[x0, wb], [x0, tp], [peak[0], peak[1]], [x1, tp], [x1, wb]], frontD = wpoly(frontP, 0.5);
+  s += `<path d="${frontD}" fill="var(--falu)"/>`;
+  if (on) s += tex(frontD, 'skTexA', 0.85);
+  for (let x = x0 + 7; x < x1 - 3; x += 7 + R() * 1.5) {
+    const yt = x < peak[0] ? tp - (x - x0) / (fw / 2) * gh : tp - (x1 - x) / (fw / 2) * gh;
+    s += bl(x, yt + 3, x, wb, .12);
+    if (on && PR() < 0.5) s += `<path d="${pline(x + 1.3, yt + 5 + PR() * 30, x + 1.3, wb - PR() * 40, SK.wobble * 0.4, 0, 40)}" stroke="var(--pencil-hi)" stroke-opacity="${(0.05 + PR() * 0.07).toFixed(3)}" stroke-width="${(0.7 * SK.line).toFixed(2)}" fill="none"/>`;   // a board edge catching the light
+  }
+  const [fc, fdef] = on ? clipDef(frontD) : ['', ''];
+  if (on) {                                              // shade under the barge boards, and where the front turns the corner
+    const eL0 = [x0 - ov, tp + ov * gh / (fw / 2)], bw = mobile ? 3.5 : 5.5, n1 = Math.hypot(fw / 2 + ov, gh + ov * gh / (fw / 2));
+    const dn = [(gh + ov * gh / (fw / 2)) / n1, (fw / 2 + ov) / n1];       // the normal to the left slope, pointing down and right, into the wall
+    const off = bw * 0.5 + 1, P0 = [eL0[0] + dn[0] * off, eL0[1] + dn[1] * off], P1 = [peak[0], peak[1] - 3 + off / dn[1]], P2 = [2 * peak[0] - P0[0], P0[1]];
+    s += fdef + fringe(P0, P1, [0.12, 1], fw * 0.07, { clip: fc, op: 1.1, gap: 0.85 }) + fringe(P1, P2, [-0.12, 1], fw * 0.07, { clip: fc, op: 1.1, gap: 0.85 });
+    s += fringe([x1 - 1, tp], [x1 - 1, wb], [-1, 0.25], fw * 0.05, { clip: fc, op: 0.8, gap: 0.9 });
+    s += fringe([x0 + 4, wb], [Math.min(x1, W + 4), wb], [0.2, -1], fw * 0.035, { clip: fc, op: 0.6, gap: 1.1 });   // a little dusk along the foot of the wall
+  }
+  const lw = [peak[0] - fw * 0.06, tp - gh * 0.28, fw * 0.12, gh * 0.24];
+  s += `<path d="M${f(lw[0])} ${f(lw[1])} h${f(lw[2])} v${f(-lw[3])} h${f(-lw[2])}Z" fill="${S.lamp ? '#D9A45C' : night ? '#0E141A' : '#2A363E'}" stroke="var(--trim)" stroke-width="2"/>`;
+  s += sketchPoly([[lw[0] - 1, lw[1] + 1], [lw[0] + lw[2] + 1, lw[1] + 1], [lw[0] + lw[2] + 1, lw[1] - lw[3] - 1], [lw[0] - 1, lw[1] - lw[3] - 1]], true, { op: 0.85, os: 0.5 });
   s += `<rect x="${f(x0 - 2)}" y="${f(tp)}" width="5" height="${f(wb - tp)}" fill="var(--trim)"/><rect x="${f(x1 - 3)}" y="${f(tp)}" width="5" height="${f(wb - tp)}" fill="var(--trim)"/>`;
+  if (on) for (const x of [x0 - 2, x0 + 3, x1 - 3, x1 + 2]) s += sketchPoly([[x, tp], [x, wb]], false, { op: x === x0 - 2 || x === x1 + 2 ? 0.95 : 0.6, w: 0.9 });
   // the door (at the right edge of the screen), with its step
   const { w: dw, h: dh, x: dxp } = CAB.door;
   s += `<rect x="${f(dxp)}" y="${f(wb - dh)}" width="${f(dw)}" height="${f(dh)}" fill="var(--trim)"/><rect x="${f(dxp + 3)}" y="${f(wb - dh + 3)}" width="${f(dw - 6)}" height="${f(dh - 3)}" fill="${night ? '#2E1A17' : '#5E2A25'}"/>`;
-  for (let i = 1; i < 4; i++) s += `<path d="M${f(dxp + 3 + (dw - 6) * i / 4)} ${f(wb - dh + 3)} V${f(wb)}" stroke="#000" stroke-opacity=".18"/>`;
+  for (let i = 1; i < 4; i++) s += bl(dxp + 3 + (dw - 6) * i / 4, wb - dh + 3, dxp + 3 + (dw - 6) * i / 4, wb, .18);
+  s += sketchPoly([[dxp, wb], [dxp, wb - dh], [dxp + dw, wb - dh], [dxp + dw, wb]], false, { op: 0.9 }) + sketchPoly([[dxp + 3, wb], [dxp + 3, wb - dh + 3], [dxp + dw - 3, wb - dh + 3]], false, { op: 0.55, w: 0.8, os: 0.5 });
   // the roof: the far slope recedes to the right; white barge boards on the gable
   const eL = [x0 - ov, tp + ov * gh / (fw / 2)], eR = [x1 + ov, tp + ov * gh / (fw / 2)];
-  s += `<path d="M${f(peak[0])} ${f(peak[1] - 3)} L${f(peak[0] + dx)} ${f(peak[1] - 3 + dy)} L${f(eR[0] + dx)} ${f(eR[1] + dy)} L${f(eR[0])} ${f(eR[1])}Z" fill="var(--roof)"/>`;
-  for (let i = 1; i < 6; i++) { const t = i / 6; s += `<path d="M${f(peak[0] + (eR[0] - peak[0]) * t)} ${f(peak[1] - 3 + (eR[1] - peak[1] + 3) * t)} l${f(dx)} ${f(dy)}" stroke="#fff" stroke-opacity=".07"/>`; }
+  const roofP = [[peak[0], peak[1] - 3], [peak[0] + dx, peak[1] - 3 + dy], [eR[0] + dx, eR[1] + dy], [eR[0], eR[1]]], roofD = wpoly(roofP, 0.5);
+  s += `<path d="${roofD}" fill="var(--roof)"/>`;
+  if (on) s += tex(roofD, 'skTexC', 1.1);
+  for (let i = 1; i < 6; i++) { const t = i / 6, ax = peak[0] + (eR[0] - peak[0]) * t, ay = peak[1] - 3 + (eR[1] - peak[1] + 3) * t; s += bl(ax, ay, ax + dx, ay + dy, .07, 1, '#fff'); }
+  if (on) s += sketchPoly(roofP.slice(1).concat([roofP[0]]), false, { op: 0.8, w: 0.9 });
   // the chimney, on the visible slope near the ridge
   const cxm = peak[0] + dx * 0.3 + (eR[0] - peak[0]) * 0.08, cym = peak[1] - 3 + dy * 0.3 + (eR[1] - peak[1]) * 0.08, cwid = fw * 0.07, chh = fw * 0.15;
-  s += `<rect x="${f(cxm - cwid / 2)}" y="${f(cym - chh)}" width="${f(cwid)}" height="${f(chh + 6)}" fill="${night ? '#5B5752' : '#B5ADA2'}"/><rect x="${f(cxm - cwid / 2 - 2)}" y="${f(cym - chh - 3)}" width="${f(cwid + 4)}" height="4" fill="${night ? '#3E3B37' : '#8C857B'}"/>`;
+  const chD = wpoly([[cxm - cwid / 2, cym - chh], [cxm + cwid / 2, cym - chh], [cxm + cwid / 2, cym + 6], [cxm - cwid / 2, cym + 6]], 0.4);
+  s += `<path d="${chD}" fill="${night ? '#5B5752' : '#B5ADA2'}"/><rect x="${f(cxm - cwid / 2 - 2)}" y="${f(cym - chh - 3)}" width="${f(cwid + 4)}" height="4" fill="${night ? '#3E3B37' : '#8C857B'}"/>`;
   s += `<rect x="${f(cxm + cwid * 0.1)}" y="${f(cym - chh)}" width="${f(cwid * 0.4)}" height="${f(chh + 6)}" fill="#000" opacity=".12"/>`;
+  if (on) {
+    s += tex(chD, 'skTexB', 0.9) + hatch(chD, [cxm + cwid * 0.1, cym - chh, cxm + cwid / 2, cym + 6], { ang: 70, op: 0.9, gap: 0.8 });
+    for (let y = cym - chh + 6, k = 0; y < cym; y += 5.5 + PR(), k++) s += bl(cxm - cwid / 2 + 1, y, cxm + cwid / 2 - 1, y, .1, 0.7, '#000', 0.3, 0.2);   // brick courses
+    s += sketchPoly([[cxm - cwid / 2, cym + 2], [cxm - cwid / 2, cym - chh], [cxm + cwid / 2, cym - chh], [cxm + cwid / 2, cym + 2]], false, { op: 0.9 });
+    s += sketchPoly([[cxm - cwid / 2 - 2, cym - chh - 3], [cxm + cwid / 2 + 2, cym - chh - 3], [cxm + cwid / 2 + 2, cym - chh + 1], [cxm - cwid / 2 - 2, cym - chh + 1]], true, { op: 0.7, w: 0.8, os: 0.4 });
+  }
   CAB.chim = [cxm, cym - chh - 3];
   s += `<path d="M${f(eL[0])} ${f(eL[1])} L${f(peak[0])} ${f(peak[1] - 3)} L${f(eR[0])} ${f(eR[1])}" stroke="var(--trim)" stroke-width="${mobile ? 3.5 : 5.5}" fill="none" stroke-linejoin="miter" stroke-linecap="square"/>`;
   s += `<path d="M${f(eL[0])} ${f(eL[1])} L${f(peak[0])} ${f(peak[1] - 3)} L${f(eR[0])} ${f(eR[1])}" stroke="var(--roof)" stroke-width="2.2" fill="none" transform="translate(0,-3)"/>`;
+  if (on) {                                              // the barge boards' two edges, overshooting at the eaves and crossing at the ridge
+    const hb = (mobile ? 3.5 : 5.5) / 2, up = mobile ? 3.4 : 4.4;
+    s += sketchPoly([[eL[0], eL[1] - up], [peak[0], peak[1] - 3 - up], [eR[0], eR[1] - up]], false, { op: 1.1, w: 1.05 });
+    s += sketchPoly([[eL[0] + hb * 0.5, eL[1] + hb + 0.6], [peak[0], peak[1] - 3 + hb * 1.35], [eR[0] - hb * 0.5, eR[1] + hb + 0.6]], false, { op: 0.7, w: 0.85 });
+  }
   if (S.snowGround) {
     const sn = night ? '#C9D2DA' : '#FBFCFD';
     s += `<path d="M${f(peak[0])} ${f(peak[1] - 6)} L${f(peak[0] + dx)} ${f(peak[1] - 6 + dy)} L${f(eR[0] + dx)} ${f(eR[1] + dy - 3)} L${f(eR[0])} ${f(eR[1] - 3)}Z" fill="${sn}" opacity=".92"/>`;
     s += `<path d="M${f(eL[0] - 2)} ${f(eL[1] - 4)} L${f(peak[0])} ${f(peak[1] - 8)} L${f(eR[0] + 2)} ${f(eR[1] - 4)}" stroke="${sn}" stroke-width="${mobile ? 3 : 4.5}" fill="none" stroke-linecap="round" opacity=".95"/>`;
     s += `<rect x="${f(cxm - cwid / 2 - 2)}" y="${f(cym - chh - 6)}" width="${f(cwid + 4)}" height="4" rx="2" fill="${sn}"/>`;
-    if (S.frozen) for (let x = eL[0] + 4; x < peak[0] - 6; x += 5 + RI() * 7) { const y = eL[1] + (peak[1] - eL[1]) * (x - eL[0]) / (peak[0] - eL[0]) + 3; s += `<path d="M${f(x)} ${f(y)} l1.4 ${f(4 + RI() * 8)} l1.4 ${f(-4 - RI() * 5)}Z" fill="#E4EEF4" opacity=".85"/>`; }
+    if (on) s += sketchPoly([[eL[0] - 2, eL[1] - 6.5], [peak[0], peak[1] - 10.5], [eR[0] + 2, eR[1] - 6.5]], false, { op: 0.45, w: 0.8 }) + sketchPoly([[eR[0], eR[1] - 3], [eR[0] + dx, eR[1] + dy - 3]], false, { op: 0.4, w: 0.8 });
+    if (S.frozen) for (let x = eL[0] + 4; x < peak[0] - 6; x += 5 + RI() * 7) { const y = eL[1] + (peak[1] - eL[1]) * (x - eL[0]) / (peak[0] - eL[0]) + 3; s += `<path d="M${f(x)} ${f(y)} l1.4 ${f(4 + RI() * 8)} l1.4 ${f(-4 - RI() * 5)}Z" fill="#E4EEF4" opacity=".85"${on ? ` stroke="var(--pencil)" stroke-opacity=".35" stroke-width=".5"` : ''}/>`; }
   }
   // the stone plinth (crawl space) under the house …
-  s += `<path d="M${f(x0 - 4)} ${f(wb - 2)} H${f(x1 + 3)} L${f(x1 + dx + 1)} ${f(wb - 2 + dy)} V${f(base + dy)} L${f(x1)} ${f(base)} H${f(x0 - 4)}Z" fill="var(--stone)"/>`;
-  for (let x = x0 + 4, row = 0; x < Math.min(x1, W + 4); x += 16 + R() * 18) s += `<path d="M${f(x)} ${f(wb + 1)} v${f(CAB.plinth - 3)}" stroke="#000" stroke-opacity=".13" stroke-width="1"/>`;
-  s += `<path d="M${f(x0 - 4)} ${f((wb + base) / 2)} H${f(Math.min(x1, W + 4))}" stroke="#000" stroke-opacity=".1" stroke-width="1"/>`;
-  s += `<path d="M${f(x0 - 8)} ${f(base + 1)} H${f(Math.min(x1 + 8, W + 8))}" stroke="#000" stroke-opacity=".16" stroke-width="2.5" stroke-linecap="round"/>`;
+  const plP = [[x0 - 4, wb - 2], [x1 + 3, wb - 2], [x1 + dx + 1, wb - 2 + dy], [x1 + dx + 1, base + dy], [x1, base], [x0 - 4, base]], plD = wpoly(plP, 0.4);
+  s += `<path d="${plD}" fill="var(--stone)"/>`;
+  if (!on) {
+    for (let x = x0 + 4, row = 0; x < Math.min(x1, W + 4); x += 16 + R() * 18) s += `<path d="M${f(x)} ${f(wb + 1)} v${f(CAB.plinth - 3)}" stroke="#000" stroke-opacity=".13" stroke-width="1"/>`;
+    s += `<path d="M${f(x0 - 4)} ${f((wb + base) / 2)} H${f(Math.min(x1, W + 4))}" stroke="#000" stroke-opacity=".1" stroke-width="1"/>`;
+    s += `<path d="M${f(x0 - 8)} ${f(base + 1)} H${f(Math.min(x1 + 8, W + 8))}" stroke="#000" stroke-opacity=".16" stroke-width="2.5" stroke-linecap="round"/>`;
+  } else {                                               // … laid as stones: two courses of rounded, uneven blocks, each outlined and toned
+    for (let x = x0 + 4; x < Math.min(x1, W + 4); x += 16 + R() * 18) {}   // (the old joints' dice, drawn but not used, so the rest of the scene keeps its shape)
+    s += tex(plD, 'skTexB', 0.9);
+    const ph = base - (wb - 2), rows = 2, rh = ph / rows, xe = Math.min(x1 + 3, W + 6);
+    let stones = '', lines = '';
+    for (let r = 0; r < rows; r++) {
+      const yA = wb - 2 + r * rh, yB = yA + rh;
+      for (let x = x0 - 4 - (r ? 9 + PR() * 8 : 0); x < xe; ) {
+        const w = rh * (1.1 + PR() * 1.3), xa = Math.max(x0 - 4, x) + 0.9, xb = Math.min(xe, x + w) - 0.9, ins = 0.9, cr = Math.min(3.5, rh * 0.22);
+        if (xb - xa > 4) {
+          const P = [[xa + cr, yA + ins], [xb - cr, yA + ins + (PR() - .5)], [xb, yA + cr + ins], [xb + (PR() - .5) * 1.2, yB - cr - ins], [xb - cr, yB - ins], [xa + cr, yB - ins + (PR() - .5)], [xa, yB - cr - ins], [xa + (PR() - .5) * 1.2, yA + cr + ins]];
+          const tone = PR(), dd = wpoly(P, 0.5);
+          stones += `<path d="${dd}" fill="${tone < 0.5 ? '#fff' : '#000'}" fill-opacity="${(tone < 0.5 ? 0.04 + tone * 0.14 : 0.03 + (tone - 0.5) * 0.14).toFixed(3)}"/>`;
+          lines += pedges(P, true, SK.wobble * 0.35, 0.8);
+        }
+        x += w;
+      }
+    }
+    s += stones + ink(lines, 0.75, 0.75);
+    s += fringe([x0 - 4, wb - 1], [xe, wb - 1], [0.3, 1], rh * 0.45, { op: 0.9, gap: 0.9 });   // the wall's shadow on the top course
+    s += sketchPoly([[x0 - 4, wb - 2], [xe, wb - 2]], false, { op: 0.9 }) + sketchPoly([[x0 - 4, wb - 2], [x0 - 4, base], [xe, base]], false, { op: 1 });
+  }
   // … and the lair: a burrow dug in under it, a little heap of earth in front
   const lx = lair.x, rx = lair.rx, ry = lair.ry;
   s += `<path d="M${f(lx - rx * 1.6)} ${f(base + 4)} Q${f(lx)} ${f(base - 6)} ${f(lx + rx * 1.6)} ${f(base + 4)}Z" fill="${S.snowGround ? (night ? '#26323F' : '#E6EBEE') : '#7A6248'}" opacity=".6"/>`;
   s += `<path d="M${f(lx - rx)} ${f(base + 1)} C${f(lx - rx)} ${f(base - ry * 1.3)} ${f(lx + rx)} ${f(base - ry * 1.3)} ${f(lx + rx)} ${f(base + 1)} Q${f(lx)} ${f(base + 4)} ${f(lx - rx)} ${f(base + 1)}Z" fill="var(--hole)"/>`;
+  if (on) {
+    const Q = []; for (let i = 0; i <= 14; i++) { const u = i / 14, q = 1 - u; Q.push([q * q * q * (lx - rx) + 3 * q * q * u * (lx - rx) + 3 * q * u * u * (lx + rx) + u * u * u * (lx + rx), q * q * q * (base + 1) + 3 * (q * q * u + q * u * u) * (base - ry * 1.3) + u * u * u * (base + 1)]); }
+    s += sketchCurve(Q, { op: 0.9, w: 1 });
+    const H2 = []; for (let i = 0; i <= 8; i++) { const u = i / 8, q = 1 - u; H2.push([q * q * (lx - rx * 1.6) + 2 * q * u * lx + u * u * (lx + rx * 1.6), q * q * (base + 4) + 2 * q * u * (base - 6) + u * u * (base + 4)]); }
+    s += sketchCurve(H2, { op: 0.45, w: 0.8 });
+  }
   return `<g id="cabin">${s}</g>`;
 }
 
@@ -732,9 +1205,73 @@ function buildForest() {
   const sc = mobile ? 0.8 : 1;
   FOREST = { far: ridge(8 * sc, 20 * sc, 4, 8, 16 * sc, 1.3), near: ridge(16 * sc, 40 * sc, 5, 11, 12 * sc, 4.1).filter(t => !(t.x > W * 0.4 && t.x < W * 0.58)),
     isle: ridge(10 * sc, 26 * sc, 5, 9, 4, 0).filter(t => t.x > W * 0.44 && t.x < W * 0.56), cabin: W * (mobile ? 0.12 : 0.22) };
+  if (SK.on) { const RJ = rng(777 + W); for (const t of [...FOREST.far, ...FOREST.near, ...FOREST.isle]) t.j = Array.from({ length: 12 }, () => RJ() - 0.5); }   // lyijykynä: each spruce drawn by hand — no two alike
+  if (SK.broadleaf > 0) {                                // kaunotar (after vesiväri): some of the near shore's trees are broadleaf crowns, aspens and birches, in the season's colour
+    const RB = rng(4242 + W), blob = (cx, cy, rx, ry, n) => Array.from({ length: n }, (_, i) => { const a = (i + (RB() - .5) * 0.5) / n * 2 * Math.PI, r = 1 + (RB() - .5) * 0.48; return [cx + Math.cos(a) * rx * r, cy + Math.sin(a) * ry * r]; });
+    for (const t of FOREST.near) {
+      if (RB() >= SK.broadleaf) continue;
+      const by = HY + 1 - t.base * 0.5, rx = t.h * (0.28 + RB() * 0.12), ry = t.h * (0.36 + RB() * 0.12);
+      t.leaf = { stem: [t.x - 0.6, by - t.h * 0.35, 1.2, t.h * 0.35 + 2], blobs: [blob(t.x, by - ry * 0.95 - t.h * 0.08, rx, ry, 9), blob(t.x + (RB() - .5) * rx, by - ry * 1.5, rx * 0.65, ry * 0.6, 7)] };
+    }
+  }
 }
-function spruce(c, x, by, h, w) {
-  const tiers = h > 18 ? 5 : 3, tp = by - h; c.moveTo(x, tp);
+/* kaunotar: the far shore's silhouettes as alpha masks, cut once per layout in band-sized canvases. A tick only tints them
+   (drawImage + 'source-in' fill per layer) instead of re-rasterizing ~600 trees: renderStatic falls from ~60 ms to a few */
+let FM = null;
+function buildForestMasks() {
+  FM = null; if (!FOREST) return;
+  const top = Math.floor(HY - 80 * (mobile ? 0.8 : 1)), h = Math.ceil(HY + 3 - top), cw = Math.round(W * DPR), ch = Math.round(h * DPR);
+  const mk = draw => { const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const x = cv.getContext('2d'); x.setTransform(DPR, 0, 0, DPR, 0, -Math.round(top * DPR)); x.fillStyle = '#000'; x.beginPath(); draw(x); x.fill(); return cv; };
+  const L = {};
+  L.far = mk(c => { for (const t of FOREST.far) spruce(c, t.x, HY - 6 - t.base, t.h, t.w, t.j); c.rect(0, HY - 7, W, 9); c.fill(); c.beginPath(); farHill(c); });
+  L.isle = mk(c => { for (const t of FOREST.isle) spruce(c, t.x, HY - 1, t.h, t.w, t.j); c.rect(W * 0.435, HY - 3, W * 0.13, 4); });
+  if (FOREST.near.some(t => t.leaf)) { L.stems = mk(c => { for (const t of FOREST.near) if (t.leaf) c.rect(...t.leaf.stem); }); L.crowns = mk(c => { for (const t of FOREST.near) if (t.leaf) crown(c, t); }); }
+  L.near = mk(c => { for (const t of FOREST.near) if (!t.leaf) spruce(c, t.x, HY + 1 - t.base * 0.5, t.h, t.w, t.j); c.moveTo(0, HY + 2); for (const t of FOREST.near) c.lineTo(t.x, HY + 1 - t.base * 0.5); c.lineTo(W, HY + 2); c.closePath(); });
+  const tmp = document.createElement('canvas'); tmp.width = cw; tmp.height = ch;
+  FM = { top, h, L, tmp, tx: tmp.getContext('2d') };
+}
+function tintMask(c, m, col) {                           // kaunotar: one silhouette layer, in its colour of the moment
+  const x = FM.tx; x.globalCompositeOperation = 'copy'; x.drawImage(m, 0, 0);
+  x.globalCompositeOperation = 'source-in'; x.fillStyle = col; x.fillRect(0, 0, FM.tmp.width, FM.tmp.height);
+  c.drawImage(FM.tmp, 0, Math.round(FM.top * DPR));
+}
+function farHill(c) {                                  // kaunotar: the far ridge's own hill, filled under its trees (the ridge rises up to ~16 px above the horizon,
+  c.moveTo(-10, HY + 2); for (const t of FOREST.far) c.lineTo(t.x, HY - 5.5 - t.base); c.lineTo(W + 10, HY + 2); c.closePath();   // and the 9-px band at its foot left a strip of sky under the raised trees)
+}
+function crown(c, t) {                                   // kaunotar: a broadleaf crown — two soft lumps, drawn through the midpoints of their jittered rims
+  for (const P of t.leaf.blobs) { const n = P.length, m = i => [(P[i][0] + P[(i + 1) % n][0]) / 2, (P[i][1] + P[(i + 1) % n][1]) / 2], s0 = m(n - 1);
+    c.moveTo(s0[0], s0[1]); for (let i = 0; i < n; i++) { const q = m(i); c.quadraticCurveTo(P[i][0], P[i][1], q[0], q[1]); } c.closePath(); }
+}
+/* lyijykynä: the far shore's pencil, cached per layout in two band-sized canvases (stroking ~600 trees costs ~50 ms in software,
+   too much for every tick): the stroke texture masked to the silhouettes, and the outlines — each ridge's hidden behind the one in front */
+let FSK = null;
+function buildForestSketch() {
+  FSK = null;
+  if (!SK.on || SK.forest <= 0 || !FOREST) return;
+  const top = Math.floor(HY - 80 * (mobile ? 0.8 : 1)), h = Math.ceil(HY + 3 - top);
+  const mk = () => { const cv = document.createElement('canvas'); cv.width = Math.round(W * DPR); cv.height = Math.round(h * DPR); const x = cv.getContext('2d'); x.setTransform(DPR, 0, 0, DPR, 0, -Math.round(top * DPR)); return [cv, x]; };
+  const far = c => { for (const t of FOREST.far) spruce(c, t.x, HY - 6 - t.base, t.h, t.w, t.j); }, isle = c => { for (const t of FOREST.isle) spruce(c, t.x, HY - 1, t.h, t.w, t.j); };
+  const near = c => { for (const t of FOREST.near) if (t.leaf) crown(c, t); else spruce(c, t.x, HY + 1 - t.base * 0.5, t.h, t.w, t.j); }, nearGround = c => { c.moveTo(0, HY + 2); for (const t of FOREST.near) c.lineTo(t.x, HY + 1 - t.base * 0.5); c.lineTo(W, HY + 2); c.closePath(); };
+  const [tc, t] = mk(), [oc, o] = mk();
+  t.fillStyle = '#000'; t.beginPath(); far(t); isle(t); near(t); nearGround(t); t.fill(); t.fillRect(0, HY - 7, W, 9); t.beginPath(); farHill(t); t.fill();
+  t.globalCompositeOperation = 'source-in'; t.fillStyle = skPat(t, -30, 0.8); t.fillRect(0, top, W, h);
+  const pen = [42, 34, 29]; o.lineWidth = 0.6 * SK.line; o.lineJoin = 'bevel';
+  const stroke = (draw, a) => { o.strokeStyle = rgba(pen, a); const q = { moveTo: (x, y) => { o.beginPath(); o.moveTo(x, y); }, lineTo: (x, y) => o.lineTo(x, y), quadraticCurveTo: (a, b, x, y) => o.quadraticCurveTo(a, b, x, y), closePath: () => { o.closePath(); o.stroke(); } }; draw(q); };   // (each tree stroked on its own: one path per ridge rasterizes a band-sized mask, ~1.7× slower in software)   // (one path per ridge: per-tree stroke() calls measured no faster)
+  const hide = draw => { o.globalCompositeOperation = 'destination-out'; o.beginPath(); draw(o); o.fill(); o.globalCompositeOperation = 'source-over'; };
+  stroke(far, 0.32); hide(isle); stroke(isle, 0.45); hide(c => { near(c); nearGround(c); }); stroke(near, 0.6);
+  FSK = { top, tex: tc, out: oc };
+}
+function spruce(c, x, by, h, w, j) {
+  const tiers = h > 18 ? 5 : 3, tp = by - h;
+  if (j) {                                               // lyijykynä: a hand-drawn spruce — a leaning tip, uneven tiers, the boughs drooping or lifting a little
+    const tx = x + j[0] * h * 0.07, wv = i => 1 + 0.32 * j[1 + i % 6], dv = i => 0.1 + 0.14 * j[6 + i % 5], nv = i => 0.45 + 0.2 * j[(i + 3) % 12];
+    c.moveTo(tx, tp);
+    for (let i = 1; i <= tiers; i++) { const y = tp + h * i / tiers + j[(i + 7) % 12] * h * 0.05, ww = h * w * i / tiers * wv(i); c.lineTo(x + ww, y + dv(i) * h / tiers); if (i < tiers) c.lineTo(x + ww * nv(i), y - h / tiers * 0.1); }
+    c.lineTo(x + 1, by); c.lineTo(x - 1, by);
+    for (let i = tiers; i >= 1; i--) { const y = tp + h * i / tiers + j[(i + 2) % 12] * h * 0.05, ww = h * w * i / tiers * wv(i + 3); if (i < tiers) c.lineTo(x - ww * nv(i + 1), y - h / tiers * 0.1); c.lineTo(x - ww, y + dv(i + 2) * h / tiers); }
+    c.closePath(); return;
+  }
+  c.moveTo(x, tp);
   for (let i = 1; i <= tiers; i++) { const y = tp + h * i / tiers, ww = h * w * i / tiers; c.lineTo(x + ww, y); if (i < tiers) c.lineTo(x + ww * 0.45, y - h / tiers * 0.1); }
   c.lineTo(x + 1, by); c.lineTo(x - 1, by);
   for (let i = tiers; i >= 1; i--) { const y = tp + h * i / tiers, ww = h * w * i / tiers; if (i < tiers) c.lineTo(x - ww * 0.45, y - h / tiers * 0.1); c.lineTo(x - ww, y); }
@@ -755,6 +1292,7 @@ const X = az => ((az - 180) / 360 + 0.5) * W;
 const Y = alt => HY - (HY - 26) * Math.pow(clamp(alt, 0, 90) / 90, 0.8);
 function renderStatic() {
   if (!W) return;
+  const tR = performance.now();
   const tr0 = $('#heroText').getBoundingClientRect(), hr0 = hero.getBoundingClientRect();
   const tl = (tr0.left - hr0.left) / SC, tr = (tr0.right - hr0.left) / SC, tt = (tr0.top - hr0.top) / SC, tb = (tr0.bottom - hr0.top) / SC;
   const behind = (x, y, r) => x + r > tl - 8 && x - r < tr + 8 && y + r > tt - 8 && y - r < tb + 8;
@@ -778,8 +1316,9 @@ function renderStatic() {
       const p = altAz(st[0] * 15 * RAD, st[1] * RAD, d, LAT, LON);
       if (p.alt < 2 || (RMS.stars && (RMS.gone.has(i) || S.voidK >= 1))) continue;   // rm stars: each one goes as it shoots off
       const x = X(p.az), y = Y(p.alt), m = st[2];
-      const a = S.starK * clamp(1.15 - m * 0.2, 0.18, 1) * smooth(2, 10, p.alt) * (0.75 + 0.25 * tw());
-      c.fillStyle = `rgba(245,240,225,${a.toFixed(3)})`; c.beginPath(); c.arc(x, y, Math.max(0.55, 1.9 - m * 0.33), 0, 7); c.fill();
+      const mb = m - SCENE.stars.boost;                   // kaunotar: drawn brighter than they are (see SCENE.stars)
+      const a = S.starK * clamp(1.15 - mb * 0.2, 0.18, 1) * smooth(2, 10, p.alt) * (0.75 + 0.25 * tw());
+      c.fillStyle = `rgba(245,240,225,${a.toFixed(3)})`; c.beginPath(); c.arc(x, y, Math.max(0.55, 1.9 - mb * 0.33), 0, 7); c.fill();
     }
   }
   if (S.moon.alt > -0.5) {
@@ -818,22 +1357,57 @@ function renderStatic() {
       c.fillStyle = rg; c.fillRect(-r, -r, 2 * r, 2 * r); c.restore();
     }
   }
-  renderForest();
+  const tF = performance.now(); renderForest();
+  SKM = null;                                            // lyijykynä: the sky's pencil strokes — white pencil and graphite layered over the colour. kaunotar: they are kept
+  if (SKYS) {                                            // out of skyC (which the lake mirrors) and laid over the sky on the screen only, with the far shore cut out of them
+    if (!skmC) skmC = document.createElement('canvas');
+    skmC.width = skyC.width; skmC.height = skyC.height; const m = skmC.getContext('2d');
+    m.globalAlpha = SK.sky * 0.52 * (1 - 0.7 * smooth(3, -8, S.sun.alt)) * (1 - 0.4 * S.cloud); m.drawImage(SKYS, 0, 0, skmC.width, skmC.height);   // (fainter after sunset: light strokes glare on a deep blue)
+    m.globalAlpha = 1; m.globalCompositeOperation = 'destination-out'; m.drawImage(forC, 0, 0); SKM = skmC;
+  }
+  topDirty = true;
+  const tJ = performance.now(); buildJetty();            // lyijykynä: the jetty's cached drawing
+  const tE = performance.now(); TIMING.renderStatic = tE - tR; TIMING.forest = tJ - tF; TIMING.jetty = tE - tJ;
 }
 function renderForest() { drawForest(fctx, false); if (dry()) drawForest(fdctx, true); }
 function drawForest(c, noWater) {
   c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, HY + 2);
   const dark = S.night ? hex('#05080C') : hex('#1D2B27');
   const farC = mix(S.hor, mix(S.mid, dark, 0.35), 0.55), nearC = mix(S.hor, dark, S.night ? 0.78 : 0.7), snowy = S.snowGround ? 0.12 : 0;
-  c.fillStyle = rgba(mix(farC, [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.far) spruce(c, t.x, HY - 6 - t.base, t.h, t.w); c.fill();
+  const pen = PENCIL(), skf = SK.on ? SK.forest : 0;
+  let leafC = null, seas = null;
+  if (SK.broadleaf > 0) {                                // kaunotar: the broadleaf crowns in the season's colour, dimmed by dusk; bare in winter: a purple-grey haze of twigs
+    const lv = S.leaves; seas = lv === 'green' ? [96, 128, 62] : lv === 'mouse' ? [150, 176, 92] : lv === 'turning' ? [168, 160, 70] : lv === 'gold' ? [214, 158, 52] : lv === 'falling' ? [196, 120, 48] : null;
+    const lit = S.night ? 0.12 : S.sun.alt < 0 ? 0.3 : 0.55; leafC = seas ? mix(nearC, mix(seas, S.hor, 0.25), lit) : mix(nearC, mix([128, 112, 122], S.hor, 0.4), S.night ? 0.12 : 0.3);
+  }
+  if (FM && !noWater) {                                  // kaunotar: the cached silhouettes, tinted
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    tintMask(c, FM.L.far, rgba(mix(farC, [230, 235, 240], snowy)));
+    tintMask(c, FM.L.isle, rgba(mix(mix(S.hor, dark, 0.62), [230, 235, 240], snowy)));
+    if (FM.L.stems) { tintMask(c, FM.L.stems, rgba(mix(nearC, [0, 0, 0], 0.2))); tintMask(c, FM.L.crowns, rgba(mix(leafC, [230, 235, 240], snowy * 0.5), seas ? 1 : 0.55)); }
+    tintMask(c, FM.L.near, rgba(mix(nearC, [230, 235, 240], snowy)));
+    c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  } else {
+  c.fillStyle = rgba(mix(farC, [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.far) spruce(c, t.x, HY - 6 - t.base, t.h, t.w, t.j); c.fill();
+  if (!noWater) { c.beginPath(); farHill(c); c.fill(); }
   if (noWater) {                                         // the distant water under the far hills and between the islands: silt, in the haze
     c.fillStyle = rgba(mix(farC, siltCol(), S.night ? 0.25 : 0.5)); c.beginPath(); c.moveTo(-10, HY + 2);
     for (const t of FOREST.far) c.lineTo(t.x, HY - 5.5 - t.base); c.lineTo(W + 10, HY + 2); c.closePath(); c.fill();
   }
   c.fillRect(0, HY - 7, W, 9);
-  c.fillStyle = rgba(mix(mix(S.hor, dark, 0.62), [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.isle) spruce(c, t.x, HY - 1, t.h, t.w); c.fill(); c.fillRect(W * 0.435, HY - 3, W * 0.13, 4);
-  c.fillStyle = rgba(mix(nearC, [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.near) spruce(c, t.x, HY + 1 - t.base * 0.5, t.h, t.w); c.fill();
+  c.fillStyle = rgba(mix(mix(S.hor, dark, 0.62), [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.isle) spruce(c, t.x, HY - 1, t.h, t.w, t.j); c.fill(); c.fillRect(W * 0.435, HY - 3, W * 0.13, 4);
+  if (leafC) {
+    c.fillStyle = rgba(mix(nearC, [0, 0, 0], 0.2)); for (const t of FOREST.near) if (t.leaf) c.fillRect(...t.leaf.stem);
+    c.fillStyle = rgba(mix(leafC, [230, 235, 240], snowy * 0.5), seas ? 1 : 0.55); c.beginPath(); for (const t of FOREST.near) if (t.leaf) crown(c, t); c.fill();
+  }
+  c.fillStyle = rgba(mix(nearC, [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.near) if (!t.leaf) spruce(c, t.x, HY + 1 - t.base * 0.5, t.h, t.w, t.j); c.fill();
   c.beginPath(); c.moveTo(0, HY + 2); for (const t of FOREST.near) c.lineTo(t.x, HY + 1 - t.base * 0.5); c.lineTo(W, HY + 2); c.fill();
+  }
+  if (FSK && skf > 0) {                                  // lyijykynä: the cached pencil — upright strokes through the silhouettes, and every tree outlined
+    const skT = skf * (1 - 0.65 * smooth(2, -9, S.sun.alt));   // (the strokes fade after dusk: light strokes on a black ridge look like reeds)
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = Math.min(1, skT * 1.3); c.drawImage(FSK.tex, 0, Math.round(FSK.top * DPR));
+    c.globalAlpha = Math.min(1, skf * (S.night ? 0.8 : 1)); c.drawImage(FSK.out, 0, Math.round(FSK.top * DPR)); c.restore();
+  }
   const cx = FOREST.cabin, cb = HY + 1 - 6, s = mobile ? 0.7 : 0.85;
   const red = mix(hex('#9B3A33'), dark, S.night ? 0.72 : S.sun.alt < 0 ? 0.45 : 0.15);
   c.fillStyle = rgba(red); c.fillRect(cx - 12 * s, cb - 11 * s, 24 * s, 11 * s + 6);
@@ -841,10 +1415,18 @@ function drawForest(c, noWater) {
   c.fillRect(cx + 5 * s, cb - 20 * s, 3 * s, 6 * s);
   if (S.farLit) { c.fillStyle = '#FFD58A'; c.fillRect(cx - 7 * s, cb - 8 * s, 4 * s, 4 * s); c.fillRect(cx + 3 * s, cb - 8 * s, 4 * s, 4 * s); }
   else { c.fillStyle = rgba(mix(S.hor, [255, 255, 255], .3), .6); c.fillRect(cx - 7 * s, cb - 8 * s, 4 * s, 4 * s); }
+  if (skf > 0) {                                         // lyijykynä: the neighbour's cabin in pencil
+    const sv = PR; PR = rng(55); c.strokeStyle = rgba(pen, 0.7 * skf * (S.night ? 0.6 : 1)); c.lineWidth = 0.6; c.lineCap = 'round'; c.beginPath();
+    cedges(c, [[cx - 12 * s, cb + 1], [cx - 12 * s, cb - 10 * s], [cx, cb - 19 * s], [cx + 12 * s, cb - 10 * s], [cx + 12 * s, cb + 1]], false, 0.4, 1.5); c.stroke(); PR = sv;
+  }
 }
-let needDraw = true;
+let needDraw = true, topDirty = true, SKM = null, skmC = null;
 const stones = [], snow = [], birds = [], falling = [], drops = [], puffs = [], rings = [];
 function composeTop(t) {
+  // kaunotar: the sky and the far shore only change at a tick (renderStatic); recompose them only then, or while something moves in them
+  const dyn = (PF.on && S.sun.alt > -10) || S.auroraK > 0 || meteors.length || S.rainbow || birds.length || LAKE.k > 0 || S.juhannus || S.neighbourSauna;
+  if (!dyn && !topDirty) return;
+  topDirty = !!dyn;
   const c = tctx; c.setTransform(1, 0, 0, 1, 0, 0);
   c.drawImage(skyC, 0, 0);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -928,18 +1510,19 @@ function drawFrame(t) {
   composeTop(t);
   const c = ctx; c.setTransform(1, 0, 0, 1, 0, 0);
   c.drawImage(top, 0, 0);
+  if (SKM) c.drawImage(SKM, 0, 0);                       // kaunotar: the pencil in the sky, on the screen only (the lake below mirrors the clean sky in top)
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const LB = H, lakeH = LB - HY, night = S.night;
+  const LB = H, lakeH = LB - HY, night = S.night, LV = Math.min(H, SHORE + SCENE.shoreWave + 6), lakeV = LV - HY;   // (kaunotar: LV — below the water line the ground covers the canvas, so it isn't painted)
   const lakeBase = S.frozen ? mix(mix(S.hor, S.mid, .4), [236, 240, 243], night ? 0.08 : 0.5) : mix(S.mid, night ? hex('#07111A') : hex('#35596B'), night ? .55 : .45);
   if (LAKE.k >= 1) {}                                    // rm water: nothing left to draw but the bed (below)
   else if (S.frozen) {
     const ig = c.createLinearGradient(0, HY, 0, LB); ig.addColorStop(0, rgba(mix(lakeBase, S.hor, .35))); ig.addColorStop(1, rgba(mix(lakeBase, S.top, .25)));
-    c.fillStyle = ig; c.fillRect(0, HY, W, lakeH);
+    c.fillStyle = ig; c.fillRect(0, HY, W, lakeV);
     c.save(); c.globalAlpha = 0.14; c.scale(1, -1); c.drawImage(top, 0, 0, top.width, top.height, 0, -HY * 2, W, HY); c.restore();
     drawIce(c);
   } else {
     const wob = reduced() ? 0 : 1 + S.precip * 1.5;
-    for (let y = HY; y < LB; y += 2) {
+    for (let y = HY; y < LV; y += 2) {
       const dy = y - HY, sy = HY - dy * 1.05; if (sy < 0) break;
       const off = wob * Math.sin(y * 0.19 + t * 1.6) * (0.4 + dy / lakeH * 3.2);
       c.drawImage(top, 0, Math.max(0, sy * DPR - 2 * DPR), top.width, 2 * DPR, off, y, W, 2.2);
@@ -948,13 +1531,13 @@ function drawFrame(t) {
       const body = waterBody(lakeBase), lit = mix(S.hor, [255, 255, 255], 0.35), cut = c.createLinearGradient(0, HY, 0, LB), add = c.createLinearGradient(0, HY, 0, LB);
       for (let i = 0; i <= 32; i++) { const y = HY + i / 32 * lakeH, sy = HY - (y - HY) * 1.05, pa = sy < 0 ? 1 : passRefl(Math.sin(altOfY(sy) * RAD), N_WATER);
         cut.addColorStop(i / 32, rgba(body, clamp(1 - pa, 0, 1))); add.addColorStop(i / 32, rgba(lit, clamp((pa - 1) * 0.3, 0, 1))); }
-      c.fillStyle = cut; c.fillRect(0, HY, W, lakeH);
-      c.globalCompositeOperation = 'screen'; c.fillStyle = add; c.fillRect(0, HY, W, lakeH); c.globalCompositeOperation = 'source-over';
+      c.fillStyle = cut; c.fillRect(0, HY, W, lakeV);
+      c.globalCompositeOperation = 'screen'; c.fillStyle = add; c.fillRect(0, HY, W, lakeV); c.globalCompositeOperation = 'source-over';
       drawShallows(c, t);
     }
     const lg = c.createLinearGradient(0, HY, 0, LB);
     lg.addColorStop(0, rgba(lakeBase, 0.18 + 0.2 * S.cloud)); lg.addColorStop(0.5, rgba(lakeBase, 0.5 + 0.15 * S.cloud)); lg.addColorStop(1, rgba(lakeBase, 0.78));
-    c.fillStyle = lg; c.fillRect(0, HY, W, lakeH);
+    c.fillStyle = lg; c.fillRect(0, HY, W, lakeV);
     c.strokeStyle = rgba(mix(S.hor, [255, 255, 255], .3), night ? 0.07 : 0.16); c.lineWidth = 1;
     const wr = rng(11);
     for (let i = 0; i < 16; i++) { const y = HY + 6 + Math.pow(wr(), 1.6) * lakeH * 0.8, x = wr() * W, l = 30 + wr() * 160 * (y - HY) / lakeH;
@@ -970,6 +1553,7 @@ function drawFrame(t) {
     if (S.iceOut) drawFloes(c);
   }
   if (LAKE.k > 0) { c.save(); c.globalAlpha = LAKE.k; drawBed(c, t); c.restore(); }   // rm water: the water fades away, the bed fades in
+  const lk = (1 - LAKE.k).toFixed(2); if (lk !== drawFrame.lk) { drawFrame.lk = lk; hero.style.setProperty('--lake-k', lk); }   // (the lake's pencil goes with the water)
   c.fillStyle = rgba(mix(S.hor, [255, 255, 255], 0.35), (night ? 0.12 : 0.35) * (1 - LAKE.k)); c.fillRect(0, HY + 1, W, 1);
   if (LAKE.k < 0.5) drawRings(c, t);
   drawStones(c, t);
@@ -1001,6 +1585,13 @@ function drawRings(c, t) {
 const fish = { st: 'idle', t0: 0, bob: null, target: null, nextDip: 0, dipAt: 0, dips: 0, bait: true, catch: null, missed: 0 };
 function jettyPts(z) { const k = 1 / z, u = (k - JET.k) / (1 - JET.k); return { y: HY + (JET.yn - HY) * k, x: JET.xf + (JET.xn - JET.xf) * u, w: JET.wn * k }; }
 function drawJetty(c, t) {
+  if (JETC) {                                            // lyijykynä: the posts' reflections wobble per frame; the jetty itself is the cached pencil drawing
+    const zf = 1 / JET.k, wd = S.night ? hex('#1A1917') : mix(hex('#5E513F'), [0, 0, 0], 1 - (S.dim || 1));
+    if (!S.frozen && LAKE.k < 0.5) { c.fillStyle = rgba(wd, 0.3);
+      for (let z = 1.15; z <= zf + 0.01; z += (zf - 1.15) / 3) { const p = jettyPts(z), ph = JET.post / z; for (const sgn of [-1, 1]) { const x = p.x + sgn * p.w * 0.42; c.fillRect(x - 1.6 / z * 2 + Math.sin(t * 1.6 + x) * 0.8, p.y + ph, 3.2 / z * 2, ph * 0.8); } } }
+    c.drawImage(JETC, JBB.x0, JBB.y0, JBB.w, JBB.h);
+    return drawRod(c, t);
+  }
   const night = S.night, dm = S.dim || 1, wood = night ? hex('#2B2926') : mix(hex('#8A7862'), [0, 0, 0], 1 - dm), woodD = night ? hex('#1A1917') : mix(hex('#5E513F'), [0, 0, 0], 1 - dm), light = S.snowGround ? (night ? [180, 190, 200] : [246, 248, 250]) : night ? hex('#3A3733') : hex('#A8977F');
   const zf = 1 / JET.k;
   for (let z = 1.15; z <= zf + 0.01; z += (zf - 1.15) / 3) {
@@ -1018,6 +1609,10 @@ function drawJetty(c, t) {
   for (let z = 1; z < zf; z += 0.09 * z) { const p = jettyPts(z); c.beginPath(); c.moveTo(p.x - p.w / 2, p.y); c.lineTo(p.x + p.w / 2, p.y); c.stroke(); }
   c.strokeStyle = rgba(light, 0.35); c.beginPath(); c.moveTo(n.x - n.w / 2, n.y); c.lineTo(f.x - f.w / 2, f.y); c.stroke();
   if (S.frozen && LAKE.k < 0.5) { const hx = f.x + f.w * 0.9, hy = f.y - 2; c.fillStyle = S.night ? '#0A1016' : '#3E5866'; c.beginPath(); c.ellipse(hx, hy, 9 * JET.k * 2, 3 * JET.k * 2, 0, 0, 7); c.fill(); FISHHOLE = [hx, hy]; }
+  drawRod(c, t);
+}
+function drawRod(c, t) {                                 // the rod, the line and the bobber (or the catch): per frame
+  const night = S.night, woodD = night ? hex('#1A1917') : mix(hex('#5E513F'), [0, 0, 0], 1 - (S.dim || 1));
   const [bx, by] = JET.base, tip = rodTip(t);
   c.strokeStyle = rgba(night ? [120, 110, 95] : [70, 58, 44]); c.lineWidth = 2.2; c.lineCap = 'round';
   c.beginPath(); c.moveTo(bx, by + 4); c.quadraticCurveTo((bx + tip[0]) / 2 - 4, (by + tip[1]) / 2 + 6, tip[0], tip[1]); c.stroke();
@@ -1334,8 +1929,12 @@ function stepParticles(dt, t) {
   if (S.swans && S.sun.alt > -4 && S.cloud < 0.7 && !birds.length && Math.random() < dt / 40) { const dir = Math.random() < .5 ? 1 : -1; birds.push({ x: dir > 0 ? -60 : W + 60, y: HY * (0.78 + Math.random() * 0.1), dir, n: 5 + Math.floor(Math.random() * 3) }); }
   for (let i = birds.length - 1; i >= 0; i--) { const b = birds[i], fl = b.flee ? 4 : 1; b.x += b.dir * 34 * fl * dt; b.y -= (b.flee ? 30 : 1.5) * dt; if (b.x < -200 || b.x > W + 200 || b.y < -60) birds.splice(i, 1); }   // rm birds: off they go, fast
 }
+let wxEmpty = false;
 function drawWx() {
-  const c = wctx; c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, H);
+  const c = wctx, none = !puffs.length && !drops.length && !snow.length;
+  if (none && wxEmpty) return;                           // kaunotar: an empty weather canvas is left alone (every touched canvas is re-sent to the screen each frame)
+  wxEmpty = none;
+  c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, H);
   drawSmoke(c);
   if (drops.length) {
     c.strokeStyle = S.sun.alt < -4 ? 'rgba(190,205,220,1)' : 'rgba(70,84,102,1)'; c.lineWidth = 1; const sl = S.wind * 5 / 600;
@@ -1352,16 +1951,20 @@ function checkContrast() {
   const txt = $('#heroText'), hr = hero.getBoundingClientRect();
   const els = [...txt.querySelectorAll('h1, .lead')];
   const samples = [];
-  const SW = Math.max(1, Math.round(W / 2)), SH = Math.max(1, Math.round(H / 2));
+  // kaunotar: only the text's own box is read back, at a quarter of the scene's size (was: the whole picture at half size)
+  const rects = []; for (const el of els) { const range = document.createRange(); range.selectNodeContents(el); for (const r of range.getClientRects()) rects.push([(r.left - hr.left) / SC, (r.top - hr.top) / SC, r.width / SC, r.height / SC]); }
+  if (!rects.length) return;
+  const Q = 4, bx = Math.max(0, Math.floor(Math.min(...rects.map(r => r[0])))), by = Math.max(0, Math.floor(Math.min(...rects.map(r => r[1]))));
+  const bw = Math.min(W, Math.ceil(Math.max(...rects.map(r => r[0] + r[2])))) - bx, bh = Math.min(H, Math.ceil(Math.max(...rects.map(r => r[1] + r[3])))) - by;
+  if (bw < 2 || bh < 2) return;
+  const SW = Math.max(1, Math.round(bw / Q)), SH = Math.max(1, Math.round(bh / Q));
   if (!checkContrast.c) { checkContrast.c = document.createElement('canvas'); checkContrast.x = checkContrast.c.getContext('2d', { willReadFrequently: true }); }
-  const cc = checkContrast.c; cc.width = SW; cc.height = SH; checkContrast.x.drawImage(cv, 0, 0, SW, SH);
+  const cc = checkContrast.c; cc.width = SW; cc.height = SH; checkContrast.x.drawImage(cv, bx * DPR, by * DPR, bw * DPR, bh * DPR, 0, 0, SW, SH);
   let data; try { data = checkContrast.x.getImageData(0, 0, SW, SH).data; } catch (e) { return; }
-  for (const el of els) {
-    const range = document.createRange(); range.selectNodeContents(el);
-    for (const r of range.getClientRects()) {
-      const x0 = (r.left - hr.left) / SC, y0 = (r.top - hr.top) / SC, rw = r.width / SC, rh = r.height / SC;
+  for (const [x0, y0, rw, rh] of rects) {
+    {
       for (let i = 0; i < 16; i++) for (let j = 0; j < 4; j++) {
-        const x = Math.round((x0 + (i + .5) / 16 * rw) / 2), y = Math.round((y0 + (j + .5) / 4 * rh) / 2);
+        const x = Math.floor((x0 + (i + .5) / 16 * rw - bx) / Q), y = Math.floor((y0 + (j + .5) / 4 * rh - by) / Q);
         if (x < 0 || y < 0 || x >= SW || y >= SH) continue;
         const k = (y * SW + x) * 4; samples.push(lum([data[k], data[k + 1], data[k + 2]]));
       }
@@ -1463,6 +2066,7 @@ function applyGround() {
   col = mix(col, [0, 0, 0], 0.16 * S.cloud * (1 - nk));                  // a little duller under a grey sky
   hero.style.setProperty('--ground', rgba(col));
   hogEl.style.setProperty('--inv', nk.toFixed(3));
+  hero.style.setProperty('--paper-k', (SK.grain * (1 - 0.4 * nk)).toFixed(3));   // lyijykynä: the paper's grain, a little fainter at night
 }
 /* ---------- tick: every 20 s (or every second in a time-lapse) ---------- */
 let lastTheme = null;
@@ -1960,10 +2564,11 @@ function spawnMeteor(src, mag, P0) {                     // src: a shower (with 
   const cR = dot3(P, R), T = unit3([P[0] * cR - R[0], P[1] * cR - R[1], P[2] * cR - R[2]]);   // along the great circle, away from the radiant
   const r = src ? src.r : RV.meteors.SPORADIC.r, v = src ? src.v : 25 + Math.random() * 45;
   const m = mag != null ? mag : Math.max(-8, 6.5 + Math.log(Math.random() || 1e-9) / Math.log(r));
+  const mv = m - SCENE.stars.boost;                      // kaunotar: how bright it looks (SCENE.stars.boost brighter than its magnitude m)
   const u = Math.random(), L0 = u < 0.12 ? 50 + 45 * Math.random() : 21 + 30 * Math.pow(Math.random(), 0.8);           // degrees of sky: mostly 15–50°, now and then one across half the sky
-  const L = Math.max(4, L0 * Math.pow(Math.sin(rho), 0.6) * (m < 0 ? 1.25 : 1)) * RAD;                         // foreshortened near the radiant
+  const L = Math.max(4, L0 * Math.pow(Math.sin(rho), 0.6) * (mv < 0 ? 1.25 : 1)) * RAD;                         // foreshortened near the radiant
   const w = (v / 40) * 98 * RAD * Math.max(0.25, Math.sin(rho));                                               // angular speed, rad/s
-  const mt = { P, T, L, dur: clamp(L / w, 0.3, 1.9), t: 0, m, col: src ? src.col : [252, 248, 240], train: m < -2 };
+  const mt = { P, T, L, dur: clamp(L / w, 0.3, 1.9), t: 0, m, mv, col: src ? src.col : [252, 248, 240], train: mv < -2 };
   meteors.push(mt); METN++; if (meteors.length > (STARQ.length || RMS.stars ? 500 : 40)) meteors.shift();
   return mt;
 }
@@ -1982,17 +2587,17 @@ function stepMeteors(dt) {
 function drawMeteors(c) {
   c.save(); c.lineCap = 'round'; c.globalCompositeOperation = 'lighter';
   for (const mt of meteors) {
-    const vis = meteorVis(mt.m); if (vis < 0.01) continue;
+    const vis = meteorVis(mt.mv); if (vis < 0.01) continue;
     const at = s => { const cs = Math.cos(s), sn = Math.sin(s), p = aaOf([mt.P[0] * cs + mt.T[0] * sn, mt.P[1] * cs + mt.T[1] * sn, mt.P[2] * cs + mt.T[2] * sn]); return p.alt < 0.3 ? null : [X(p.az), Y(p.alt)]; };
-    const width = clamp(1.9 - mt.m * 0.3, 1, 5), N = 9;
+    const width = clamp(1.9 - mt.mv * 0.3, 1, 5), N = 9;
     const streak = (s0, s1, a, wk) => { let prev = null;
       for (let i = 0; i <= N; i++) { const q = at(s0 + (s1 - s0) * i / N); if (q && prev && Math.abs(q[0] - prev[0]) < W / 3) { c.strokeStyle = rgba(mt.col, a(i / N)); c.lineWidth = width * wk(i / N); c.beginPath(); c.moveTo(prev[0], prev[1]); c.lineTo(q[0], q[1]); c.stroke(); } prev = q; }
       return prev; };
     if (mt.t <= mt.dur) {
       const tau = mt.t / mt.dur, head = mt.L * tau, b = Math.pow(Math.sin(Math.PI * clamp(tau, 0.03, 0.97)), 0.6) * vis;   // it brightens, then burns out
       const hp = streak(Math.max(0, head - mt.L * 0.45), head, u => b * u * u, u => 0.35 + 0.65 * u);
-      if (hp) { const g = width * (mt.m < 0 ? 2.6 - mt.m * 0.9 : 2), rg = c.createRadialGradient(hp[0], hp[1], 0, hp[0], hp[1], g);
-        rg.addColorStop(0, rgba(mt.m < -3 ? [214, 255, 226] : mt.col, Math.min(1, b))); rg.addColorStop(1, rgba(mt.col, 0)); c.fillStyle = rg; c.fillRect(hp[0] - g, hp[1] - g, 2 * g, 2 * g); }
+      if (hp) { const g = width * (mt.mv < 0 ? 2.6 - mt.mv * 0.9 : 2), rg = c.createRadialGradient(hp[0], hp[1], 0, hp[0], hp[1], g);
+        rg.addColorStop(0, rgba(mt.mv < -3 ? [214, 255, 226] : mt.col, Math.min(1, b))); rg.addColorStop(1, rgba(mt.col, 0)); c.fillStyle = rg; c.fillRect(hp[0] - g, hp[1] - g, 2 * g, 2 * g); }
     } else if (mt.train) {                               // a fireball leaves a glowing train that fades away
       const f = 1 - (mt.t - mt.dur) / 1.8; streak(mt.L * 0.25, mt.L, u => 0.22 * f * f * vis * Math.sin(Math.PI * u), () => 1.4);
     }
@@ -2003,7 +2608,7 @@ RV.hooks.meteor = (key, mag) => {
   const src = key && key !== 'spo' ? RV.meteors.rates(S.ms).find(s => s.key === key) : null;
   const mt = spawnMeteor(src, mag); if (!mt) return 'it missed the sky. try again.';
   needDraw = true;
-  const fm = m => (m < 0 ? '−' : '') + Math.abs(m).toFixed(1), seen = meteorVis(mt.m);
+  const fm = m => (m < 0 ? '−' : '') + Math.abs(m).toFixed(1), seen = meteorVis(mt.mv);
   let s = `${src ? src.one : 'a sporadic meteor'}, magnitude ${fm(mt.m)}${mt.m <= -4 ? ' — a fireball' : ''}${src ? `, out of ${src.from}` : ''}.`;
   if (src && src.alt < 0) s += ' <span class="m">(its radiant is below the horizon — so it grazes up from the edge of the sky.)</span>';
   else if (src && src.zhr < 1) s += ` <span class="m">(out of season — they peak the night of ${src.night} — but here’s one anyway.)</span>`;
@@ -2200,7 +2805,7 @@ RV.hooks.rm = what => {
     seedBed(); LAKE.st = 'draining'; LAKE.k = reduced() ? 1 : 0.001; snow.length = 0; drops.length = 0; rings.length = 0;
     if (fish.st !== 'idle') { fish.st = 'idle'; fish.bob = null; fish.catch = null; rodButton(); }   // the line comes up empty
     tick();
-    return '<span class="r">what. have. you. done.</span>';
+    return '<span class="r">what have you done...</span>';
   }
   if (what === 'sun') {                                  // the sun shrinks to a point and goes out; the moon goes with it (it only reflected the sun); a moonless night
     if (RMS.sun || RMS.stars) return 'rm: cannot remove \'sun\': it’s already gone.';
@@ -2247,7 +2852,7 @@ RV.hooks.wipe = () => {
   const steps = [
     [300, fgg('birch').concat([$('#apple')]), "removed '/birch' <span class=\"m\">(and the apple on it)</span>"],
     [750, fgg('house').concat([$('#win'), $('#winGlow'), $('#mailbox'), $('#doorHandle')]), "removed '/mökki' <span class=\"m\">(and the sauna. that one hurts.)</span>"],
-    [1200, [cv, wxc, $('#rod')], "removed '/sky', '/stars', '/lake' <span class=\"m\">(and everything in it)</span>"],
+    [1200, [cv, wxc, $('#rod')].concat(fgg('lake')), "removed '/sky', '/stars', '/lake' <span class=\"m\">(and everything in it)</span>"],
     [1650, fgg('land').concat([$('#feet')]), "removed '/ground'"],
     [2100, [$('#heroText')], "removed '/home/vlad/index.html'"]
   ];
@@ -2315,9 +2920,25 @@ function saveWash() {                                    // the colours of this 
     localStorage.setItem('rv.wash', JSON.stringify({ g, t: Date.now() }));
   } catch (e) {}
 }
+/* kaunotar: a slow machine steps down once. For 2.5 s after the reveal the frame rate is watched; if frames come slower than ~22 a second
+   (the canvas work doesn't fit in a frame), the canvases drop to SCENE.perf.slowRes and the redraws to SCENE.perf.slowFps for the rest of the visit */
+const PW = { t0: 0, n: 0, done: !SCENE.perf.auto };
+function perfWatch(now, live) {
+  if (PW.done || ST[3] < 1 || !live || document.hidden) { PW.t0 = 0; return; }
+  if (!PW.t0) { PW.t0 = now; PW.n = 0; return; }
+  PW.n++;
+  if (now - PW.t0 < 2500) return;
+  PW.done = true; PW.avg = (now - PW.t0) / PW.n;
+  if (PW.avg > 45) perfStepDown();
+}
+function perfStepDown() {
+  if (PERF.slow) return;
+  PERF.slow = true; PERF.fps = SCENE.perf.slowFps;
+  if (SCENE.perf.slowRes < PERF.res) { PERF.res = SCENE.perf.slowRes; layout(); renderStatic(); drawFrame(performance.now() / 1000); drawWx(); }
+}
 function loop(now) {
   stepReveal(now);
-  const dt = Math.min(0.04, (now - lastT) / 1000); lastT = now;
+  const dt = clamp((now - lastT) / 1000, 0, 0.04); lastT = now;   // (the first rAF stamp can predate lastT: a negative dt walked the hedgehog backwards into RUNF[-1])
   const t = now / 1000;
   if ([RMS.stars, RMS.sun, RMS.moon].some(t => t && now - t < STARS_FADE * 1000 + 600) && now - lastTick > 100) { lastTick = now; tick(); }   // rm stars / sun / moon: the light drains away
   if (now - lastTick > (RV.speed() > 1 ? 1000 : S.w && S.w.sinceEnd < 12 ? 4000 : 20000)) { lastTick = now; tick(); }
@@ -2327,7 +2948,7 @@ function loop(now) {
     stepParticles(dt, t); stepStones(t); stepFish(t); stepMeteors(dt); stepLake(dt); stepFilter(dt);
     const busy = stones.length || fish.st !== 'idle' || rings.length || puffs.length || drops.length || snow.length || meteors.length || STARQ.length || LAKE.k > 0 || PF.spin;
     const animate = !reduced() || busy || needDraw;
-    if (animate && now - lastDraw > 30) { drawFrame(t); drawWx(); lastDraw = now; needDraw = false; }
+    if (animate && now - lastDraw > 1000 / PERF.fps - 3) { drawFrame(t); drawWx(); lastDraw = now; needDraw = false; perfWatch(now, animate && !reduced()); }
   }
   requestAnimationFrame(loop);
 }
@@ -2335,19 +2956,26 @@ RV.onChange(p => { applyHogSetting(); lastTick = performance.now(); tick(); });
 
 /* ---------- boot ---------- */
 window.__rv = { lastSkip: null, lastCatch: null };
-computeState(); applyTheme(); applyGround();
-layout();                                                // measure the window; build the forest, the clouds and the foreground once
-lastTheme = themeKey();                                  // (so the first tick below doesn't build the foreground a second time)
-applyHogSetting();
-hog.x = mobile ? W * 0.3 : W * 0.46; hogBoot(); setAppleTree(); appleRelayout();
-for (let i = 0; i < 160; i++) stepSmoke(0.05, i * 0.05);        // the chimney has been going for a while
-tick();
-addEventListener('resize', () => { layout(); renderStatic(); Win.size(); requestAnimationFrame(checkContrast); });
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(() => { if (textBox() === laidOutText) return; layout(); renderStatic(); drawFrame(performance.now() / 1000); checkContrast(); }));   // the text's final size moves the horizon — re-lay out only if it did change
-requestAnimationFrame(loop);
-// the reveal starts once the first frame is drawn — and the web fonts are in (the text's size sets the horizon), or 0.45 s at most
-(document.fonts && document.fonts.status !== 'loaded' ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 450))]) : Promise.resolve())
-  .then(() => requestAnimationFrame(() => requestAnimationFrame(startReveal)));
+function boot() {
+  TIMING.boot = performance.now();
+  computeState(); applyTheme();
+  { const t = performance.now(); if (SK.on) makeTextures(); else $('#paper').hidden = true; TIMING.textures = performance.now() - t; }   // lyijykynä: the stroke tile and the paper, once
+  applyGround();
+  layout();                                                // measure the window; build the forest, the clouds and the foreground once
+  lastTheme = themeKey();                                  // (so the first tick below doesn't build the foreground a second time)
+  applyHogSetting();
+  hog.x = mobile ? W * 0.3 : W * 0.46; hogBoot(); setAppleTree(); appleRelayout();
+  for (let i = 0; i < 160; i++) stepSmoke(0.05, i * 0.05);        // the chimney has been going for a while
+  tick();
+  addEventListener('resize', () => { layout(); renderStatic(); Win.size(); requestAnimationFrame(checkContrast); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(() => { if (textBox() === laidOutText) return; layout(); renderStatic(); drawFrame(performance.now() / 1000); checkContrast(); }));   // the text's final size moves the horizon — re-lay out only if it did change
+  requestAnimationFrame(loop);
+  TIMING.boot = performance.now() - TIMING.boot; TIMING.scriptStart = BOOT0; TIMING.scriptEnd = performance.now();
+  requestAnimationFrame(() => requestAnimationFrame(startReveal));   // the reveal starts once the first frame is drawn
+}
+// kaunotar: the first layout waits for the web fonts (0.45 s at most, as the reveal always did) — the text's size sets the horizon, so laying
+// out with the fallback font first meant building the whole scene twice on every first visit. Meanwhile the page shows the colour wash.
+(document.fonts && document.fonts.status !== 'loaded' ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 450))]) : Promise.resolve()).then(boot);
 
 /* test & tinkering hooks (no UI) */
 const HOOKS = {
@@ -2365,6 +2993,8 @@ const HOOKS = {
   poisson: n => { const a = []; for (let i = 0; i < n; i++) a.push(poissonSkips()); return a; },
   chantWord, leipaa,
   recheck: () => tick(), win: Win,
+  get timing() { return { ...TIMING }; },
+  get perf() { return { ...PERF, watch: { ...PW }, dpr: DPR }; }, slow: () => perfStepDown(),
   get meteors() { return { live: meteors.length, total: METN, mags: meteors.map(m => +m.m.toFixed(1)) }; }, get lake() { return { ...LAKE }; }, get filter() { return { ...PF }; }
 };
 Object.defineProperties(window.__rv, Object.getOwnPropertyDescriptors(HOOKS));   // keep the getters live
