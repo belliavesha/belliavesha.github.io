@@ -1,11 +1,21 @@
 <!doctype html>
 <html lang="en">
-<!-- revontuli · research: an almanac of interests, papers and talks, each chapter with its engraved plate, under a polarizing filter -->
+<!-- research: an almanac of interests, papers and talks, each chapter with its engraved plate, under a polarizing filter -->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Research — Vlad Loktev</title>
-<meta name="description" content="Research of Dr. Vladislav Loktev: X-ray polarimetry of X-ray binaries and pulsars, radiative transfer, relativistic plasma. Selected papers, talks and figures.">
+<title>Research · Vlad Loktev</title>
+<meta name="description" content="Research of Vladislav Loktev: X-ray polarimetry of X-ray binaries and pulsars, radiative transfer, relativistic plasma. Selected papers, talks and figures.">
+<link rel="canonical" href="https://belliavesha.github.io/research.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vlad Loktev">
+<meta property="og:title" content="Research · Vlad Loktev">
+<meta property="og:description" content="Research of Vladislav Loktev: X-ray polarimetry of X-ray binaries and pulsars, radiative transfer, relativistic plasma. Selected papers, talks and figures.">
+<meta property="og:url" content="https://belliavesha.github.io/research.html">
+<meta property="og:image" content="https://belliavesha.github.io/assets/images/og/plate.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="An engraved plate: the polarized image of an accretion disc around a black hole.">
 <link rel="icon" href="assets/images/favicon/hedgehog.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" type="image/png" href="assets/images/favicon/hedgehog-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/images/favicon/hedgehog-180.png">
@@ -88,7 +98,6 @@
 .fig canvas{display:block;width:100%;height:100%;position:absolute;inset:0}
 .fig .lbl{position:absolute;font-style:italic;font-weight:600;font-size:14.4px;line-height:1;transform:translate(-50%,-50%);color:var(--ink);
   text-shadow:0 0 2.7px var(--plate),0 0 2.7px var(--plate),0 0 5.4px var(--plate);pointer-events:none;white-space:nowrap}
-.fig .val{position:absolute;left:9px;top:7.2px;font-style:italic;font-size:13.5px;color:var(--ink-2);text-shadow:0 0 2.7px var(--plate),0 0 2.7px var(--plate);pointer-events:none}
 .figcap{margin:7.2px 5.4px 0;font-size:14.8px;line-height:1.4;color:var(--ink-2);position:relative}
 .figcap .sc{color:var(--ink);font-size:12.6px;letter-spacing:.1em}
 .figcap + .figcap{margin-top:5.4px}
@@ -112,12 +121,10 @@
 .ctl input[type=range]::-moz-range-thumb{width:9.9px;height:9.9px;border-radius:50%;background:var(--plate);border:1.5px solid var(--ink)}
 .ctl input[type=range]:hover::-webkit-slider-thumb,.ctl input[type=range]:focus-visible::-webkit-slider-thumb{border-color:var(--rubric)}
 .ctl input[type=range]:focus-visible{outline:none}
+@supports (-moz-appearance:none){.ctl input[type=range]:focus-visible{outline:1.5px dashed var(--rubric);outline-offset:3px}}   /* Firefox: no track tint, so an outline */
 .ctl input[type=range]:focus-visible::-webkit-slider-runnable-track{background:var(--rubric)}
 .play{justify-self:start;border:1px solid var(--hair);background:none;border-radius:899.1px;padding:2px 10.8px 2.7px;cursor:pointer;font-style:italic;font-size:14.4px}
 .play:hover{border-color:var(--rubric);color:var(--rubric)}
-.stroke{display:inline-block;width:16.2px;height:0;border-top:2px solid var(--rubric);vertical-align:middle;margin-right:3.6px}
-.tick{display:inline-block;width:12.6px;height:0;border-top:1.2px solid var(--ink-2);vertical-align:middle;margin-right:3.6px}
-.drafting canvas{image-rendering:auto}
 
 /* ===== Plate IV: the views along the path — photographs re-engraved in the About page's two inks, peach and ink-blue ===== */
 .views{--vink:#2B3142;--vink-2:#555C6E;--vpeach:#E7C4A6;--vpeach-3:#F3DDC9;background:var(--vpeach-3);color:var(--vink);margin:0 0 19.8px}
@@ -150,10 +157,10 @@
 </head>
 <body data-page="research">
 <a class="rv-skip" href="#interests">Skip to content</a>
-<div class="rh" role="navigation" aria-label="Sections of this page">
+<div class="rh">
   <div class="rh-bar">
     <a class="rh-t" href="#top">Loktev · Research</a>
-    <nav class="rh-nav" id="rhNav">
+    <nav class="rh-nav" id="rhNav" aria-label="Sections of this page">
       <a href="#interests"><span class="n">i</span>Interests</a>
       <a href="#papers"><span class="n">ii</span>Papers</a>
       <a href="#talks"><span class="n">iii</span>Talks</a>
@@ -175,11 +182,8 @@
       <h1>Research <i>&amp; career</i></h1>
       <p class="tp-sub">
         The longer and less interactive version is in the <a href="assets/pdfs/CV_Loktev.pdf">CV</a>;
-        The short version, and how to reach me, is on the <a href="about.html">about page</a>
-        .
+        the short version, and how to reach me, is on the <a href="about.html">about page</a>.
       </p>
-        <!-- the framed certificates hang in <a href="merits.html">the cabin</a>.  -->
-        <!-- <p class="note">X-ray polarimetry of black holes and neutron stars — what the angle of the light tells us about the matter and the plasma around them.</p> -->
     </div>
     <ol class="toc" aria-label="Contents">
       <li><a href="#interests"><span class="n">I.</span><span class="t">Interests</span><span class="ld"></span><span class="p">Plate I</span></a></li>
@@ -196,18 +200,18 @@
         <p class="lede" id="intLede"></p>
         <ol class="pillars" id="intPillars"></ol>
         <p id="intNow"></p>
-        <p class="note">The plates on this page are drawn by your browser, line by line, from the equations they illustrate, and each answers to its sliders. Their red strokes are polarized ink: slide the filter in (top right) and turn it — and some lines on this page are printed in polarized ink, too.</p>
+        <p class="note">The plates on this page are drawn by your browser from the equations they illustrate, and respond to their sliders. The red strokes are printed in polarized ink: slide in the filter (top right) and turn it. A few lines of text are printed that way too.</p>
       </div>
-      <figure class="plate" id="plate1" aria-labelledby="cap1">
-        <div class="plate-h"><span class="pl">Plate I.</span><span class="ti">A close binary</span></div>
+      <figure class="plate" id="plate1" aria-labelledby="plate1-h" aria-describedby="cap1">
+        <div class="plate-h" id="plate1-h"><span class="pl">Plate I.</span><span class="ti">A close binary</span></div>
         <div class="fig f-bin" id="figBin"><canvas role="img" aria-label="Engraving of a low-mass X-ray binary: a teardrop-shaped companion star filling its Roche lobe, a stream of gas from the inner Lagrangian point curving onto an accretion disc around a compact object; red strokes mark the polarization of X-rays scattered by the star, the stream and the disc."></canvas></div>
         <div class="ctl" id="binCtl">
           <label><span class="k">phase <i>φ</i></span><input type="range" id="binPh" min="0" max="100" value="0" aria-label="Orbital phase"><span class="v" id="binPhV"></span></label>
           <label><span class="k">incl. <i>i</i></span><input type="range" id="binI" min="15" max="82" value="62" aria-label="Inclination of the orbit"><span class="v" id="binIV"></span></label>
           <label><span class="k">ratio <i>q</i></span><input type="range" id="binQ" min="5" max="105" value="42" aria-label="Mass ratio, companion to compact object"><span class="v" id="binQV"></span></label>
-          <span><button type="button" class="play" id="binPlay" aria-pressed="false">orbit</button></span>
+          <span><button type="button" class="play" id="binPlay">orbit</button></span>
         </div>
-        <p class="figcap" id="cap1"><span class="sc">Fig. 1.</span> <i>A low-mass X-ray binary</i>, ray-marched through the Roche potential: the companion fills its lobe, gas pours through L₁ and is swung by the Coriolis force onto the disc. X-rays from the compact object are scattered by the star — its lit face is a mirror — and by the stream and the disc, and come out polarized <b>perpendicular to the plane of scattering</b>: the red strokes circle the compact object. Turn the orbit with <i>φ</i>, tilt it with <i>i</i>, weigh the companion with <i>q</i>.</p>
+        <p class="figcap" id="cap1"><span class="sc">Fig. 1.</span> <i>A low-mass X-ray binary</i>, ray-marched through the Roche potential: the companion fills its lobe, gas pours through L₁ and is swung by the Coriolis force onto the disc. X-rays from the compact object are scattered by the star (its lit face is a mirror) and by the stream and the disc, and come out polarized <b>perpendicular to the plane of scattering</b>: the red strokes circle the compact object. Turn the orbit with <i>φ</i>, tilt it with <i>i</i>, weigh the companion with <i>q</i>.</p>
       </figure>
     </div>
   </section>
@@ -216,18 +220,19 @@
     <div class="ch-h"><span class="num">II.</span><h2 id="h-pap">Selected papers</h2></div>
     <div class="two">
       <div>
+        <noscript><p>The plates on this page are drawn with JavaScript. The papers and talks are listed in the <a href="assets/pdfs/CV_Loktev.pdf">CV</a> and on <a href="https://ui.adsabs.harvard.edu/search/q=orcid%3A0000-0001-6894-871X&amp;sort=date%20desc%2C%20bibcode%20desc&amp;p_=0">ADS</a>.</p></noscript>
         <ol class="papers" id="paperList"></ol>
         <p class="after">Everything else, in order: <a href="https://ui.adsabs.harvard.edu/search/q=orcid%3A0000-0001-6894-871X&amp;sort=date%20desc%2C%20bibcode%20desc&amp;p_=0">all publications on ADS</a> · ORCID <a href="https://orcid.org/0000-0001-6894-871X">0000-0001-6894-871X</a> · <a href="assets/pdfs/CV_Loktev.pdf">CV</a></p>
       </div>
-      <figure class="plate" id="plate2" aria-labelledby="cap2">
-        <div class="plate-h"><span class="pl">Plate II.</span><span class="ti">A black hole’s disc, traced analytically</span></div>
+      <figure class="plate" id="plate2" aria-labelledby="plate2-h" aria-describedby="cap2">
+        <div class="plate-h" id="plate2-h"><span class="pl">Plate II.</span><span class="ti">A black hole's disc, traced analytically</span></div>
         <div class="fig f-disc" id="figDisc"><canvas role="img" aria-label="Engraved image of a thin accretion disc around a spinning black hole; the far side of the disc is lifted over the black shadow by the bending of light, the approaching side is brighter; short red strokes mark the plane of polarization."></canvas></div>
         <div class="ctl" id="discCtl">
           <label><span class="k">spin <i>a</i></span><input type="range" id="discA" min="0" max="79" value="50" aria-label="Black hole spin, from 0 to 0.79"><span class="v" id="discAV"></span></label>
           <label><span class="k">incl. <i>i</i></span><input type="range" id="discI" min="8" max="84" value="70" aria-label="Inclination of the disc"><span class="v" id="discIV"></span></label>
           <span class="note" id="discVal" aria-live="polite"></span>
         </div>
-        <p class="figcap" id="cap2"><span class="sc">Fig. 2.</span> <i>The inner disc around a Kerr black hole</i>, by analytical ray-tracing as in the Schwarzschild paper and <span class="sc" style="font-size:.9em">artpol</span>: light bending (Beloborodov’s approximation) lifts the far side over the shadow; the spin moves the disc’s inner edge (the ISCO) inwards and drags the orbits, so the approaching side brightens. Red strokes: the plane of polarization of an electron-scattering atmosphere, their length the degree, parallel-transported to us. Through the filter the brightness is modulated by 1 + <i>p</i> cos 2(χ − θ), exaggerated ×4.</p>
+        <p class="figcap" id="cap2"><span class="sc">Fig. 2.</span> <i>The inner disc around a Kerr black hole</i>, by analytical ray-tracing as in the Schwarzschild paper and <span class="sc" style="font-size:.9em">artpol</span>: light bending (Beloborodov's approximation) lifts the far side over the shadow; the spin moves the disc's inner edge (the ISCO) inwards and drags the orbits, so the approaching side brightens. Red strokes: the plane of polarization of an electron-scattering atmosphere, their length the degree, parallel-transported to us. Through the filter the brightness is modulated by 1 + <i>p</i> cos 2(χ − θ), exaggerated ×4.</p>
       </figure>
     </div>
   </section>
@@ -236,18 +241,18 @@
     <div class="ch-h"><span class="num">III.</span><h2 id="h-talks">Talks &amp; posters</h2></div>
     <div class="two">
       <ul class="talks" id="talkList"></ul>
-      <figure class="plate" id="plate3" aria-labelledby="cap3">
-        <div class="plate-h"><span class="pl">Plate III.</span><span class="ti">An accreting pulsar, and the rotating vector</span></div>
+      <figure class="plate" id="plate3" aria-labelledby="plate3-h" aria-describedby="cap3">
+        <div class="plate-h" id="plate3-h"><span class="pl">Plate III.</span><span class="ti">An accreting pulsar, and the rotating vector</span></div>
         <div class="fig f-psr" id="figPsr"><canvas role="img" aria-label="An accreting pulsar seen from Earth: a neutron star, its spin axis, dipole field lines that rotate with the star, and a dashed circle marking the polarization-limiting radius with small ticks showing the field direction there; red strokes show the resulting polarization."></canvas></div>
-        <p class="figcap"><span class="sc">Fig. 3.</span> <i>The pulsar as seen from Earth.</i> Grey ticks: the magnetic field on the sphere of the adiabatic radius <i>r</i><sub>pl</sub> (dashed; really tens of stellar radii). On the way out a photon’s polarization follows the field — the magnetized vacuum is birefringent — and freezes at <i>r</i><sub>pl</sub>, where every ray sees the same dipole: so the red strokes (the X-mode, ⟂ field) all agree.</p>
+        <p class="figcap"><span class="sc">Fig. 3.</span> <i>The pulsar as seen from Earth.</i> Grey ticks: the magnetic field on the sphere of the polarization-limiting radius <i>r</i><sub>pl</sub> (dashed; really tens of stellar radii). On the way out a photon's polarization follows the field (the magnetized vacuum is birefringent) and freezes at <i>r</i><sub>pl</sub>, where every ray sees the same dipole: so the red strokes (the X-mode, ⟂ field) all agree. <i>ψ</i>: the angle between the magnetic axis and the line of sight.</p>
         <div class="ctl">
           <label><span class="k">incl. <i>i</i></span><input type="range" id="inI" min="5" max="90" value="40" aria-label="Inclination of the spin axis to the line of sight"><span class="v" id="vI">40°</span></label>
           <label><span class="k">obliquity <i>θ</i></span><input type="range" id="inT" min="5" max="85" value="30" aria-label="Angle between spin and magnetic axes"><span class="v" id="vT">30°</span></label>
-          <span><button type="button" class="play" id="play" aria-pressed="true">pause</button></span>
+          <span><button type="button" class="play" id="play">pause</button></span>
         </div>
         <div class="fig f-rvm" id="figRvm"><canvas role="img" aria-label="Graph of polarization angle against rotational phase: the S-shaped swing of the rotating-vector model, with a marker at the current phase."></canvas></div>
-        <p class="figcap" id="cap3"><span class="sc">Fig. 4.</span> <i>Polarization angle against phase</i> — the rotating-vector model, tan χ = sin θ sin φ / (sin <i>i</i> cos θ − cos <i>i</i> sin θ cos φ), plus 90° for the X-mode; fitting it to IXPE data is how <a href="assets/pdfs/2025_AA_Loktev_4U1538.pdf">the 4U 1538-52 paper</a> weighs the geometry. Drag across the graph to turn the star by hand.</p>
-        <p class="figcap"><i>To include the effects of non-adiabatic pockets and accretion-flow birefringence, see <a href="https://arxiv.org/abs/2608.27699">Mushtukov et al. (2026)</a>.</i></p>
+        <p class="figcap" id="cap3"><span class="sc">Fig. 4.</span> <i>Polarization angle against phase</i>: the rotating-vector model, tan χ = sin θ sin φ / (sin <i>i</i> cos θ − cos <i>i</i> sin θ cos φ), plus 90° for the X-mode; fitting it to IXPE data is how <a href="assets/pdfs/2025_AA_Loktev_4U1538.pdf">the 4U 1538-52 paper</a> weighs the geometry. Drag across the graph to turn the star by hand.</p>
+        <p class="figcap"><i>To include the effects of non-adiabatic regions and accretion-flow birefringence, see <a href="https://arxiv.org/abs/2608.27699">Mushtukov et al. (2026)</a>.</i></p>
       </figure>
     </div>
   </section>
@@ -257,19 +262,15 @@
     <div class="two">
       <table class="path"><tbody id="pathRows"></tbody></table>
       <div>
-        <figure class="plate views" id="plate4" aria-labelledby="cap5">
-          <div class="plate-h"><span class="pl">Plate IV.</span><span class="ti">Iconic silhouettes</span></div>
+        <figure class="plate views" id="plate4" aria-labelledby="plate4-h" aria-describedby="cap5">
+          <div class="plate-h" id="plate4-h"><span class="pl">Plate IV.</span><span class="ti">Iconic silhouettes</span></div>
           <div class="vgrid" id="views"></div>
           <p class="figcap" id="cap5"><span class="sc">Fig. 5.</span> Maybe the <i>real</i> landmarks are the friends we've made along the way.</p>
         </figure>
-      <!-- <div class="prose">
-        <p class="note">The short version, and how to reach me, is on the <a href="about.html">about page</a>; the framed certificates hang in <a href="merits.html">the cabin</a>. A full list of everything is in the <a href="assets/pdfs/CV_Loktev.pdf">CV</a>.</p>
-      </div> -->
       </div>
     </div>
   </section>
   <footer class="colo"><span class="orn" aria-hidden="true">❦</span>
-    <!-- Plates engraved in your browser from their equations · type <b style="font-style:normal">analyzer 45</b> in the command line below -->
   </footer>
 </main>
 
@@ -277,9 +278,8 @@
 <script src="data.js"></script>
 <script src="site.js"></script>
 <script>
-/* revontuli · research. Chapters rendered from data.js; plates engraved with the dusty-almanac burin
-   (field sampled once, re-inked through the filter — after pikeperch); the pulsar after cabin-fever;
-   the analyzer after crossed-polarizers. */
+/* research. Chapters rendered from data.js; plates engraved line by line (the field is sampled once, then re-inked
+   through the filter); the pulsar; the analyzer. */
 (() => {
 'use strict';
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -299,13 +299,14 @@ $('#intPillars').innerHTML = I.pillars.map(p => `<li><div><b>${p.title}</b> <spa
 $('#intNow').innerHTML = md(I.now);
 const PLATE_ID = { I: 'plate1', II: 'plate2', III: 'plate3' };
 $('#paperList').innerHTML = SITE.papers.map(p => {
+  const NEW = ' target="_blank" rel="noopener"';             // PDFs and outside links open in a new tab, as everywhere on the site
   const pdf = p.pdf ? SITE.PDF + p.pdf : null, au = esc(p.authors).replace('V. Loktev', '<b>V. Loktev</b>');
-  return `<li><span class="yr">${p.year}</span><div><div class="t">${pdf ? `<a href="${pdf}">${p.title}</a>` : p.title}</div><p class="au">${au} · <span class="j">${esc(p.venue)}</span></p>` +
-    `<div class="mat">${pdf ? `<a href="${pdf}">pdf</a>` : ''}${p.ads ? `<a href="${p.ads}">ads</a>` : ''}${p.link ? `<a href="${p.link}">link</a>` : ''}${p.plate ? `<a class="xref" href="#${PLATE_ID[p.plate] || ''}">see Plate ${p.plate}</a>` : ''}</div>${p.note ? `<p class="au">${md(p.note)}</p>` : ''}</div></li>`;
+  return `<li><span class="yr">${p.year}</span><div><div class="t">${pdf ? `<a href="${pdf}"${NEW}>${p.title}</a>` : p.title}</div><p class="au">${au} · <span class="j">${esc(p.venue)}</span></p>` +
+    `<div class="mat">${pdf ? `<a href="${pdf}"${NEW}>pdf</a>` : ''}${p.ads ? `<a href="${p.ads}"${NEW}>ads</a>` : ''}${p.link ? `<a href="${p.link}"${NEW}>link</a>` : ''}${p.plate ? `<a class="xref" href="#${PLATE_ID[p.plate] || ''}">see Plate ${p.plate}</a>` : ''}</div>${p.note ? `<p class="au">${md(p.note)}</p>` : ''}</div></li>`;
 }).join('');
 $('#talkList').innerHTML = SITE.talks.map(t => {
-  const m = t.material ? `<a href="${SITE.url(t.material.url)}">${esc(t.material.label)}</a>` : '';
-  return `<li class="talk"><span class="d">${esc(t.date)}</span><div><div class="tt">${t.title}</div><div class="oc">${t.kind ? `<span class="kind">${esc(t.kind)}</span> · ` : ''}${esc(t.venue)}${t.summary ? ' — ' + md(t.summary) : ''}</div>` +
+  const m = t.material ? `<a href="${SITE.url(t.material.url)}" target="_blank" rel="noopener">${esc(t.material.label)}</a>` : '';
+  return `<li class="talk"><span class="d">${esc(t.date)}</span><div><div class="tt">${t.title}</div><div class="oc">${t.kind ? `<span class="kind">${esc(t.kind)}</span> · ` : ''}${esc(t.venue)}${t.summary ? ': ' + md(t.summary) : ''}</div>` +
     `${m || t.award ? `<div class="mat">${m}${t.award ? `<span class="award">${esc(t.award)}</span>` : ''}</div>` : ''}</div></li>`;
 }).join('');
 $('#pathRows').innerHTML = SITE.path.map((p, i) => `<tr data-i="${i}"${p.now ? ' class="now"' : ''}><td class="y">${esc(p.when)}</td><td class="w"><b>${esc(p.place)}</b><span>${md(p.text)}</span></td></tr>`).join('');
@@ -394,8 +395,9 @@ function setAn(th, on) {
   // Their strokes dim with it, like the plates' red strokes (0.1 + 0.9 cos²); with the filter out they just sit there
   for (const e of EPI) { const c = Math.cos((AN.th - e.ang) * D2R), v = AN.on ? c * c : 0; e.el.style.setProperty('--v', v.toFixed(3)); e.el.style.setProperty('--pv', AN.on ? (0.1 + 0.9 * v).toFixed(3) : '.55'); }
   for (const f of subs) f();
-  try { sessionStorage.setItem('rv.an', JSON.stringify([AN.th, AN.on])); } catch (e) {}
+  clearTimeout(anSave); anSave = setTimeout(() => { try { sessionStorage.setItem('rv.an', JSON.stringify([AN.th, AN.on])); } catch (e) {} }, 300);   // (not on every frame of a turn)
 }
+let anSave = 0;
 const dialEl = $('#dial'), dctx = dialEl.getContext('2d'), DS = 36;
 { const dpr = Math.min(2, devicePixelRatio || 1); dialEl.width = DS * dpr; dialEl.height = DS * dpr; dialEl.style.width = dialEl.style.height = DS + 'px'; dialEl._dpr = dpr; }
 function drawDial() {
@@ -423,9 +425,10 @@ function drawDial() {
   dialEl.addEventListener('pointerup', end); dialEl.addEventListener('pointercancel', () => { drag = null; });
   dialEl.addEventListener('wheel', e => { e.preventDefault(); stopSpin(); setAn(AN.th - Math.sign(e.deltaY) * 2, true); }, { passive: false });
   dialEl.addEventListener('keydown', e => {
-    const step = e.shiftKey ? 10 : 1, k = { ArrowLeft: step, ArrowUp: step, ArrowRight: -step, ArrowDown: -step, PageUp: 15, PageDown: -15 }[e.key];
+    const step = e.shiftKey ? 10 : 1, k = { ArrowRight: step, ArrowUp: step, ArrowLeft: -step, ArrowDown: -step, PageUp: 15, PageDown: -15 }[e.key];
     if (k !== undefined) { e.preventDefault(); stopSpin(); setAn(AN.th + k, true); }
-    else if (e.key === 'Home') { e.preventDefault(); setAn(0, true); }
+    else if (e.key === 'Home') { e.preventDefault(); stopSpin(); setAn(0, true); }
+    else if (e.key === 'End') { e.preventDefault(); stopSpin(); setAn(179, true); }
     else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (AN.on) stopSpin(); setAn(null, !AN.on); }
   });
 }
@@ -716,7 +719,7 @@ const Disc = {
   cv: $('#figDisc canvas'), kind: 'disc',
   params: () => ({ a: DISC.a, i: DISC.i }),
   build(draft) { const Z = sizeCanvas(this.cv, draft); if (!Z) return false; this.Z = Z; this.req = ++wkSeq; this.apply(discCompute(Z.w, Z.h, Z.dpr, this.params())); return true; },
-  apply(R) { this.F = R.F; this.st = R.st; this.P = R.P; this.maxL = R.maxL; $('#discVal').innerHTML = `the disc’s inner edge, the ISCO: <i>r</i> = ${iscoM(R.spin).toFixed(2)} <i>GM</i>/<i>c</i>²`; },
+  apply(R) { this.F = R.F; this.st = R.st; this.P = R.P; this.maxL = R.maxL; $('#discVal').innerHTML = `the disc's inner edge, the ISCO: <i>r</i> = ${iscoM(R.spin).toFixed(2)} <i>GM</i>/<i>c</i>²`; },
   draw() { const c = this.cv.getContext('2d'); ink(c, this.F, this.P, 4); strokes(c, this.st, this.Z.dpr, this.maxL); }
 };
 
@@ -727,7 +730,8 @@ let WK = null; const wkWait = new Map();
 try {
   const src = `'use strict';\nconst D2R = Math.PI / 180;\nconst clamp = ${clamp};\nconst iscoM = ${iscoM};\n${rng}\n${sampleField}\n${binCompute}\n${discCompute}\n` +
     `onmessage = e => { const d = e.data, R = (d.kind === 'bin' ? binCompute : discCompute)(d.w, d.h, d.dpr, d.par), F = R.F; postMessage({ id: d.id, R }, [F.L.buffer, F.Pp.buffer, F.Qq.buffer, F.C2.buffer, F.S2.buffer]); };`;
-  WK = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+  const wkURL = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+  WK = new Worker(wkURL); URL.revokeObjectURL(wkURL);
   WK.onmessage = e => { const f = wkWait.get(e.data.id); wkWait.delete(e.data.id); if (f) f(e.data.R); };
   WK.onerror = e => { if (e.preventDefault) e.preventDefault(); WK = null; const waiting = [...wkWait.values()]; wkWait.clear(); waiting.forEach(f => f(null)); };
 } catch (e) { WK = null; }
@@ -856,7 +860,7 @@ let psrVisible = false;
 const io = new IntersectionObserver(es => { for (const e of es) {
   const p = plates.find(q => q.cv.parentElement === e.target);
   if (p) { p.visible = e.isIntersecting; if (e.isIntersecting && !built.has(p) && !p.asked) { p.asked = true; idle(() => buildFull(p, () => { built.add(p); drawP(p); })); } else if (e.isIntersecting && built.has(p) && p.stamp !== stamp) drawP(p); }
-  if (e.target.id === 'plate3') { psrVisible = e.isIntersecting; if (psrVisible) drawDyn(); }
+  if (e.target.id === 'plate3') { psrVisible = e.isIntersecting; if (psrVisible) { drawDyn(); psrWake(); } }
 } }, { rootMargin: '400px 0px' });
 io.observe($('#figBin')); io.observe($('#figDisc')); io.observe($('#plate3'));
 // a slider drags → a quick draft at half resolution; let go → the full engraving
@@ -883,10 +887,11 @@ for (const id of ['discA', 'discI']) { $('#' + id).addEventListener('input', dis
    (one orbit in BIN_PERIOD s) — so the binary keeps its pace however fast the machine engraves. Off screen it waits. */
 const BIN_PERIOD = 24, binPlay = $('#binPlay');
 let binPlaying = false, binPh = 0, binLast = 0, binAsked = 0;
-function setBinPlay(on) { binPlaying = on; binPlay.textContent = on ? 'pause' : 'orbit'; binPlay.setAttribute('aria-pressed', on); if (on) { binPh = BIN.ph; binLast = performance.now(); } }
+let binTimer = 0;
+function setBinPlay(on) { binPlaying = on; binPlay.textContent = on ? 'pause' : 'orbit'; if (on) { binPh = BIN.ph; binLast = performance.now(); if (!binTimer) binTimer = setInterval(binStep, 40); } else { clearInterval(binTimer); binTimer = 0; } }
 binPlay.addEventListener('click', () => setBinPlay(!binPlaying));
 $('#binPh').addEventListener('pointerdown', () => setBinPlay(false)); $('#binPh').addEventListener('keydown', () => setBinPlay(false));
-setInterval(() => {
+function binStep() {
   const now = performance.now();
   if (!binPlaying || !built.has(Bin) || !Bin.visible || document.hidden) { binLast = now; return; }
   if (binAsked && now - binAsked < 4000) return;          // the last frame is still being engraved
@@ -895,22 +900,25 @@ setInterval(() => {
   binAsked = now;
   const done = () => { binAsked = 0; drawP(Bin); };
   if (WK) buildFull(Bin, done); else { if (Bin.build(true)) drawP(Bin); binAsked = 0; }   // without the worker: quick drafts
-}, 40);
+}
 // the pulsar turns while it is on screen
 let last = performance.now(), scrub = false;
 // (speed) if the machine can't keep up — frames arriving slower than ~45 a second while the pulsar turns — it is
 // redrawn every other frame from then on (the turn itself stays smooth in time, just at 30 steps a second)
 let frameEma = 16.7, slowFor = 0, halfRate = false, odd = false;
-const loop = now => { const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  if (psrVisible && PSR.playing && !RM() && !document.hidden && !scrub) {
+let psrRaf = 0;
+const psrWake = () => { if (!psrRaf && psrVisible && PSR.playing && !RM()) { last = performance.now(); psrRaf = requestAnimationFrame(loop); } };
+const loop = now => { const dt = Math.min(0.05, (now - last) / 1000); last = now; psrRaf = 0;
+  if (!(psrVisible && PSR.playing && !RM())) return;      // off screen or paused: stop until psrWake()
+  if (!document.hidden && !scrub) {
     PSR.ph = (PSR.ph + dt / 9) % 1;
     if (!halfRate && dt > 0) { frameEma += (dt * 1000 - frameEma) * 0.1; slowFor = frameEma > 22 ? slowFor + dt : 0; if (slowFor > 1.5) halfRate = true; }
     odd = !odd; if (!halfRate || odd) drawDyn();
   }
-  requestAnimationFrame(loop); };
-requestAnimationFrame(loop);
-const play = $('#play'), setPlay = p => { PSR.playing = p; play.textContent = p ? 'pause' : 'turn'; play.setAttribute('aria-pressed', p); };
+  psrRaf = requestAnimationFrame(loop); };
+const play = $('#play'), setPlay = p => { PSR.playing = p; play.textContent = p ? 'pause' : 'turn'; psrWake(); };
 play.addEventListener('click', () => setPlay(!PSR.playing)); if (RM()) setPlay(false);
+RV.onChange(psrWake);                                    // (the motion setting may have changed)
 const sI = $('#inI'), sT = $('#inT');
 const upd = () => { PSR.i = +sI.value; PSR.t = +sT.value; $('#vI').textContent = PSR.i + '°'; $('#vT').textContent = PSR.t + '°'; drawDyn(); };
 sI.addEventListener('input', upd); sT.addEventListener('input', upd);
@@ -933,7 +941,7 @@ $$('section.ch').forEach(s => spy.observe(s));
 /* commands for this page */
 RV.register('analyzer', a => {
   const v = (a[0] || '').toLowerCase();
-  if (!v) return [`analyzer: <span class="a">${AN.on ? AN.th.toFixed(0) + '°' : 'out'}</span>${AN.spin ? ' (turning)' : ''} <span class="m">— analyzer &lt;deg&gt; | on | off | turn | stop</span>`];
+  if (!v) return [`analyzer: <span class="a">${AN.on ? AN.th.toFixed(0) + '°' : 'out'}</span>${AN.spin ? ' (turning)' : ''} <span class="m">(analyzer &lt;deg&gt; | on | off | turn | stop)</span>`];
   if (v === 'off' || v === 'out') { stopSpin(); setAn(null, false); return ['the filter is put away. the plates look as printed.']; }
   if (v === 'on' || v === 'in') { setAn(null, true); return [`the filter is over the plates, at ${AN.th.toFixed(0)}°.`]; }
   if (v === 'turn' || v === 'spin') { startSpin(); return ['the filter turns slowly. grab the dial (or type analyzer stop) to hold it.']; }
@@ -944,7 +952,7 @@ RV.register('analyzer', a => {
 RV.register('plate', a => { const k = parseInt(a[0], 10), el = { 1: '#plate1', 2: '#plate2', 3: '#plate3' }[k]; if (!el) return ['<span class="m">usage: plate 1–3</span>']; $(el).scrollIntoView({ behavior: RM() ? 'auto' : 'smooth', block: 'start' }); return [`→ plate ${['', 'I', 'II', 'III'][k]}`]; });
 for (const [k, id] of [['papers', '#papers'], ['talks', '#talks'], ['interests', '#interests'], ['path', '#path'], ['career', '#path'], ['plates', '#plate1'], ['figures', '#plate1']])
   RV.register(k, () => { $(id).scrollIntoView({ behavior: RM() ? 'auto' : 'smooth' }); history.replaceState(null, '', id); return [`→ ${k}`]; }, { hidden: ['career', 'figures', 'interests', 'plates'].includes(k) });
-window.__rs = { AN, setAn, BIN, DISC, PSR, Bin, Disc, built: () => built.size, epi: () => EPI.map(e => [e.ang, +getComputedStyle(e.el).getPropertyValue('--v')]), iscoM, paX };
+if (/[?&]debug\b/.test(location.search)) window.__rs = { AN, setAn, BIN, DISC, PSR, Bin, Disc, built: () => built.size, epi: () => EPI.map(e => [e.ang, +getComputedStyle(e.el).getPropertyValue('--v')]), iscoM, paX };
 })();
 </script>
 </body>

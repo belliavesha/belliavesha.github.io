@@ -1,3 +1,18 @@
 /assets/images/alive_pic
 /assets/videos
 
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# working notes: never published
+/fifty-review.md
+*-review.md
+/notes/
+
+# local tool markers and scripts
+.mandelburger-publish
+*.sh

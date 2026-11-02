@@ -1,11 +1,24 @@
 <!doctype html>
 <html lang="en">
-<!-- revontuli · about: another chapter of the same book — the almanac paper, in two inks from the flower wallpaper (peach & navy) -->
+<!-- about: another chapter of the same book — the almanac paper, in two inks from the flower wallpaper (peach & navy) -->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>About — Vlad Loktev</title>
-<meta name="description" content="About Dr. Vladislav Loktev, astrophysicist: current position, personal info, career path, and contact info how to get in touch.">
+<title>About · Vlad Loktev</title>
+<meta name="description" content="About Vladislav Loktev, astrophysicist: current position, personal info, career path, contact info, and how to get in touch.">
+<link rel="canonical" href="https://belliavesha.github.io/about.html">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="Vlad Loktev">
+<meta property="og:title" content="About · Vlad Loktev">
+<meta property="og:description" content="About Vladislav Loktev, astrophysicist: current position, personal info, career path, contact info, and how to get in touch.">
+<meta property="og:url" content="https://belliavesha.github.io/about.html">
+<meta property="og:image" content="https://belliavesha.github.io/assets/images/og/lake.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A red cabin by a lake in Finland, drawn in pencil, with a hedgehog on the shore.">
+<link rel="me" href="https://orcid.org/0000-0001-6894-871X">
+<link rel="me" href="https://github.com/belliavesha">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Vladislav Loktev", "alternateName": "Vlad Loktev", "honorificPrefix": "Dr", "jobTitle": "Postdoctoral researcher in astrophysics", "affiliation": {"@type": "Organization", "name": "Astronomical Institute of the Czech Academy of Sciences", "url": "https://astro.cas.cz/"}, "alumniOf": [{"@type": "CollegeOrUniversity", "name": "University of Turku"}, {"@type": "CollegeOrUniversity", "name": "Saint Petersburg University"}], "url": "https://belliavesha.github.io/", "sameAs": ["https://orcid.org/0000-0001-6894-871X", "https://github.com/belliavesha", "https://ui.adsabs.harvard.edu/search/q=orcid%3A0000-0001-6894-871X"]}</script>
 <link rel="icon" href="assets/images/favicon/hedgehog.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" type="image/png" href="assets/images/favicon/hedgehog-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/images/favicon/hedgehog-180.png">
@@ -22,7 +35,7 @@
 }
 a{text-decoration-color:var(--peach-2);text-decoration-thickness:2px;text-underline-offset:.18em}
 a:hover{color:var(--ink);text-decoration-color:var(--ink)}
-.rh-nav a .n{color:var(--peach-2)}
+.rh-nav a .n{color:var(--ink-2)}
 .rh-nav a[aria-current="true"]{box-shadow:inset 0 -2px 0 var(--peach-2)}
 ::selection{background:var(--peach);color:var(--ink)}
 
@@ -31,8 +44,8 @@ section.ch#about{padding-top:57.6px}
 .about-body{display:grid;grid-template-columns:minmax(0,36em) 252px;grid-template-areas:"prose fig";gap:25.2px 57.6px;justify-content:space-between;align-items:start}
 .about-body .prose{grid-area:prose}
 .front{grid-area:fig;margin:5.4px 0 0;justify-self:end;width:100%;max-width:252px}
-.front .plate{position:relative;background:var(--peach-3);padding:10.8px;box-shadow:0 1px 0 rgba(0,0,0,.03),0 14.4px 27px -21.6px rgba(30,30,50,.55)}
-.front .plate::before{content:"";position:absolute;inset:5.4px;border:1px solid var(--hair);pointer-events:none}
+.front .plate,.offduty .plate{position:relative;background:var(--peach-3);padding:10.8px;box-shadow:0 1px 0 rgba(0,0,0,.03),0 14.4px 27px -21.6px rgba(30,30,50,.55)}
+.front .plate::before,.offduty .plate::before{content:"";position:absolute;inset:5.4px;border:1px solid var(--hair);pointer-events:none}
 .front canvas{display:block;width:100%;
   aspect-ratio:640/640;
   background:var(--peach)}
@@ -48,7 +61,7 @@ section.ch#about{padding-top:57.6px}
 .prose p:first-child{font-size:1.12em;line-height:1.45}
 .prose p:first-child::first-letter{float:left;font-size:3.5em;line-height:.8;padding:.08em .1em .02em .06em;margin:.04em .12em 0 0;background:var(--peach);color:var(--ink);font-weight:600}
 
-/* the route so far (after pikeperch): places, years, one line each, with their links */
+/* the bio so far: places, years, one line each, with their links */
 .route{list-style:none;margin:0;padding:0 0 0 2px;max-width:40em;position:relative}
 .route li{position:relative;padding:0 0 16.2px 27px;border-left:1.5px dotted var(--hair)}
 .route li:last-child{border-left-color:transparent;padding-bottom:0}
@@ -60,8 +73,6 @@ section.ch#about{padding-top:57.6px}
 /* …and beside it, off the clock: a second plate, engraved like the frontispiece */
 .route-body{display:grid;grid-template-columns:minmax(0,40em) 270px;gap:25.2px 57.6px;justify-content:space-between;align-items:start}
 .offduty{margin:3.6px 0 0;justify-self:end;width:100%;max-width:270px}
-.offduty .plate{position:relative;background:var(--peach-3);padding:10.8px;box-shadow:0 1px 0 rgba(0,0,0,.03),0 14.4px 27px -21.6px rgba(30,30,50,.55)}
-.offduty .plate::before{content:"";position:absolute;inset:5.4px;border:1px solid var(--hair);pointer-events:none}
 .offduty .pic{position:relative;aspect-ratio:4/5;background:var(--peach)}
 .offduty canvas,.offduty img{display:block;position:absolute;inset:0;width:100%;height:100%}
 .offduty img{object-fit:cover;object-position:60% 50%;filter:grayscale(1) sepia(.3) hue-rotate(180deg) contrast(.95)}
@@ -72,7 +83,6 @@ section.ch#about{padding-top:57.6px}
 /* contact: the tear-off tabs are the only list of addresses on the page */
 .contact .lede{max-width:36em;margin:0 0 .3em}
 .contact .office{margin:0;color:var(--ink-2);font-size:.92em}
-.contact .office a{white-space:nowrap}
 .notice{position:relative;margin:23.4px 0 0;max-width:738px;background:var(--peach-3);padding:14.4px 0 0;box-shadow:0 1px 0 rgba(0,0,0,.03),0 16.2px 27px -23.4px rgba(30,30,50,.6)}
 .notice-h{margin:0 16.2px 12.6px;display:flex;justify-content:space-between;align-items:baseline;gap:10.8px;flex-wrap:wrap}
 .notice-h b{font-family:var(--sc);font-weight:700;font-size:18px;letter-spacing:.14em}
@@ -88,6 +98,7 @@ section.ch#about{padding-top:57.6px}
 .tab.torn{animation:tear 1.1s cubic-bezier(.4,.1,.7,1) forwards;pointer-events:none}
 @keyframes tear{0%{transform:none}25%{transform:rotate(-7deg) translateY(3.6px)}100%{transform:rotate(-24deg) translate(-36px,378px);opacity:0}}
 .tab.regrow{animation:regrow .6s ease-out}
+html.rv-reduced .tab.regrow{animation:none}
 @keyframes regrow{from{opacity:0;transform:translateY(-10.8px)}to{opacity:1;transform:none}}
 /* stubs of tabs someone already tore off and took: no link, no pull — only what's left above the tear */
 .tabs li.gone{background:var(--paper) var(--laid)}
@@ -99,7 +110,6 @@ section.ch#about{padding-top:57.6px}
 html.rv-reduced .tab.torn{animation:none;opacity:.3}
 @media (prefers-reduced-motion:reduce){.tab.torn{animation:none;opacity:.3}}
 @media (max-width:576px){.tabs{flex-wrap:wrap;border-top:0;min-height:0}.tabs li{flex:0 0 20%;height:252px;border-top:1.5px dashed var(--ink)}.tabs li:nth-child(5n){border-right:0}.tabs li:nth-child(n+6){margin-top:12.6px}.tab{height:252px}.tab .v,.stub{font-size:13.1px}.tab .v small{font-size:10.3px;letter-spacing:.1em}.notice-h b{font-size:15.3px}}
-.tabs-note{margin:9px 0 0;font-style:italic;color:var(--ink-2);font-size:14.4px}
 
 /* under the tabs: the CV, and the legacy $50 (kept for the connoisseurs) — a matched pair of buttons */
 .acts{display:flex;flex-wrap:wrap;gap:12.6px;margin:21.6px 0 0}
@@ -111,38 +121,44 @@ html.rv-reduced .tab.torn{animation:none;opacity:.3}
 </head>
 <body data-page="about">
 <a class="rv-skip" href="#about">Skip to content</a>
-<div class="rh" role="navigation" aria-label="Sections of this page">
+<div class="rh">
   <div class="rh-bar">
     <a class="rh-t" href="#top">Loktev · About</a>
-    <nav class="rh-nav" id="rhNav">
+    <nav class="rh-nav" id="rhNav" aria-label="Sections of this page">
       <a href="#about"><span class="n">i</span>About</a>
       <a href="#contact"><span class="n">ii</span>Contact</a>
-      <a href="#route"><span class="n">iii</span>The route</a>
+      <a href="#route"><span class="n">iii</span>The bio so far</a>
     </nav>
   </div>
 </div>
 
 <main class="wrap" id="top">
+  <h1 class="rv-sr">Vladislav Loktev: about</h1>
   <section class="ch" id="about" aria-labelledby="h-about">
     <div class="ch-h"><span class="num">I.</span><h2 id="h-about">About</h2></div>
     <div class="about-body">
       <figure class="front" id="front">
-        <div class="plate"><canvas id="por" role="img" aria-label="An engraved portrait of Dr. Vladislav Loktev: a bearded man with long hair and glasses."></canvas></div>
+        <div class="plate"><canvas id="por" role="img" aria-label="An engraved portrait of Vladislav Loktev: a bearded man with long hair and glasses."></canvas></div>
         <figcaption>Dr. Vladislav Loktev</figcaption>
       </figure>
-      <div class="prose" id="prose"></div>
+      <div class="prose" id="prose">
+        <p>Ahoj, I'm Vlad!</p>
+        <p>Since October 2026 I have been a postdoctoral researcher at the <a href="https://astro.cas.cz/" target="_blank" rel="noopener">Astronomical Institute of the Czech Academy of Sciences</a>, working on spectral and timing modelling of X-ray binaries and their connection to relativistic plasma physics as a member of <a href="https://expand-plasma.eu/wg4.html" target="_blank" rel="noopener">Working Group 4 of the EXPAND COST Action</a>. More personal history <a href="about.html#route">below</a>.</p>
+        <p>Broadly, I work on black hole and neutron star X-ray binaries, and I try to bridge what we observe with what our models predict: radiative transfer and Comptonization in hot atmospheres, numerical simulations of magnetized plasma turbulence, and ray-tracing of polarized X-rays. More about my scientific projects, papers, slides and career is on the <a href="research.html">research page</a>.</p>
+        <p>In my free time I like to relax in a sauna by a lake about once a week. Recently I took up bouldering (I currently climb 6a confidently). Besides astrophysics I have some recreational interests in maths, as you may notice in a not-so-secret corner of this site. I also enjoy playing the piano, the guitar/ukulele, and other random instruments, although I am progressively losing those skills.</p>
+      </div>
     </div>
   </section>
 
   <section class="ch contact" id="contact" aria-labelledby="h-contact">
     <div class="ch-h"><span class="num">II.</span><h2 id="h-contact">Contact</h2></div>
-    <p class="lede">Feel free to contact me.</p>
-    <p class="office">Office: <span id="office"></span></p>
+    <p class="lede">E-mail works best.</p>
+    <p class="office">Office: <span id="office"><noscript>Room 207, Boční II 1401/1, Astronomical Institute of the Czech Academy of Sciences</noscript></span></p>
     <div class="notice">
       <div class="notice-h"><b>Take a tab.</b>
-        <!-- <span>it will grow back</span> -->
       </div>
       <ul class="tabs" id="tabs" aria-label="Tear-off contact tabs"></ul>
+      <noscript><p>E-mail: loktev.astro (at) gmail.com, or loktev (at) asu.cas.cz · <a href="https://github.com/belliavesha">GitHub</a> · <a href="https://orcid.org/0000-0001-6894-871X">ORCID</a> · <a href="https://telegram.me/belliavesha">Telegram</a></p><style>#get50{display:none}</style></noscript>
     </div>
     <div class="acts">
       <a class="act" href="assets/pdfs/CV_Loktev.pdf" target="_blank" rel="noopener">See CV ↗</a>
@@ -152,12 +168,11 @@ html.rv-reduced .tab.torn{animation:none;opacity:.3}
 
   <section class="ch" id="route" aria-labelledby="h-route">
     <div class="ch-h"><span class="num">III.</span><h2 id="h-route">The bio so far</h2>
-      <!-- <span class="fi">papers and talks are on the <a href="research.html">research page</a></span> -->
     </div>
     <div class="route-body">
       <ol class="route" id="routeList"></ol>
       <figure class="offduty" id="offduty">
-        <div class="plate"><div class="pic"><canvas id="piano" role="img" aria-label="Vlad with long hair and glasses, singing at a keyboard set up on a river embankment."></canvas></div></div>
+        <div class="plate"><div class="pic"><canvas id="piano" role="img" aria-label="Vlad with long hair and glasses, singing at a piano set up on a river embankment."></canvas></div></div>
         <figcaption>
           <small>
           A princess
@@ -168,8 +183,6 @@ html.rv-reduced .tab.torn{animation:none;opacity:.3}
     </div>
   </section>
   <footer class="colo"><span class="orn" aria-hidden="true">❦</span>
-    <!-- Printed in two inks, peach and ink-blue, on the same paper as the <a href="research.html">research</a>  -->
-    <!-- · the certificates hang in <a href="merits.html">the cabin</a> -->
   </footer>
 </main>
 
@@ -179,7 +192,7 @@ html.rv-reduced .tab.torn{animation:none;opacity:.3}
 <script src="site.js"></script>
 <script src="fifty.js"></script>
 <script>
-/* revontuli · about. Prose, route and tabs from data.js; the frontispiece engraved with the research page's burin. */
+/* about. The route and the tabs from data.js (the prose is above, in the page); the frontispiece engraved with the research page's burin. */
 (() => {
 'use strict';
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -187,7 +200,6 @@ const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const md = SITE.md, esc = RV.esc;
 
 /* ---------- the text ---------- */
-$('#prose').innerHTML = SITE.about.map(p => `<p>${md(p)}</p>`).join('');
 $('#routeList').innerHTML = SITE.path.map(p => `<li${p.now ? ' class="now"' : ''}><b>${esc(p.city || p.place)}</b><span class="yr">${esc(p.short || p.when)}</span><p>${md(p.brief || p.text)}</p></li>`).join('');
 $('#office').textContent = SITE.OFFICE;
 
@@ -211,14 +223,14 @@ RV.register('tear', () => { const a = $$('.tab').find(x => !x.classList.contains
 
 /* ---------- the frontispiece: the photo, re-engraved in ink-blue on a peach plate ----------
    The still is frame 01 of the nod sequence; the nod stays off until the photo is replaced. */
-// const PORTRAIT = 'assets/images/alive_2/frame01.jpg';
 const PORTRAIT = 'assets/images/madheadshot.jpeg';
 const cv = $('#por');
 let PIX = null;
 function load() { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = PORTRAIT; }); }
 function engravePortrait() {
   if (!PIX) return;
-  const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr); if (w < 20) return;
+  const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+  if (w < 20 || PIX.done === w + 'x' + h) return; PIX.done = w + 'x' + h;   // (a resize that kept the size: nothing to do)
   cv.width = w; cv.height = h;
   const c = cv.getContext('2d'), img = c.createImageData(w, h), d = img.data, P = 2.6 * dpr, aa = P / 2.1;
   const ink = [43, 49, 66], bg = [231, 196, 166];
@@ -295,7 +307,7 @@ let rt = 0; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout
 const navA = $$('#rhNav a');
 const spy = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) navA.forEach(a => a.setAttribute('aria-current', a.getAttribute('href') === '#' + en.target.id)); }), { rootMargin: '-40% 0px -55% 0px' });
 $$('section.ch').forEach(s => spy.observe(s));
-window.__ab = { tabs: () => $$('#tabs li').map(li => li.className === 'gone' ? 'STUB ' + li.textContent : li.textContent) };
+if (/[?&]debug\b/.test(location.search)) window.__ab = { tabs: () => $$('#tabs li').map(li => li.className === 'gone' ? 'STUB ' + li.textContent : li.textContent) };
 })();
 </script>
 </body>

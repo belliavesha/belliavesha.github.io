@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /old/
+Disallow: /collatztree/grid/
+
+Sitemap: https://belliavesha.github.io/sitemap.xml

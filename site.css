@@ -1,4 +1,4 @@
-/* revontuli — shared chrome: the dock (menu + command line), its log, sheets and chips.
+/* shared chrome: the dock (menu + command line), its log, sheets and chips.
    One family for the chrome everywhere: DM Mono. Colours: lamp-lit dark glass, one amber accent. */
 :root{
   --rv-glass: rgba(21,23,25,.86);
@@ -16,7 +16,7 @@
   --rv-gap: 12px;
   --rv-reserve: calc(var(--rv-h) + var(--rv-gap) + 26px + env(safe-area-inset-bottom, 0px));
 }
-.rv-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rv-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .rv-skip{position:fixed;left:-999px;top:10px;z-index:120;background:var(--rv-solid);color:var(--rv-ink);font:500 14px var(--rv-mono);padding:8px 14px;border-radius:10px;text-decoration:none}
 .rv-skip:focus{left:10px}
 
@@ -90,7 +90,7 @@
 /* the terminal: liquid glass — the scene shows through, only lightly blurred; a lit top edge and a thin bright rim */
 .rv-out{
   background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.03) 38%,rgba(255,255,255,0) 70%),rgba(21,23,25,.056);
-  -webkit-backdrop-filter:blur(4px) saturate(1.3) brightness(.56);backdrop-filter:blur(3px) saturate(1.3) brightness(.56);   /* the scene behind is dimmed, so light type reads on a bright day */
+  -webkit-backdrop-filter:blur(3px) saturate(1.3) brightness(.56);backdrop-filter:blur(3px) saturate(1.3) brightness(.56);   /* the scene behind is dimmed, so light type reads on a bright day */
   border:1px solid rgba(255,255,255,.17);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(255,255,255,.06),inset 0 0 0 .5px rgba(255,255,255,.04),0 22px 50px -24px rgba(0,0,0,.6);
 }

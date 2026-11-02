@@ -1,13 +1,14 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Cyg X-2 · NuSTAR spectral explorer</title><link rel="stylesheet" href="./style.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Cyg X-2 · NuSTAR spectral explorer</title><meta name="description" content="Explore the spectral states of the neutron-star X-ray binary Cyg X-2 in NuSTAR data: a configurable count-rate and colour diagram with draggable swan, snail and peacock tracks."><link rel="stylesheet" href="./style.css"></head>
 <body>
-<header><div><p class="eyebrow">NUSTAR / CYG X-2</p><h1>Spectral-state explorer</h1></div><div class="observation">
+<header><div><p class="eyebrow"><a href="../" style="color:inherit">Vlad Loktev</a> · NuSTAR / Cyg X-2</p><h1>Spectral-state explorer</h1></div><div class="observation">
     <!-- <span class="dot"></span> -->
     <!-- <span id="observation-count">Observations</span>
     <small id="date">Bundled observations</small>   -->
 </div>
 </header>
 <div id="loading" role="status">Loading channel-resolved spectra…</div>
+<noscript><p style="padding:1em">This explorer needs JavaScript. <a href="../">Back to the main site</a>.</p><style>#loading{display:none}</style></noscript>
 <main id="workspace" hidden>
 <section class="plot-panel"><div class="plot-heading"><div><h2>Segment diagram</h2><p id="plot-caption"></p></div><span id="performance" class="badge"></span></div>
 <div class="chart-wrap"><canvas id="hid" tabindex="0" aria-label="Configurable count-rate and color diagram. Click a point to inspect its observation. Optional swan, snail, and peacock overlays can be dragged and reshaped."></canvas><canvas id="swan-layer" aria-hidden="true"></canvas><div id="tooltip" hidden></div></div>

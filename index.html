@@ -1,11 +1,21 @@
 <!doctype html>
 <html lang="en" data-light="day">
-<!-- revontuli · home: a lake in Turku, lit by the real sun; a red cabin with Vlad in the window -->
+<!-- home: a lake in Turku, lit by the real sun; a red cabin with Vlad in the window -->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Vlad Loktev — astrophysicist</title>
-<meta name="description" content="Dr. Vladislav Loktev, astrophysicist: high-energy astrophysics, X-ray binaries and polarization; radiative transfer, relativistic plasma simulations, IXPE data.">
+<title>Vlad Loktev, astrophysicist</title>
+<meta name="description" content="Vladislav Loktev, astrophysicist: high-energy astrophysics, X-ray binaries and polarization; radiative transfer, relativistic plasma simulations, IXPE data.">
+<link rel="canonical" href="https://belliavesha.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vlad Loktev">
+<meta property="og:title" content="Vlad Loktev, astrophysicist">
+<meta property="og:description" content="Vladislav Loktev, astrophysicist: high-energy astrophysics, X-ray binaries and polarization; radiative transfer, relativistic plasma simulations, IXPE data.">
+<meta property="og:url" content="https://belliavesha.github.io/">
+<meta property="og:image" content="https://belliavesha.github.io/assets/images/og/lake.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A red cabin by a lake in Finland, drawn in pencil, with a hedgehog on the shore.">
 <link rel="icon" href="assets/images/favicon/hedgehog.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" type="image/png" href="assets/images/favicon/hedgehog-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/images/favicon/hedgehog-180.png">
@@ -27,7 +37,7 @@ document.documentElement.style.setProperty('--z', heroZoom());
   document.documentElement.style.setProperty('--wash', g);
 })();
 </script>
-<noscript><style>.hero{--st1:1;--st2:1;--st3:1}</style></noscript>
+<noscript><meta http-equiv="refresh" content="0; url=about.html"></noscript>
 <link rel="stylesheet" href="site.css">
 <style>
 :root{
@@ -36,7 +46,7 @@ document.documentElement.style.setProperty('--z', heroZoom());
   --bark:#F1EDE4; --bark-mark:#2A2926; --limb:#2A2926; --twig:#5B4636; --hole:#2A241E; --grass:#7A8752;
   --falu:#9B3A33; --falu-2:#7C2C27; --trim:#F2EEE6; --roof:#2B2C2E; --stone:#8C8A84; --post:#6B5A48;
   --mb-red:#AE3A31; --mb-red-2:#8E2D26; --mb-white:#F3F1EC; --mb-roof:#2C2F34;
-  --pencil:#2A221D; --pencil-hi:#FFFDF6;                /* lyijykynä: the graphite of the outlines and hatching, and the light pencil */
+  --pencil:#2A221D; --pencil-hi:#FFFDF6;                /* the graphite of the outlines and hatching, and the light pencil */
   --sky-ink:#16222A; --scrim-c:#EEF2F4; --scrim-a:0;
   --serif:"Fraunces","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   color-scheme:light;
@@ -61,7 +71,7 @@ a{color:inherit}
 button{font:inherit;color:inherit}
 
 /* ---------- the scene ---------- */
-/* the reveal (see reveal() in the script): 1 the landscape and the text · 2 jetty, birch, cabin, mailbox, hedgehog · 3 the weather.
+/* the reveal (see stepReveal() in the script): 1 the landscape and the text · 2 jetty, birch, cabin, mailbox, hedgehog · 3 the weather.
    A layer stays invisible until the scene has been measured and drawn, so nothing flashes in an unplaced spot. */
 .hero{--st1:0;--st2:0;--st3:0}
 #sky,.hero-text,.fg .st-land{opacity:var(--st1)}
@@ -77,7 +87,7 @@ button{font:inherit;color:inherit}
 .hero.ready .fg .ground{transition:fill 18s linear}
 @keyframes footfade{from{opacity:.55}to{opacity:0}}
 #wx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
-/* lyijykynä: the pencil layers. .st-lake (in the foreground SVG): hatching on the lake and the horizon line — static vector, so it costs
+/* the pencil layers. .st-lake (in the foreground SVG): hatching on the lake and the horizon line — static vector, so it costs
    nothing per frame (a static canvas would be re-uploaded every frame) · .paper: the sketchbook's grain over the whole picture ·
    .win-sk: pencil lines round Vlad's window */
 .fg .st-lake{opacity:calc(var(--st1) * var(--lake-k,1))}
@@ -85,15 +95,15 @@ button{font:inherit;color:inherit}
 .paper[hidden]{display:none}
 .win-sk{position:absolute;z-index:3;left:0;top:0;pointer-events:none;overflow:visible;opacity:var(--st2)}
 
-.hero-text{position:absolute;z-index:3;left:max(24px,5.5cqw);top:clamp(64px,12cqh,128px);width:min(600px,calc(100% - 48px));color:var(--sky-ink)}
+.hero-text{position:absolute;z-index:3;left:max(24px,5.5vw);left:max(24px,5.5cqw);top:clamp(64px,12vh,128px);top:clamp(64px,12cqh,128px);width:min(600px,calc(100% - 48px));color:var(--sky-ink)}
 .hero.ready .hero-text{transition:color 1.5s ease}
 /* a soft halo in the scrim's colour round each letter: the text may cross the birch trunk, which is brighter than the scrim can cover */
 .hero h1,.lead{text-shadow:0 0 2px var(--scrim-c),0 0 6px var(--scrim-c),0 0 12px var(--scrim-c)}
 .scrim{position:absolute;inset:-34px -40px;border-radius:60px;background:var(--scrim-c);opacity:var(--scrim-a);filter:blur(26px);z-index:-1;pointer-events:none}
 .hero.ready .scrim{transition:opacity 1.5s ease,background-color 1.5s ease}
-.hero h1{margin:0;font-weight:360;font-size:clamp(34.5px,5.25cqw,75px);line-height:.98;letter-spacing:-.018em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
-.lead{margin:.6em 0 0;font-size:clamp(16.6px,1.43cqw,20.4px);line-height:1.5;max-width:30em;font-variation-settings:"SOFT" 80,"WONK" 0}
-.lead a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:color-mix(in srgb,currentColor 50%,transparent)}
+.hero h1{margin:0;font-weight:360;font-size:clamp(34.5px,5.25vw,75px);font-size:clamp(34.5px,5.25cqw,75px);line-height:.98;letter-spacing:-.018em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
+.lead{margin:.6em 0 0;font-size:clamp(16.6px,1.43vw,20.4px);font-size:clamp(16.6px,1.43cqw,20.4px);line-height:1.5;max-width:30em;font-variation-settings:"SOFT" 80,"WONK" 0}
+.lead a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:currentColor;text-decoration-color:color-mix(in srgb,currentColor 50%,transparent)}
 .lead a:hover{text-decoration-color:currentColor;text-decoration-thickness:2px}
 .lead .chill{display:inline;border:0;background:none;padding:0;cursor:pointer;font:inherit;font-style:italic;color:inherit;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:.22em;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent)}
 .lead .chill:hover{text-decoration-color:currentColor}
@@ -101,11 +111,10 @@ button{font:inherit;color:inherit}
 .lead .psst-k{font-style:italic}
 @container (max-width:699px){.hero-text{top:clamp(40px,6.5cqh,72px)}.hero h1{font-size:33px}.lead{font-size:15.7px;line-height:1.48}}
 
-/* the cabin window, with Vlad in it (one still photo; the nod is switched off — see NOD_ENABLED) */
+/* the cabin window, with Vlad in it */
 .win{position:absolute;z-index:3;left:0;top:0;padding:5px;background:var(--trim);border-radius:2px;
   box-shadow:0 0 0 1px rgba(0,0,0,.12),0 3px 0 -1px rgba(0,0,0,.15);touch-action:pan-y;-webkit-tap-highlight-color:transparent}
 .win .top{position:absolute;inset:0;z-index:1;pointer-events:none}
-.win .top i{display:none}
 .win .top::after{content:'';position:absolute;left:0;right:0;top:30%;height:5px;background:var(--trim);box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .win .top::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:5px;margin-left:-2.5px;background:var(--trim);box-shadow:1px 0 0 rgba(0,0,0,.25)}
 .win .glass{position:absolute;inset:0;overflow:hidden;background:#7C7F7E;border-radius:1px}
@@ -127,9 +136,6 @@ button{font:inherit;color:inherit}
 .mailbox:hover .letter,.mailbox:focus-visible .letter{transform:translateY(-4px)} */
 .mailbox .snowcap{display:none}
 .mailbox.snowy .snowcap{display:block}
-.mailbox .tip{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translate(-50%,4px);white-space:nowrap;font:500 12px/1 "DM Mono",ui-monospace,monospace;letter-spacing:.02em;
-  padding:6px 9px;border-radius:999px;background:rgba(21,23,25,.86);color:#EEE7D9;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
-.mailbox:hover .tip,.mailbox:focus-visible .tip{opacity:1;transform:translate(-50%,0)}
 
 /* the cabin door's handle: a brass lever; it is pressed on hover, and the door lets you into the merits room */
 .door-h{position:absolute;z-index:3;left:0;top:0;display:block;--brass:#C9A55E;--brass-2:#9C7E43;-webkit-tap-highlight-color:transparent}
@@ -139,13 +145,10 @@ html[data-light="night"] .door-h{--brass:#8E7748;--brass-2:#6B5932}
 .door-h:hover .lever,.door-h:focus-visible .lever{transform:rotate(22deg)}
 .door-h.press .lever{transform:rotate(38deg);transition-duration:.18s}
 .door-h:focus-visible{outline:none}.door-h:focus-visible svg{outline:2px dashed var(--berry);outline-offset:4px;border-radius:4px}
-.door-h .tip{position:absolute;right:calc(100% + 6px);top:50%;transform:translate(4px,-50%);white-space:nowrap;font:500 12px/1 "DM Mono",ui-monospace,monospace;letter-spacing:.02em;
-  padding:6px 9px;border-radius:999px;background:rgba(21,23,25,.86);color:#EEE7D9;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
-.door-h:hover .tip,.door-h:focus-visible .tip{opacity:1;transform:translate(0,-50%)}
 
 /* jetty & rod: one invisible button over them */
 .rod{position:absolute;z-index:3;left:0;top:0;border:0;padding:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.rod:focus-visible{outline:none}
+.rod:focus-visible{outline:none;clip-path:none!important}   /* (its clip-path would hide the focus ring) */
 .rod:focus-visible::after{content:"";position:absolute;inset:-4px;border:2px dashed var(--berry);border-radius:8px}
 
 /* words over the lake (skipping, fishing): no box — a soft highlight of the sky behind them */
@@ -178,6 +181,7 @@ html.rv-reduced .chant{animation:none;opacity:.9}
 .apple:hover svg{transform:rotate(-12deg)}
 .apple[hidden]{display:none}
 .mailbox.bump svg{animation:mbbump .35s ease-out}
+html.rv-reduced .mailbox.bump svg,html.rv-reduced .burrow.open .eyes{animation:none}
 @keyframes mbbump{30%{transform:translateY(2px) rotate(-1.5deg)}}
 .burrow{position:absolute;z-index:3;width:54px;height:40px;border:0;padding:0;background:transparent;border-radius:50% 50% 8px 8px;pointer-events:none}
 .burrow.open{pointer-events:auto;cursor:pointer}
@@ -187,33 +191,7 @@ html.rv-reduced .chant{animation:none;opacity:.9}
 .burrow .eyes i:first-child{left:2px}.burrow .eyes i:last-child{right:2px}
 @keyframes blink{0%,46%,50%,100%{transform:translate(-50%,-50%) scaleY(1)}48%{transform:translate(-50%,-50%) scaleY(.1)}}
 
-/* the note on the birch: "check this out" */
-.note{position:absolute;z-index:6;width:236px;padding:16px 18px 10px 16px;background:#FBF8F1;color:#26312F;border-radius:3px 3px 14px 3px;
-  box-shadow:0 1px 0 rgba(0,0,0,.04),0 14px 26px -16px rgba(10,20,30,.55);transform:rotate(2.2deg);transform-origin:8% 6%;font-size:15.5px;line-height:1.42;
-  transition:transform .6s cubic-bezier(.3,1.4,.5,1),opacity .6s}
-html[data-light="night"] .note{background:#E9E3D6;box-shadow:0 14px 30px -14px rgba(0,0,0,.8)}
-.note::after{content:"";position:absolute;right:0;bottom:0;width:22px;height:22px;background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.07) 50%,rgba(0,0,0,.02));border-radius:0 0 3px 0}
-.note .pin{position:absolute;left:10px;top:-5px;width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#E58B94,#8E2633 70%);box-shadow:0 2px 2px rgba(0,0,0,.3)}
-.note-k{display:block;margin:0 0 4px;padding:0;border:0;background:none;cursor:pointer;font-size:13px;letter-spacing:.08em;font-variant-caps:all-small-caps;color:#8E2633;font-weight:560;text-align:left}
-.note-k:hover{text-decoration:underline;text-underline-offset:3px}
-.note.folded{width:auto!important;padding:7px 12px 7px 26px;border-radius:3px 3px 10px 3px}
-.note.folded .note-k{margin:0}
-.note.folded .note-k::after{content:" ›";letter-spacing:0}
-.note.folded .note-t,.note.folded .note-b,.note.folded::after{display:none}
-.note-t{margin:0;font-variation-settings:"SOFT" 100,"WONK" 0}
-.note-t a{color:#1E4E66;text-decoration:underline;text-decoration-color:rgba(30,78,102,.4);text-underline-offset:.18em}
-.note-t a:hover{color:#8E2633}
-.note-t .sc{font-variant-caps:all-small-caps;letter-spacing:.04em}
-.note-b{display:flex;justify-content:flex-end;gap:2px;margin-top:6px}
-.note-b button{border:0;background:none;color:#5C6663;cursor:pointer;font-size:13.5px;font-style:italic;padding:4px 8px;border-radius:8px}
-.note-b button:hover{background:rgba(0,0,0,.06);color:#1E2A2F}
-.note.gone{opacity:0;transform:translate(160px,-120px) rotate(38deg) scale(.7);pointer-events:none;transition:transform 1.1s cubic-bezier(.4,.1,.6,1),opacity 1.1s ease}
-.note.swap{opacity:0;transform:translate(30px,40px) rotate(-8deg);transition:transform .45s ease-in,opacity .45s}
-.pin-only{position:absolute;z-index:6;width:26px;height:26px;border:0;padding:0;background:none;cursor:pointer}
-.pin-only::before{content:"";position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#E58B94,#8E2633 70%);box-shadow:0 2px 2px rgba(0,0,0,.3)}
-.pin-only:hover::before{inset:4px}
-.pin-only[hidden]{display:none}
-html.rv-reduced .note,html.rv-reduced .win img{transition:none}
+html.rv-reduced .win img{transition:none}
 /* a faint daylight glare on the window glass; the polarizing filter (the `filter` command) takes it off (--glare, set from the script) */
 .win .glass::after{content:'';position:absolute;inset:0;background:rgba(236,240,244,var(--glare,.085));pointer-events:none;transition:background .35s ease}
 /* rm -rf /: the scene goes piece by piece — all but the hedgehog */
@@ -221,33 +199,32 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
 .hero.wiping #sky,.hero.wiping .paper,.hero.wiping .win-sk,.hero.wiping #wx,.hero.wiping .fg g,.hero.wiping .win,.hero.wiping .win-glow,.hero.wiping .mailbox,.hero.wiping .door-h,.hero.wiping .rod,.hero.wiping .apple,.hero.wiping .hero-text{transition:opacity .5s ease}
 .hero .rm-gone{opacity:0!important;pointer-events:none}
 </style>
+<noscript><style>.hero{--st1:1;--sky-ink:#F6F0E4}</style></noscript>
 </head>
 <body data-page="home">
 <a class="rv-skip" href="#heroText">Skip to the text</a>
 <div class="hero-clip">
 <main class="hero" id="home">
   <canvas id="sky" aria-hidden="true"></canvas>
-  <div class="hero-text" id="heroText">
+  <div class="hero-text" id="heroText" tabindex="-1">
     <div class="scrim" aria-hidden="true"></div>
-    <h1>Hi, I’m Vlad!</h1>
+    <h1>Hi, I'm Vlad!</h1>
     <p class="lead">
-      Welcome to my humble webpage. Don't be afraid of the hedgehog but try not to scare him either. I’m an <a href="research.html">astrophysicist</a>, currently living in Prague - <a href="about.html">more about me</a>. <span class="psst" id="psst"><span class="psst-k">By the way... </span> <span id="psstText"></span></span> <span class="or">…or just <button type="button" class="chill" id="chill">chill here skipping stones</button>.</span>
+      Don't be afraid of the hedgehog, but try not to scare him either. I'm an <a href="research.html">astrophysicist</a>, currently living in Prague - <a href="about.html">more about me</a>. <span class="psst" id="psst"><span class="psst-k">By the way…</span> <span id="psstText"></span></span> <span class="or">…or just <button type="button" class="chill" id="chill">chill here skipping stones</button>.</span>
     </p>
   </div>
   <svg class="fg" id="fg" aria-hidden="true"></svg>
   <div class="win-glow" id="winGlow" aria-hidden="true"></div>
   <canvas id="wx" aria-hidden="true"></canvas>
   <div class="win" id="win" role="img" aria-label="Vlad, looking out of the cabin window.">
-    <div class="top" aria-hidden="true"><i></i><i></i></div>
-    <!-- src="assets/images/alive_2/frame01.jpg"  -->
+    <div class="top" aria-hidden="true"></div>
     <div class="glass"><img id="winImg" 
       src="assets/images/working3.jpeg"
       alt="" width="448" height="608" decoding="async"><div class="tint"></div><div class="refl"></div><canvas id="fog" aria-hidden="true"></canvas></div>
     <span class="sill" aria-hidden="true"></span>
   </div>
   <svg class="win-sk" id="winSk" aria-hidden="true"></svg>
-  <a class="mailbox" id="mailbox" href="about.html#contact" aria-label="The mailbox — how to reach me (contact)">
-    <!-- <span class="tip" aria-hidden="true">@ contact</span> -->
+  <a class="mailbox" id="mailbox" href="about.html#contact" aria-label="The mailbox: how to reach me (contact)">
     <svg viewBox="0 0 60 100" aria-hidden="true">
       <defs><clipPath id="mbBody"><path d="M11 29 30 12.5 49 29V70H11Z"/></clipPath></defs>
       <ellipse cx="30" cy="99" rx="22" ry="2.4" fill="#000" opacity=".16"/>
@@ -258,7 +235,6 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
       <path d="M11 67.5H49V70H11Z" fill="var(--mb-red-2)"/>
       <rect x="11" y="29" width="2" height="41" fill="var(--mb-white)" opacity=".95"/><rect x="47" y="29" width="2" height="41" fill="var(--mb-white)" opacity=".95"/>
       <text x="30" y="30.2" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="12.5" font-weight="600" fill="var(--mb-white)" stroke="rgba(0,0,0,.25)" stroke-width=".35">@</text>
-      <!-- <g class="letter"><rect x="22" y="37.5" width="16" height="10" rx=".6" fill="#FBF8F1" stroke="#B9B2A4" stroke-width=".5"/><path d="M22.4 38 30 43l7.6-5" fill="none" stroke="#B9B2A4" stroke-width=".6"/></g> -->
       <rect x="18.5" y="42" width="23" height="22" rx="1.2" fill="var(--mb-white)" stroke="rgba(0,0,0,.18)" stroke-width=".6"/>
       <rect x="23.5" y="49" width="13" height="3.2" rx=".5" fill="#2B2E33" opacity=".75"/><rect x="24.6" y="49.9" width="10.8" height="1.4" fill="#F5F3EE" opacity=".8"/>
       <path d="M18.5 60h23" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
@@ -270,8 +246,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
       <path class="snowcap" d="M.3 31 30 3.6 59.7 31c-2.4-.6-4.3.3-6.4-.9-2.6-1.5-4.2.6-6.8-1.3S42.8 26.5 40 25s-4.3.4-6.3-1.1-3.4-.8-5.6-.2-3.8-1.3-6 .3-3.6.9-5.9 2.4-4 .5-6.2 2.2-4.9 1.1-7.3 3.4z" fill="#FBFAF6"/>
     </svg>
   </a>
-  <a class="door-h" id="doorHandle" href="merits.html" aria-label="The cabin door handle — step inside (merits)">
-    <!-- <span class="tip" aria-hidden="true">come in</span> -->
+  <a class="door-h" id="doorHandle" href="merits.html" aria-label="The cabin door handle: step inside (merits)">
     <svg viewBox="0 0 24 18" aria-hidden="true"><rect x="2" y="2.5" width="5.2" height="13" rx="1.6" fill="var(--brass-2)"/><g class="lever"><rect x="3" y="7.4" width="17.5" height="3.2" rx="1.6" fill="var(--brass)"/><rect x="3" y="7.4" width="17.5" height="1.1" rx=".55" fill="#fff" opacity=".35"/></g><circle cx="4.6" cy="9" r="2.2" fill="var(--brass)" stroke="rgba(0,0,0,.25)" stroke-width=".5"/></svg>
   </a>
   <button class="rod" id="rod" type="button" aria-label="The fishing rod on the jetty: cast the line"></button>
@@ -279,16 +254,9 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
   <button class="apple on-tree" id="apple" type="button" aria-label="An apple, growing on the birch (yes, on the birch). Knock it down.">
     <svg viewBox="0 0 34 34" aria-hidden="true"><use href="#appleArt"/></svg>
   </button>
-  <div class="hog" id="hog" role="img" aria-label="A hand-drawn hedgehog pottering along the shore. You can pick him up.">
+  <div class="hog" id="hog" role="img" aria-label="A hand-drawn hedgehog pottering along the shore. Drag him to pick him up, or type hog come in the command line.">
     <div class="spr"><svg class="carry" viewBox="0 0 34 34" aria-hidden="true"><use href="#appleArt"/></svg></div>
   </div>
-  <aside class="note" id="note" aria-label="Check this out" hidden>
-    <span class="pin" aria-hidden="true"></span>
-    <button type="button" class="note-k" id="noteFold" aria-expanded="true">psst — have a look</button>
-    <p class="note-t" id="noteText"></p>
-    <div class="note-b"><button type="button" id="noteNext">another?</button><button type="button" id="noteClose" aria-label="Let the wind take this note">let it go ×</button></div>
-  </aside>
-  <button class="pin-only" id="pinOnly" type="button" hidden aria-label="Pin a new note to the birch"></button>
   <div class="paper" id="paper" aria-hidden="true"></div>
   <div class="say" id="skipSay" aria-live="polite"></div>
   <div class="say" id="fishSay" aria-live="polite"></div>
@@ -307,8 +275,7 @@ html.rv-reduced .note,html.rv-reduced .win img{transition:none}
 <script src="data.js"></script>
 <script src="site.js"></script>
 <script>
-/* revontuli · the lake. Scene engine after midnight-sun and cabin-fever (sky, sun, moon, stars, aurora, seasons,
-   hedgehog, cabin, jetty, rain & rainbow); chimney-smoke puffs after pikeperch. */
+/* the lake: sky, sun, moon, stars, aurora, seasons, hedgehog, cabin, jetty, rain & rainbow, chimney smoke. */
 (() => {
 'use strict';
 const BOOT0 = performance.now();
@@ -357,10 +324,9 @@ function computeState() {
   S.frozen = env.frozen;
   S.iceOut = md > 412 && md <= 428;
   S.snowGround = RV.snowSeason(L);
-  S.cold = env.cold;
   S.leaves = md >= 1105 || md < 501 ? 'bare' : md < 521 ? 'mouse' : md < 901 ? 'green' : md < 926 ? 'turning' : md < 1021 ? 'gold' : 'falling';
   S.flowers = md >= 415 && md <= 610; S.blueberries = md >= 705 && md <= 831; S.lingon = md >= 820 && md <= 1015;
-  S.fallen = md >= 920 && md <= 1130; S.pile = md >= 1001 || md <= 415; S.hibernate = md >= 1101 || md <= 415;
+  S.fallen = md >= 920 && md <= 1130; S.hibernate = md >= 1101 || md <= 415;
   S.fallenCol = ['#D9A33A', '#BF7430'];
   if (RMS.leaves) { if (!S.fallen && (S.leaves === 'green' || S.leaves === 'mouse')) S.fallenCol = ['#7C8C4E', '#8A9A55']; S.leaves = 'bare'; S.fallen = true; }   // rm leaves: all of them on the ground
   if (RMS.snow || dry()) S.snowGround = false;                             // rm snow · rm water (snow is water too)
@@ -405,7 +371,7 @@ function rainbowNow() {
 }
 function applyTheme() { document.documentElement.dataset.light = S.night ? 'night' : 'day'; }
 
-/* ---------- the knobs: every size and position of the lake scene lives here (documented in SCENE.md) ----------
+/* ---------- the knobs: every size and position of the lake scene lives here ----------
    A pair [a, b] means [desktop, mobile] (mobile = hero narrower than 700 px). H and W are the hero's height and width. */
 const SCENE = {
   horizon: [0.46, 0.58],        // the far shore (horizon line), as a fraction of H …
@@ -423,7 +389,7 @@ const SCENE = {
     plinth: 0.075,              // … and stone plinth (crawl space) under it; the rest is the gable
     offRight: [0.3, 0.34],      // share of the gable front hidden beyond the right edge of the screen (0.2–0.4; on mobile it keeps a strip of the door in view)
     window: [0.3, 0.34],        // Vlad's window: width ÷ front width
-    windowAspect: 1.15,         // …and its height ÷ that width (was a fixed 1.45, making a taller window)
+    windowAspect: 1.15,         // …and its height ÷ that width
     door: [0.62, 0.56],         // the door's left edge, ÷ front width from the left wall (further left on mobile, or the edge of the screen hides it)
     lair: 0.2,                  // the hedgehog's lair (a hole in the plinth), ÷ front width from the left wall
   },
@@ -435,13 +401,13 @@ const SCENE = {
   hog: { size: [57, 46], cell: 1.22, walkAngle: 15, stride: 0.109, dockGap: 64, watch: 4.6, flee: 1.5 },
   //     HS px · rendered cell ÷ HS · max climb/descent while walking (°) · distance per drawing ÷ HB · keep his feet this far above the bottom (the dock) ·
   //     the cursor within `watch` sprite sizes (HB): he stops and keeps an eye on it · closer than `flee`: he rolls into a ball
-  hogJump: { chance: 0.0067, height: [3, 5], dist: [3, 8], g: 1100, frame: 0.17, land: 0.11 },
+  hogJump: { chance: 0.005, height: [3, 5], dist: [3, 8], g: 1100, frame: 0.17, land: 0.11 },
   //         the long jump, once in a blue moon: chance each time he picks something to do · apex height and length, in sprite sizes (HB) ·
   //         gravity px/s² · s per drawing in the air (01·02 up, 03·04 down) · s on the landing drawing (05)
   apple: { dropX: 0.08, hang: 0.28, g: 1400, missStay: 20, regrow: 3, roofBounce: 0.3 },
   //       hangs above the roof at this ÷ front width from the left wall · this far above the roof ÷ house height · gravity px/s² · s on the grass if it misses · s to grow a new one · how much of its speed it keeps bouncing off the roof (0 = none)
   iceTrail: { life: 7, barb: 1 },   // stones on ice: s the scratch stays · feather-barb size
-  // lyijykynä — the pencil look (documented in DESIGN.md). Everything is drawn once per layout / theme change, never per frame.
+  // the pencil look. Everything is drawn once per layout / theme change, never per frame.
   sketch: {
     on: true,                   // false: the old flat vector look (every pencil layer is skipped)
     wobble: 1.1,                // px: how far a pencil line wanders off the straight (bigger: shakier hand)
@@ -452,17 +418,16 @@ const SCENE = {
     hatch: 0.3,                 // opacity of the graphite hatching in the shadows (cabin side, eaves, plinth, trunk, jetty)
     hatchGap: 4.2,              // px between hatch strokes
     fill: 0.55,                 // strength of the coloured-pencil stroke texture inside shapes (0 = flat fills)
-    sky: 0.55,                  // strength of the long pencil strokes layered in the sky (kaunotar: the sky only — the lake mirrors a clean sky)
-    lake: 0,                    // strength of the horizontal hatching on the water / ice (kaunotar: off — the water read too much like the sky)
-    mailbox: false,             // kaunotar: pencil outlines and hatching on the mailbox (off: it stays a clean little painted box)
-    broadleaf: 0.16,            // kaunotar: share of the near shore's trees that are broadleaf crowns (aspen, birch) in the season's colour
+    sky: 0.55,                  // strength of the long pencil strokes layered in the sky (the sky only — the lake mirrors a clean sky)
+    lake: 0,                    // strength of the horizontal hatching on the water / ice (off — the water read too much like the sky)
+    mailbox: false,             // pencil outlines and hatching on the mailbox (off: it stays a clean little painted box)
+    broadleaf: 0.16,            // share of the near shore's trees that are broadleaf crowns (aspen, birch) in the season's colour
     forest: 0.5,                // the far shore: outline and stroke texture of the spruce silhouettes
     grain: 0.32                 // opacity of the paper grain over the whole picture
   },
-  stars: { boost: 1.5 },        // kaunotar: stars and meteors are drawn this many magnitudes brighter than they are (the pencil-scratched night sky swallowed the faint ones); `meteor 4` now looks as `meteor 2.5` did
-  litter: [7, 10],              // kaunotar: how many loose birch leaves lie on the grass under the birch, by the mailbox (none on snow; the old leaf pile is gone)
-  note: false,                  // the "psst — have a look" note pinned to the birch
-  perf: {                       // kaunotar: how much the scene asks of the machine
+  stars: { boost: 1.5 },        // stars and meteors are drawn this many magnitudes brighter than they are (the pencil-scratched night sky swallowed the faint ones); `meteor 4` now looks as `meteor 2.5` did
+  litter: [7, 10],              // how many loose birch leaves lie on the grass under the birch, by the mailbox (none on snow; the old leaf pile is gone)
+  perf: {                       // how much the scene asks of the machine
     res: 1.5,                   // canvas pixels per screen pixel, at most (sky, lake, weather). 2 = full retina sharpness; the soft sky and water look the same at 1.5
     slowRes: 1,                 // … and on a machine that can't keep up (see slowFps): one canvas pixel per screen pixel
     fps: 30,                    // the canvas (water, weather, jetty) is redrawn at most this often
@@ -472,12 +437,12 @@ const SCENE = {
 };
 const pk = a => Array.isArray(a) ? a[mobile ? 1 : 0] : a;
 
-/* ---------- lyijykynä: the pencil — hand-drawn lines, graphite hatching, coloured-pencil texture and paper (SCENE.sketch) ----------
+/* ---------- the pencil: hand-drawn lines, graphite hatching, coloured-pencil texture and paper (SCENE.sketch) ----------
    Everything here is generated once: the textures at boot; the lines and hatching in layout() / buildFG() / renderStatic() (i.e. on a
    resize, a theme change or the 20-s tick), from seeded dice so that a line stays put for a given window size and date. Nothing runs
    per frame: the per-frame loop only blits the cached jetty. */
 const SK = SCENE.sketch;
-const PERF = { res: SCENE.perf.res, fps: SCENE.perf.fps, slow: false };   // kaunotar: the live settings (they step down once on a slow machine)
+const PERF = { res: SCENE.perf.res, fps: Math.max(1, SCENE.perf.fps), slow: false };   // the live settings (they step down once on a slow machine)
 if (/[?&]sketch=0\b/.test(location.search)) SK.on = false;   // ?sketch=0: the same page without the pencil (for comparing)
 const f1 = n => n.toFixed(1);
 let PR = rng(1);                                         // the pencil's own dice (never the scene's R: with the pencil off, the scene is unchanged)
@@ -646,15 +611,8 @@ function cedges(c, P, closed, amp, os) { const n = P.length; for (let i = 0; i <
 const PENCIL = () => S.night ? [4, 6, 8] : [42, 34, 29];
 
 /* the sky: long, gently tilted coloured-pencil strokes in clusters, light and dark, grey on clear — laid over the sky with soft-light in
-   renderStatic(), so they take on whatever colour the sky has (and the lake mirrors them). Made once per layout. */
-let SKYS = null, skyJob = 0;
-// they wait for an idle moment (≤ 250 ms), so they never hold up the first picture or a resize; meanwhile the old ones are stretched to fit
-function skySoon() {
-  FSK = null;                                            // (the forest is rebuilt with the layout: its cached pencil with it, below)
-  if (!SK.on) { SKYS = null; return; }
-  const job = ++skyJob, run = () => { if (job !== skyJob) return; const t = performance.now(); buildSkyStrokes(); buildForestSketch(); TIMING.sky = performance.now() - t; renderStatic(); needDraw = true; TIMING.idle = performance.now() - t; };
-  if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 250 }); else setTimeout(run, 60);
-}
+   renderStatic(), so they take on whatever colour the sky has. Made once per layout. */
+let SKYS = null;
 function buildSkyStrokes() {
   SKYS = null;
   if (!SK.on || SK.sky <= 0) return;   // (and the forest's cache: buildForestSketch, run in the same idle job)
@@ -736,7 +694,7 @@ function lakeSketch() {
   const R = rng(hashStr('lake' + W + H)), night = S.night, frozen = S.frozen, y0 = HY + 3, y1 = SHORE + 8, k = SK.lake;
   const hi = frozen ? (night ? '#BECDDC' : '#FFFFFF') : night ? '#AABED2' : '#FAFCFF', dk = frozen ? (night ? '#000000' : '#465A69') : night ? '#040608' : '#2A221D';
   const B = {};
-  const n = k > 0 ? Math.round(W / (mobile ? 2.2 : 3.2)) : 0;   // (kaunotar: SK.lake = 0 — no hatching on the water, just the horizon line)
+  const n = k > 0 ? Math.round(W / (mobile ? 2.2 : 3.2)) : 0;   // (SK.lake = 0 — no hatching on the water, just the horizon line)
   for (let i = 0; i < n; i++) {
     const u = Math.pow(R(), 0.8), y = y0 + u * (y1 - y0), L = (10 + R() * 70) * (0.25 + 1.5 * u) * (mobile ? 0.7 : 1), x = R() * (W + L) - L, light = R() < (night ? 0.55 : 0.5);
     const a = (light ? (night ? 0.10 : 0.16) : (night ? 0.18 : 0.11)) * (0.4 + 0.9 * R()) * (0.45 + 0.75 * u) * k * 1.6, lw = (0.5 + R() * 0.8) * (0.6 + 0.7 * u);
@@ -816,11 +774,20 @@ const roofY = x => CAB.top - (x - CAB.x0) * CAB.gh / (CAB.fw / 2) - (mobile ? 3.
 const textBox = () => { const r = $('#heroText').getBoundingClientRect(); return `${Math.round(r.width)}×${Math.round(r.height)}`; };
 let laidOutText = '';
 const TIMING = { start: 0, boot: performance.now() };                             // (test hook: __rv.timing — ms spent in the last layout, buildFG, sky strokes, renderStatic)
+function replan() {                                     // after a relayout: what was planned on the old geometry
+  if (!hog.st) return;
+  const hi = Math.max(40, xLimit());
+  if (hog.st === 'jump' && hog.jump) { const j = hog.jump; j.x0 = clamp(j.x0, 20, W - 20); j.x1 = clamp(j.x1, 30, hi); j.y1 = clamp(j.y1, hogYMin(j.x1), hogYMax(j.x1)); }
+  else if (hog.st === 'home') go('home');
+  else if (hog.st === 'walk' && hog.path && hog.path.length) { const e = hog.path[hog.path.length - 1], x = clamp(e[0], 30, hi); go('walk', [x, clamp(e[1], hogYMin(x), hogYMax(x))]); }
+  else if (hog.st === 'fall' && hog.floor != null) hog.floor = clamp(hog.floor, hogYMin(hog.x), hogYMax(hog.x));
+  if (fish.st !== 'idle' && fish.target) fish.target = [clamp(fish.target[0], 30, Math.max(40, S.skipMaxX - 20)), clamp(fish.target[1], HY + 4, JET.yf)];
+}
 function layout() {
   TIMING.start = performance.now();
   SC = window.heroZoom ? heroZoom() : 1; document.documentElement.style.setProperty('--z', SC);   // the scene's zoom (see <head>)
   W = hero.clientWidth; H = hero.clientHeight; mobile = W < 700;                                   // in scene px (unaffected by the scale)
-  DPR = Math.min(PERF.res, window.devicePixelRatio || 1) * SC;                                     // canvas px per scene px (kaunotar: at most SCENE.perf.res per screen pixel)
+  DPR = Math.min(PERF.res, window.devicePixelRatio || 1) * SC;                                     // canvas px per scene px (at most SCENE.perf.res per screen pixel)
   const htr = $('#heroText').getBoundingClientRect(), hrr = hero.getBoundingClientRect();
   HY = Math.round(Math.min(H * SCENE.horizonMax, Math.max(H * pk(SCENE.horizon), (htr.bottom - hrr.top) / SC + SCENE.textGap)));
   SHORE = Math.round(Math.max(H * pk(SCENE.shore), HY + 60));
@@ -865,16 +832,16 @@ function layout() {
   for (const [c, h] of [[cv, H], [top, HY + 2], [skyC, HY + 2], [forC, HY + 2], [forDC, HY + 2], [wxc, H]]) { c.width = Math.round(W * DPR); c.height = Math.round(h * DPR); }
   topDirty = true;
   const t0 = performance.now();
-  const t1 = performance.now();
   fg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   planApple();
   buildClouds(); buildForest();
-  { const ts = performance.now(); buildForestMasks(); if (SK.on) { buildSkyStrokes(); buildForestSketch(); } else { SKYS = null; FSK = null; } TIMING.sky = performance.now() - ts; }   // kaunotar: made with the layout (was: in idle time, then a second renderStatic)
-  const t2 = performance.now(); buildFG(); const t3 = performance.now(); placeThings(); placeNote();
+  { const ts = performance.now(); buildForestMasks(); if (SK.on) { buildSkyStrokes(); buildForestSketch(); } else { SKYS = null; FSK = null; } TIMING.sky = performance.now() - ts; }   // made with the layout
+  const t2 = performance.now(); buildFG(); const t3 = performance.now(); placeThings();
   TIMING.fg = t3 - t2; TIMING.layout = performance.now() - t0 + (t0 - TIMING.start);
   hog.x = clamp(hog.x || W * 0.45, 30, W - 40);
   if (hog.y) hog.y = clamp(hog.y, hogYMin(hog.x), hogYMax(hog.x));
   appleRelayout();
+  replan();
   needDraw = true;
   laidOutText = textBox();                               // the text box this layout was made for
 }
@@ -894,13 +861,13 @@ function placeThings() {
   Object.assign(dh.style, { left: CAB.door.x + 4 + 'px', top: CAB.wb - CAB.door.h * 0.5 - hh / 2 + 'px', width: hw + 'px', height: hh + 'px' });
   const b = $('#burrow'), L = CAB.lair;
   Object.assign(b.style, { left: L.x - L.rx * 1.2 + 'px', top: CAB.base - L.ry - 6 + 'px', width: L.rx * 2.4 + 'px', height: L.ry + 10 + 'px' });
-  sketchWindow(); sketchMailbox();                       // lyijykynä
+  sketchWindow(); sketchMailbox();
 }
 const inPoly = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) if ((P[i][1] > y) !== (P[j][1] > y) && x < (P[j][0] - P[i][0]) * (y - P[i][1]) / (P[j][1] - P[i][1]) + P[i][0]) c = !c; return c; };
 
 /* ---------- the birch: a silver birch, grown procedurally — long arching limbs and hanging curtains of twigs ---------- */
-function birchSVG(R, night, topY, gy, tx, tww, textBox) {
-  const out = { limbs: [], twigs: new Map(), leaves: new Map(), snow: [] };   // (kaunotar: twigs and leaves are pooled by look into a handful of <path>s — ~2,000 elements fewer to parse, style and paint)
+function birchSVG(R, night, topY, gy, tx, tww) {
+  const out = { limbs: [], twigs: new Map(), leaves: new Map(), snow: [] };   // (twigs and leaves are pooled by look into a handful of <path>s — ~2,000 elements fewer to parse, style and paint)
   const pool = (m, key, d) => { const a = m.get(key); if (a) a.push(d); else m.set(key, [d]); };
   const sc = mobile ? 0.62 : 1;
   const RL = rng(hashStr('leaves' + W + S.md)), RS = rng(hashStr('snow' + W));   // leaves and snow have their own dice: with or without them, the same branches
@@ -915,7 +882,7 @@ function birchSVG(R, night, topY, gy, tx, tww, textBox) {
   };
   const path = pts => 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
   const stroke = (pts, w0, w1, op) => { const n = pts.length - 1, seg = 4; let s = ''; for (let k = 0; k < seg; k++) { const a = Math.floor(k * n / seg), b = Math.floor((k + 1) * n / seg); const w = w0 + (w1 - w0) * (k + .5) / seg; s += `<path d="${path(pts.slice(a, b + 1))}" stroke="var(--limb)" stroke-opacity="${op}" stroke-width="${w.toFixed(2)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`; }
-    if (SK.on) s += `<path d="${smoothD(pts.map(p => [p[0] + (PR() - .5) * 1.3, p[1] + (PR() - .5) * 1.3]))}" stroke="var(--pencil)" stroke-opacity="${(op * 0.55).toFixed(2)}" stroke-width="${(0.45 * SK.line).toFixed(2)}" fill="none" stroke-linecap="round"/>`;   // lyijykynä: the second, sketchier pass
+    if (SK.on) s += `<path d="${smoothD(pts.map(p => [p[0] + (PR() - .5) * 1.3, p[1] + (PR() - .5) * 1.3]))}" stroke="var(--pencil)" stroke-opacity="${(op * 0.55).toFixed(2)}" stroke-width="${(0.45 * SK.line).toFixed(2)}" fill="none" stroke-linecap="round"/>`;   // the second, sketchier pass
     return s; };
   // curtains of hanging twigs along a limb (mostly on its outer, drooping half)
   const curtain = (pts, side, density, reach) => {
@@ -984,18 +951,21 @@ function birchSVG(R, night, topY, gy, tx, tww, textBox) {
   }
   let tw = '';
   for (const [k, ds] of out.twigs) { const [op, w] = k.split('|'); tw += `<path d="${ds.join('')}" stroke="var(--twig)" stroke-opacity="${op}" stroke-width="${w}" fill="none"/>`; }
-  for (const [col, ds] of out.leaves) tw += `<path d="${ds.join('')}" fill="${col}" fill-opacity="${night ? .75 : .92}"${SK.on ? ` stroke="var(--pencil)" stroke-opacity=".38" stroke-width=".45"` : ''}/>`;   // lyijykynä: each leaf outlined
+  for (const [col, ds] of out.leaves) tw += `<path d="${ds.join('')}" fill="${col}" fill-opacity="${night ? .75 : .92}"${SK.on ? ` stroke="var(--pencil)" stroke-opacity=".38" stroke-width=".45"` : ''}/>`;   // each leaf outlined
   return `<g id="twigs">${tw}</g>${out.limbs.join('')}${out.snow.join('')}`;
 }
 
 /* ---------- foreground: the birch (behind the house), the ground, the cabin with the hedgehog's lair under it ---------- */
-function buildFG() {
+function buildFG() {                                    // the foreground, rebuilt; the cabin keeps its light filter
+  buildFG0(); const cab = $('#cabin'); if (cab && S.cabFlt) cab.style.filter = S.cabFlt;
+}
+function buildFG0() {
   if (!W) return;
   const htr = $('#heroText').getBoundingClientRect(), hrr = hero.getBoundingClientRect();
   const textBottom = (htr.bottom - hrr.top) / SC;
   const R = rng(hashStr('fg' + W + S.md)), RF = rng(hashStr('fallen' + W + S.md)), RP = rng(hashStr('pile' + W));   // RF, RP: for what comes and goes (rm leaves, rm snow)
   const night = document.documentElement.dataset.light === 'night', f = n => n.toFixed(1);
-  skSeed('fg' + S.md); TEXK = night ? 0.5 : 1;          // lyijykynä: the pencil's dice for this foreground
+  skSeed('fg' + S.md); TEXK = night ? 0.5 : 1;          // the pencil's dice for this foreground
   // the ground, from the water line down; its colour (--ground) follows the sun, see applyGround()
   let d = `M0 ${H + 2}`;
   for (let x = 0; x <= W + 6; x += 6) d += ` L${x} ${ground(x).toFixed(1)}`;
@@ -1009,14 +979,14 @@ function buildFG() {
   const tww = y => tw * (0.42 + 0.58 * Math.pow(tu(y), 0.8));
   let Lp = '', Rr = '';
   for (let y = topY; y <= gy + 10; y += 8) { Lp += `${(tx(y) - tww(y) / 2).toFixed(1)} ${y.toFixed(1)} `; Rr = `${(tx(y) + tww(y) / 2).toFixed(1)} ${y.toFixed(1)} ` + Rr; }
-  const crown = birchSVG(R, night, topY, crownBase, tx, tww, mobile ? null : { right: (htr.right - hrr.left) / SC, bottom: textBottom });
+  const crown = birchSVG(R, night, topY, crownBase, tx, tww);
   const marks = [];
   for (let y = topY + 6; y < crownBase + 40; y += 5 + R() * 15) {
     const w = tww(y), left = R() < 0.5, ml = w * (R() < 0.18 ? 0.7 + R() * 0.3 : 0.15 + R() * 0.4);
     const x = left ? tx(y) - w / 2 : tx(y) + w / 2 - ml, th = R() < 0.25 ? 2 + R() * 2.5 : 0.8 + R() * 1.2;
     marks.push(`<path d="M${x.toFixed(1)} ${y.toFixed(1)} q${(ml / 2).toFixed(1)} ${(R() - .5).toFixed(1)} ${ml.toFixed(1)} 0" stroke="var(--bark-mark)" stroke-width="${th.toFixed(1)}" stroke-linecap="round" fill="none" opacity="${(0.55 + R() * 0.35).toFixed(2)}"/>`);
   }
-  // lyijykynä: the trunk in pencil — contours (the shaded right one darker) and short curved strokes that round it off
+  // the trunk in pencil — contours (the shaded right one darker) and short curved strokes that round it off
   let trunkSk = '';
   if (SK.on) {
     const LP = [], RP = [];
@@ -1028,7 +998,6 @@ function buildFG() {
   }
   // the twig the apple hangs from (an apple on a birch: don't ask)
   const [hx, hy] = APPLE.hang, ty0 = Math.max(topY + 8, hy - 34), sx0 = tx(ty0), tipx = hx + 1.5, tipy = hy - 12;
-  APPLE.twig = [tipx, tipy];
   let twig = `<path d="M${f(sx0)} ${f(ty0)} Q${f((sx0 + tipx) / 2)} ${f(Math.min(ty0, tipy) - 12)} ${f(tipx)} ${f(tipy)}" stroke="var(--limb)" stroke-opacity=".7" stroke-width="${mobile ? 1.3 : 1.9}" fill="none" stroke-linecap="round"/>`;
   if (S.leaves !== 'bare') for (const [ox, oy, a] of [[-7, -5, -40], [6, -8, 35]]) twig += `<ellipse cx="${f(tipx + ox)}" cy="${f(tipy + oy)}" rx="2.2" ry="4.2" transform="rotate(${a} ${f(tipx + ox)} ${f(tipy + oy)})" fill="${S.leaves === 'green' ? (night ? '#56643A' : '#7C8C4E') : S.leaves === 'mouse' ? '#A9BD5E' : '#D9A33A'}"/>`;
   if (S.snowGround) twig += `<path d="M${f(sx0)} ${f(ty0 - 1.5)} Q${f((sx0 + tipx) / 2)} ${f(Math.min(ty0, tipy) - 13.5)} ${f(tipx)} ${f(tipy - 1.5)}" stroke="${night ? '#C9D2DA' : '#FBFCFD'}" stroke-opacity=".8" stroke-width="1.4" fill="none" stroke-dasharray="10 7"/>`;
@@ -1046,11 +1015,10 @@ function buildFG() {
   for (let i = 0, n = mobile ? 9 : 26; i < n; i++) {
     const x = 10 + R() * Math.max(10, MB.left - 24), y0 = ground(x) + 16, y = y0 + R() * Math.max(4, H - SCENE.hog.dockGap + 20 - y0), k = R(), sc = 0.8 + 0.5 * (y - y0) / (H - y0);
     if (S.snowGround) { if (k < 0.5) det += `<path d="M${f(x)} ${f(y)} q${f(12 * sc)} -3 ${f(24 * sc)} 0" stroke="${night ? '#2B3947' : '#D2DBE1'}" stroke-width="1.4" fill="none" opacity=".75"/>`; }
-    // (kaunotar: the three-bladed grass tufts are gone — the pencil grass texture does the job)
+    // (the three-bladed grass tufts are gone — the pencil grass texture does the job)
   }
-  // kaunotar: no leaf pile any more (he sleeps where he is) — instead a few loose birch leaves lie on the grass under the birch, by the mailbox
+  // a few loose birch leaves on the grass under the birch, by the mailbox
   let pile = '';
-  S.pileX = S.pileY = null;
   if (!S.snowGround && SCENE.litter) {                    // (the only leaves on the ground: the old scatter along the shore is gone too)
     const RL2 = rng(hashStr('litter' + W + S.md)), [n0, n1] = SCENE.litter, n = (n0 + Math.floor(RL2() * (n1 - n0 + 1))) * (RMS.leaves ? 4 : 1);   // (rm leaves: they all came down)
     const cols = S.fallen ? S.fallenCol : S.leaves === 'bare' ? ['#9A7650', '#7E6043'] : ['#D9A33A', '#C9A83A'];   // the birch's own colours, as they fall (yellowed in summer, brown in a snowless winter)
@@ -1062,7 +1030,7 @@ function buildFG() {
     }
     pile = ld;
   }
-  // lyijykynä: the ground in pencil — a stroke texture over the grass (or snow), the water line drawn in graphite, the bank shaded below it
+  // the ground in pencil — a stroke texture over the grass (or snow), the water line drawn in graphite, the bank shaded below it
   let landSk = '', shadowSk = '';
   if (SK.on) {
     const SP = []; for (let x = -12; x <= W + 12; x += 10) SP.push([x, ground(x) + 0.5]);
@@ -1079,7 +1047,7 @@ function buildFG() {
 function cabinSVG(R, night) {
   const RI = rng(hashStr('icicles' + W));                // the icicles have their own dice: the rest of the cabin stays put with or without them
   const { x0, x1, fw, dx, dy, top: tp, wb, base, gh, peak, ov, lair } = CAB, f = n => n.toFixed(1);
-  const on = SK.on;                                      // lyijykynä: with the pencil off, exactly the old flat drawing
+  const on = SK.on;                                      // with the pencil off, exactly the old flat drawing
   // a straight line: pencil (wavering, overshooting, of uneven weight) or the old hairline
   const bl = (ax, ay, bx, by, op, w = 1, col = '#000', amp = 0.45, os = 1.2) => on
     ? `<path d="${pline(ax, ay, bx, by, SK.wobble * amp, SK.overshoot * os / 4.5, 34)}" stroke="${col === '#000' ? 'var(--pencil)' : col}" stroke-opacity="${(op * (1.1 + PR() * 0.9)).toFixed(3)}" stroke-width="${(w * SK.line * (0.65 + PR() * 0.45)).toFixed(2)}" fill="none" stroke-linecap="round"/>`
@@ -1159,7 +1127,7 @@ function cabinSVG(R, night) {
   const plP = [[x0 - 4, wb - 2], [x1 + 3, wb - 2], [x1 + dx + 1, wb - 2 + dy], [x1 + dx + 1, base + dy], [x1, base], [x0 - 4, base]], plD = wpoly(plP, 0.4);
   s += `<path d="${plD}" fill="var(--stone)"/>`;
   if (!on) {
-    for (let x = x0 + 4, row = 0; x < Math.min(x1, W + 4); x += 16 + R() * 18) s += `<path d="M${f(x)} ${f(wb + 1)} v${f(CAB.plinth - 3)}" stroke="#000" stroke-opacity=".13" stroke-width="1"/>`;
+    for (let x = x0 + 4; x < Math.min(x1, W + 4); x += 16 + R() * 18) s += `<path d="M${f(x)} ${f(wb + 1)} v${f(CAB.plinth - 3)}" stroke="#000" stroke-opacity=".13" stroke-width="1"/>`;
     s += `<path d="M${f(x0 - 4)} ${f((wb + base) / 2)} H${f(Math.min(x1, W + 4))}" stroke="#000" stroke-opacity=".1" stroke-width="1"/>`;
     s += `<path d="M${f(x0 - 8)} ${f(base + 1)} H${f(Math.min(x1 + 8, W + 8))}" stroke="#000" stroke-opacity=".16" stroke-width="2.5" stroke-linecap="round"/>`;
   } else {                                               // … laid as stones: two courses of rounded, uneven blocks, each outlined and toned
@@ -1205,8 +1173,8 @@ function buildForest() {
   const sc = mobile ? 0.8 : 1;
   FOREST = { far: ridge(8 * sc, 20 * sc, 4, 8, 16 * sc, 1.3), near: ridge(16 * sc, 40 * sc, 5, 11, 12 * sc, 4.1).filter(t => !(t.x > W * 0.4 && t.x < W * 0.58)),
     isle: ridge(10 * sc, 26 * sc, 5, 9, 4, 0).filter(t => t.x > W * 0.44 && t.x < W * 0.56), cabin: W * (mobile ? 0.12 : 0.22) };
-  if (SK.on) { const RJ = rng(777 + W); for (const t of [...FOREST.far, ...FOREST.near, ...FOREST.isle]) t.j = Array.from({ length: 12 }, () => RJ() - 0.5); }   // lyijykynä: each spruce drawn by hand — no two alike
-  if (SK.broadleaf > 0) {                                // kaunotar (after vesiväri): some of the near shore's trees are broadleaf crowns, aspens and birches, in the season's colour
+  if (SK.on) { const RJ = rng(777 + W); for (const t of [...FOREST.far, ...FOREST.near, ...FOREST.isle]) t.j = Array.from({ length: 12 }, () => RJ() - 0.5); }   // each spruce drawn by hand — no two alike
+  if (SK.broadleaf > 0) {                                // some of the near shore's trees are broadleaf crowns, aspens and birches, in the season's colour
     const RB = rng(4242 + W), blob = (cx, cy, rx, ry, n) => Array.from({ length: n }, (_, i) => { const a = (i + (RB() - .5) * 0.5) / n * 2 * Math.PI, r = 1 + (RB() - .5) * 0.48; return [cx + Math.cos(a) * rx * r, cy + Math.sin(a) * ry * r]; });
     for (const t of FOREST.near) {
       if (RB() >= SK.broadleaf) continue;
@@ -1215,7 +1183,7 @@ function buildForest() {
     }
   }
 }
-/* kaunotar: the far shore's silhouettes as alpha masks, cut once per layout in band-sized canvases. A tick only tints them
+/* the far shore's silhouettes as alpha masks, cut once per layout in band-sized canvases. A tick only tints them
    (drawImage + 'source-in' fill per layer) instead of re-rasterizing ~600 trees: renderStatic falls from ~60 ms to a few */
 let FM = null;
 function buildForestMasks() {
@@ -1230,19 +1198,19 @@ function buildForestMasks() {
   const tmp = document.createElement('canvas'); tmp.width = cw; tmp.height = ch;
   FM = { top, h, L, tmp, tx: tmp.getContext('2d') };
 }
-function tintMask(c, m, col) {                           // kaunotar: one silhouette layer, in its colour of the moment
+function tintMask(c, m, col) {                           // one silhouette layer, in its colour of the moment
   const x = FM.tx; x.globalCompositeOperation = 'copy'; x.drawImage(m, 0, 0);
   x.globalCompositeOperation = 'source-in'; x.fillStyle = col; x.fillRect(0, 0, FM.tmp.width, FM.tmp.height);
   c.drawImage(FM.tmp, 0, Math.round(FM.top * DPR));
 }
-function farHill(c) {                                  // kaunotar: the far ridge's own hill, filled under its trees (the ridge rises up to ~16 px above the horizon,
+function farHill(c) {                                  // the far ridge's own hill, filled under its trees (the ridge rises up to ~16 px above the horizon,
   c.moveTo(-10, HY + 2); for (const t of FOREST.far) c.lineTo(t.x, HY - 5.5 - t.base); c.lineTo(W + 10, HY + 2); c.closePath();   // and the 9-px band at its foot left a strip of sky under the raised trees)
 }
-function crown(c, t) {                                   // kaunotar: a broadleaf crown — two soft lumps, drawn through the midpoints of their jittered rims
+function crown(c, t) {                                   // a broadleaf crown — two soft lumps, drawn through the midpoints of their jittered rims
   for (const P of t.leaf.blobs) { const n = P.length, m = i => [(P[i][0] + P[(i + 1) % n][0]) / 2, (P[i][1] + P[(i + 1) % n][1]) / 2], s0 = m(n - 1);
     c.moveTo(s0[0], s0[1]); for (let i = 0; i < n; i++) { const q = m(i); c.quadraticCurveTo(P[i][0], P[i][1], q[0], q[1]); } c.closePath(); }
 }
-/* lyijykynä: the far shore's pencil, cached per layout in two band-sized canvases (stroking ~600 trees costs ~50 ms in software,
+/* the far shore's pencil, cached per layout in two band-sized canvases (stroking ~600 trees costs ~50 ms in software,
    too much for every tick): the stroke texture masked to the silhouettes, and the outlines — each ridge's hidden behind the one in front */
 let FSK = null;
 function buildForestSketch() {
@@ -1256,14 +1224,14 @@ function buildForestSketch() {
   t.fillStyle = '#000'; t.beginPath(); far(t); isle(t); near(t); nearGround(t); t.fill(); t.fillRect(0, HY - 7, W, 9); t.beginPath(); farHill(t); t.fill();
   t.globalCompositeOperation = 'source-in'; t.fillStyle = skPat(t, -30, 0.8); t.fillRect(0, top, W, h);
   const pen = [42, 34, 29]; o.lineWidth = 0.6 * SK.line; o.lineJoin = 'bevel';
-  const stroke = (draw, a) => { o.strokeStyle = rgba(pen, a); const q = { moveTo: (x, y) => { o.beginPath(); o.moveTo(x, y); }, lineTo: (x, y) => o.lineTo(x, y), quadraticCurveTo: (a, b, x, y) => o.quadraticCurveTo(a, b, x, y), closePath: () => { o.closePath(); o.stroke(); } }; draw(q); };   // (each tree stroked on its own: one path per ridge rasterizes a band-sized mask, ~1.7× slower in software)   // (one path per ridge: per-tree stroke() calls measured no faster)
+  const stroke = (draw, a) => { o.strokeStyle = rgba(pen, a); const q = { moveTo: (x, y) => { o.beginPath(); o.moveTo(x, y); }, lineTo: (x, y) => o.lineTo(x, y), quadraticCurveTo: (a, b, x, y) => o.quadraticCurveTo(a, b, x, y), closePath: () => { o.closePath(); o.stroke(); } }; draw(q); };   // (each tree stroked on its own: one path per ridge rasterizes a band-sized mask, ~1.7× slower in software)
   const hide = draw => { o.globalCompositeOperation = 'destination-out'; o.beginPath(); draw(o); o.fill(); o.globalCompositeOperation = 'source-over'; };
   stroke(far, 0.32); hide(isle); stroke(isle, 0.45); hide(c => { near(c); nearGround(c); }); stroke(near, 0.6);
   FSK = { top, tex: tc, out: oc };
 }
 function spruce(c, x, by, h, w, j) {
   const tiers = h > 18 ? 5 : 3, tp = by - h;
-  if (j) {                                               // lyijykynä: a hand-drawn spruce — a leaning tip, uneven tiers, the boughs drooping or lifting a little
+  if (j) {                                               // a hand-drawn spruce — a leaning tip, uneven tiers, the boughs drooping or lifting a little
     const tx = x + j[0] * h * 0.07, wv = i => 1 + 0.32 * j[1 + i % 6], dv = i => 0.1 + 0.14 * j[6 + i % 5], nv = i => 0.45 + 0.2 * j[(i + 3) % 12];
     c.moveTo(tx, tp);
     for (let i = 1; i <= tiers; i++) { const y = tp + h * i / tiers + j[(i + 7) % 12] * h * 0.05, ww = h * w * i / tiers * wv(i); c.lineTo(x + ww, y + dv(i) * h / tiers); if (i < tiers) c.lineTo(x + ww * nv(i), y - h / tiers * 0.1); }
@@ -1316,7 +1284,7 @@ function renderStatic() {
       const p = altAz(st[0] * 15 * RAD, st[1] * RAD, d, LAT, LON);
       if (p.alt < 2 || (RMS.stars && (RMS.gone.has(i) || S.voidK >= 1))) continue;   // rm stars: each one goes as it shoots off
       const x = X(p.az), y = Y(p.alt), m = st[2];
-      const mb = m - SCENE.stars.boost;                   // kaunotar: drawn brighter than they are (see SCENE.stars)
+      const mb = m - SCENE.stars.boost;                   // drawn brighter than they are (see SCENE.stars)
       const a = S.starK * clamp(1.15 - mb * 0.2, 0.18, 1) * smooth(2, 10, p.alt) * (0.75 + 0.25 * tw());
       c.fillStyle = `rgba(245,240,225,${a.toFixed(3)})`; c.beginPath(); c.arc(x, y, Math.max(0.55, 1.9 - mb * 0.33), 0, 7); c.fill();
     }
@@ -1343,7 +1311,7 @@ function renderStatic() {
     const grey = mix(mix(S.mid, S.night ? [40, 46, 54] : [112, 120, 130], 0.6), S.hor, 0.12);
     c.fillStyle = rgba(grey, 0.5 * S.cloud); c.fillRect(0, 0, W, HY + 2);
     c.save(); c.globalAlpha = clamp(S.cloud * 1.1, 0, 1);
-    const tint = document.createElement('canvas'); tint.width = CLOUDS.width; tint.height = CLOUDS.height;
+    const tint = renderStatic.tint || (renderStatic.tint = document.createElement('canvas')); tint.width = CLOUDS.width; tint.height = CLOUDS.height;   // (one canvas, reused; setting the size clears it)
     const t2 = tint.getContext('2d'); t2.drawImage(CLOUDS, 0, 0); t2.globalCompositeOperation = 'source-in';
     t2.fillStyle = rgba(S.night ? mix(S.mid, [60, 66, 76], .5) : mix([222, 225, 228], S.hor, 0.25)); t2.fillRect(0, 0, tint.width, tint.height);
     c.drawImage(tint, 0, 0, W, HY + 2); c.restore();
@@ -1358,7 +1326,7 @@ function renderStatic() {
     }
   }
   const tF = performance.now(); renderForest();
-  SKM = null;                                            // lyijykynä: the sky's pencil strokes — white pencil and graphite layered over the colour. kaunotar: they are kept
+  SKM = null;                                            // the sky's pencil strokes — white pencil and graphite layered over the colour. they are kept
   if (SKYS) {                                            // out of skyC (which the lake mirrors) and laid over the sky on the screen only, with the far shore cut out of them
     if (!skmC) skmC = document.createElement('canvas');
     skmC.width = skyC.width; skmC.height = skyC.height; const m = skmC.getContext('2d');
@@ -1366,7 +1334,7 @@ function renderStatic() {
     m.globalAlpha = 1; m.globalCompositeOperation = 'destination-out'; m.drawImage(forC, 0, 0); SKM = skmC;
   }
   topDirty = true;
-  const tJ = performance.now(); buildJetty();            // lyijykynä: the jetty's cached drawing
+  const tJ = performance.now(); buildJetty();            // the jetty's cached drawing
   const tE = performance.now(); TIMING.renderStatic = tE - tR; TIMING.forest = tJ - tF; TIMING.jetty = tE - tJ;
 }
 function renderForest() { drawForest(fctx, false); if (dry()) drawForest(fdctx, true); }
@@ -1376,11 +1344,11 @@ function drawForest(c, noWater) {
   const farC = mix(S.hor, mix(S.mid, dark, 0.35), 0.55), nearC = mix(S.hor, dark, S.night ? 0.78 : 0.7), snowy = S.snowGround ? 0.12 : 0;
   const pen = PENCIL(), skf = SK.on ? SK.forest : 0;
   let leafC = null, seas = null;
-  if (SK.broadleaf > 0) {                                // kaunotar: the broadleaf crowns in the season's colour, dimmed by dusk; bare in winter: a purple-grey haze of twigs
+  if (SK.broadleaf > 0) {                                // the broadleaf crowns in the season's colour, dimmed by dusk; bare in winter: a purple-grey haze of twigs
     const lv = S.leaves; seas = lv === 'green' ? [96, 128, 62] : lv === 'mouse' ? [150, 176, 92] : lv === 'turning' ? [168, 160, 70] : lv === 'gold' ? [214, 158, 52] : lv === 'falling' ? [196, 120, 48] : null;
     const lit = S.night ? 0.12 : S.sun.alt < 0 ? 0.3 : 0.55; leafC = seas ? mix(nearC, mix(seas, S.hor, 0.25), lit) : mix(nearC, mix([128, 112, 122], S.hor, 0.4), S.night ? 0.12 : 0.3);
   }
-  if (FM && !noWater) {                                  // kaunotar: the cached silhouettes, tinted
+  if (FM && !noWater) {                                  // the cached silhouettes, tinted
     c.setTransform(1, 0, 0, 1, 0, 0);
     tintMask(c, FM.L.far, rgba(mix(farC, [230, 235, 240], snowy)));
     tintMask(c, FM.L.isle, rgba(mix(mix(S.hor, dark, 0.62), [230, 235, 240], snowy)));
@@ -1403,7 +1371,7 @@ function drawForest(c, noWater) {
   c.fillStyle = rgba(mix(nearC, [230, 235, 240], snowy)); c.beginPath(); for (const t of FOREST.near) if (!t.leaf) spruce(c, t.x, HY + 1 - t.base * 0.5, t.h, t.w, t.j); c.fill();
   c.beginPath(); c.moveTo(0, HY + 2); for (const t of FOREST.near) c.lineTo(t.x, HY + 1 - t.base * 0.5); c.lineTo(W, HY + 2); c.fill();
   }
-  if (FSK && skf > 0) {                                  // lyijykynä: the cached pencil — upright strokes through the silhouettes, and every tree outlined
+  if (FSK && skf > 0) {                                  // the cached pencil — upright strokes through the silhouettes, and every tree outlined
     const skT = skf * (1 - 0.65 * smooth(2, -9, S.sun.alt));   // (the strokes fade after dusk: light strokes on a black ridge look like reeds)
     c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = Math.min(1, skT * 1.3); c.drawImage(FSK.tex, 0, Math.round(FSK.top * DPR));
     c.globalAlpha = Math.min(1, skf * (S.night ? 0.8 : 1)); c.drawImage(FSK.out, 0, Math.round(FSK.top * DPR)); c.restore();
@@ -1415,7 +1383,7 @@ function drawForest(c, noWater) {
   c.fillRect(cx + 5 * s, cb - 20 * s, 3 * s, 6 * s);
   if (S.farLit) { c.fillStyle = '#FFD58A'; c.fillRect(cx - 7 * s, cb - 8 * s, 4 * s, 4 * s); c.fillRect(cx + 3 * s, cb - 8 * s, 4 * s, 4 * s); }
   else { c.fillStyle = rgba(mix(S.hor, [255, 255, 255], .3), .6); c.fillRect(cx - 7 * s, cb - 8 * s, 4 * s, 4 * s); }
-  if (skf > 0) {                                         // lyijykynä: the neighbour's cabin in pencil
+  if (skf > 0) {                                         // the neighbour's cabin in pencil
     const sv = PR; PR = rng(55); c.strokeStyle = rgba(pen, 0.7 * skf * (S.night ? 0.6 : 1)); c.lineWidth = 0.6; c.lineCap = 'round'; c.beginPath();
     cedges(c, [[cx - 12 * s, cb + 1], [cx - 12 * s, cb - 10 * s], [cx, cb - 19 * s], [cx + 12 * s, cb - 10 * s], [cx + 12 * s, cb + 1]], false, 0.4, 1.5); c.stroke(); PR = sv;
   }
@@ -1423,17 +1391,20 @@ function drawForest(c, noWater) {
 let needDraw = true, topDirty = true, SKM = null, skmC = null;
 const stones = [], snow = [], birds = [], falling = [], drops = [], puffs = [], rings = [];
 function composeTop(t) {
-  // kaunotar: the sky and the far shore only change at a tick (renderStatic); recompose them only then, or while something moves in them
-  const dyn = (PF.on && S.sun.alt > -10) || S.auroraK > 0 || meteors.length || S.rainbow || birds.length || LAKE.k > 0 || S.juhannus || S.neighbourSauna;
+  // the sky and the far shore only change at a tick (renderStatic); recompose them only then, when the filter or the rainbow
+  // changes, or while something moves in them
+  const pol = PF.on && S.sun.alt > -10, rk = rainbowKey(), sk = (pol ? PF.th.toFixed(1) : '-') + '|' + rk;
+  if (sk !== composeTop.sk) { composeTop.sk = sk; topDirty = true; }
+  const dyn = S.auroraK > 0 || meteors.length || birds.length || LAKE.k > 0 || S.juhannus;
   if (!dyn && !topDirty) return;
   topDirty = !!dyn;
   const c = tctx; c.setTransform(1, 0, 0, 1, 0, 0);
   c.drawImage(skyC, 0, 0);
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
-  if (PF.on && S.sun.alt > -10) drawSkyPol(c);              // the polarizing filter: the sky deepens 90° from the sun
+  if (pol) drawSkyPol(c);                                    // the polarizing filter: the sky deepens 90° from the sun
   if (S.auroraK > 0) drawAurora(c, t);
   if (meteors.length) drawMeteors(c);                        // before the forest: it hides their ends, and the lake mirrors them
-  if (S.rainbow) drawRainbow(c);
+  if (S.rainbow) { if (rk !== RBL.key) { RBL.key = rk; drawRainbowLayer(); } c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(RBL.cv, 0, 0); c.setTransform(DPR, 0, 0, DPR, 0, 0); }
   if (birds.length) drawBirds(c, t);
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.drawImage(forC, 0, 0);
@@ -1442,9 +1413,18 @@ function composeTop(t) {
   if (S.juhannus) { const fx = W * 0.62, fy = HY - 2, fl = 0.7 + 0.3 * Math.sin(t * 9) * Math.sin(t * 5.3);
     const fgr = c.createRadialGradient(fx, fy, 0, fx, fy, 26); fgr.addColorStop(0, `rgba(255,190,110,${0.8 * fl})`); fgr.addColorStop(1, 'rgba(255,160,80,0)');
     c.fillStyle = fgr; c.fillRect(fx - 26, fy - 26, 52, 52); c.fillStyle = '#FFD89A'; c.fillRect(fx - 1.5, fy - 5 * fl, 3, 5 * fl); }
-  if (S.neighbourSauna) { c.strokeStyle = rgba(mix(S.hor, [200, 200, 200], .4), .5); c.lineWidth = 1.2; c.beginPath();
-    const s = mobile ? .7 : .85, sx0 = FOREST.cabin + 6.5 * s, sy0 = HY - 5 - 20 * s;
-    c.moveTo(sx0, sy0); for (let i = 1; i < 12; i++) c.lineTo(sx0 + i * 2.2 * S.wind / Math.abs(S.wind) + Math.sin(t * 1.2 + i * .7) * 2, sy0 - i * 3.2); c.stroke(); }
+}
+function drawNeighbourSmoke(c, t) {                     // the neighbour's sauna across the lake: one thin line of smoke (drawn on the screen, so the sky isn't recomposed for it)
+  c.strokeStyle = rgba(mix(S.hor, [200, 200, 200], .4), .5); c.lineWidth = 1.2; c.beginPath();
+  const s = mobile ? .7 : .85, sx0 = FOREST.cabin + 6.5 * s, sy0 = HY - 5 - 20 * s, tt = reduced() ? 0 : t;
+  c.moveTo(sx0, sy0); for (let i = 1; i < 12; i++) c.lineTo(sx0 + i * 2.2 * Math.sign(S.wind || 1) + Math.sin(tt * 1.2 + i * .7) * 2, sy0 - i * 3.2); c.stroke();
+}
+/* the rainbow changes only with its strength, the sun and the filter: drawn once per change into its own canvas */
+const RBL = { cv: document.createElement('canvas'), key: '' };
+const rainbowKey = () => S.rainbow ? [S.rainbow.k.toFixed(2), S.rainbow.anti.toFixed(1), S.sun.alt.toFixed(1), PF.on ? PF.th.toFixed(1) : '-', W, HY, DPR].join() : '';
+function drawRainbowLayer() {
+  const cv = RBL.cv; cv.width = top.width; cv.height = top.height;
+  const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); drawRainbow(c);
 }
 let AUR = null;
 function drawAurora(c, t) {
@@ -1510,11 +1490,12 @@ function drawFrame(t) {
   composeTop(t);
   const c = ctx; c.setTransform(1, 0, 0, 1, 0, 0);
   c.drawImage(top, 0, 0);
-  if (SKM) c.drawImage(SKM, 0, 0);                       // kaunotar: the pencil in the sky, on the screen only (the lake below mirrors the clean sky in top)
+  if (SKM) c.drawImage(SKM, 0, 0);                       // the pencil in the sky, on the screen only (the lake below mirrors the clean sky in top)
   c.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const LB = H, lakeH = LB - HY, night = S.night, LV = Math.min(H, SHORE + SCENE.shoreWave + 6), lakeV = LV - HY;   // (kaunotar: LV — below the water line the ground covers the canvas, so it isn't painted)
+  if (S.neighbourSauna) drawNeighbourSmoke(c, t);
+  const LB = H, lakeH = LB - HY, night = S.night, LV = Math.min(H, SHORE + SCENE.shoreWave + 6), lakeV = LV - HY;   // (LV — below the water line the ground covers the canvas, so it isn't painted)
   const lakeBase = S.frozen ? mix(mix(S.hor, S.mid, .4), [236, 240, 243], night ? 0.08 : 0.5) : mix(S.mid, night ? hex('#07111A') : hex('#35596B'), night ? .55 : .45);
-  if (LAKE.k >= 1) {}                                    // rm water: nothing left to draw but the bed (below)
+  if (LAKE.k >= 1) { /* rm water: no water left to draw, only the bed (below) */ }
   else if (S.frozen) {
     const ig = c.createLinearGradient(0, HY, 0, LB); ig.addColorStop(0, rgba(mix(lakeBase, S.hor, .35))); ig.addColorStop(1, rgba(mix(lakeBase, S.top, .25)));
     c.fillStyle = ig; c.fillRect(0, HY, W, lakeV);
@@ -1542,7 +1523,7 @@ function drawFrame(t) {
     const wr = rng(11);
     for (let i = 0; i < 16; i++) { const y = HY + 6 + Math.pow(wr(), 1.6) * lakeH * 0.8, x = wr() * W, l = 30 + wr() * 160 * (y - HY) / lakeH;
       c.beginPath(); c.moveTo(x + Math.sin(t * .3 + i) * 6, y); c.lineTo(x + l + Math.sin(t * .3 + i) * 6, y); c.stroke(); }
-    const glit = (x0, strength, col) => { const gr = rng(Math.floor(t * 6));
+    const glit = (x0, strength, col) => { const gr = rng(reduced() ? 7 : Math.floor(t * 6));   // (still, with reduced motion)
       for (let i = 0; i < 70; i++) { const u = Math.pow(gr(), 0.8), y = HY + 2 + u * (lakeH - 30), w = (2 + u * 26) * (0.4 + gr()), x = x0 + (gr() - 0.5) * (6 + u * 90);
         const pa = PF.on ? Math.min(1.6, passRefl(Math.sin(altOfY(HY - (y - HY) * 1.05) * RAD), N_WATER)) : 1;   // glints are reflections too
         c.fillStyle = rgba(col, Math.min(1, strength * (0.3 + 0.7 * gr()) * (1 - u * 0.5) * pa)); c.fillRect(x - w / 2, y, w, 1.3); } };
@@ -1585,7 +1566,7 @@ function drawRings(c, t) {
 const fish = { st: 'idle', t0: 0, bob: null, target: null, nextDip: 0, dipAt: 0, dips: 0, bait: true, catch: null, missed: 0 };
 function jettyPts(z) { const k = 1 / z, u = (k - JET.k) / (1 - JET.k); return { y: HY + (JET.yn - HY) * k, x: JET.xf + (JET.xn - JET.xf) * u, w: JET.wn * k }; }
 function drawJetty(c, t) {
-  if (JETC) {                                            // lyijykynä: the posts' reflections wobble per frame; the jetty itself is the cached pencil drawing
+  if (JETC) {                                            // the posts' reflections wobble per frame; the jetty itself is the cached pencil drawing
     const zf = 1 / JET.k, wd = S.night ? hex('#1A1917') : mix(hex('#5E513F'), [0, 0, 0], 1 - (S.dim || 1));
     if (!S.frozen && LAKE.k < 0.5) { c.fillStyle = rgba(wd, 0.3);
       for (let z = 1.15; z <= zf + 0.01; z += (zf - 1.15) / 3) { const p = jettyPts(z), ph = JET.post / z; for (const sgn of [-1, 1]) { const x = p.x + sgn * p.w * 0.42; c.fillRect(x - 1.6 / z * 2 + Math.sin(t * 1.6 + x) * 0.8, p.y + ph, 3.2 / z * 2, ph * 0.8); } } }
@@ -1671,14 +1652,14 @@ function drawCatch(c, p, kind) {
   c.restore();
 }
 const CATCH = [
-  [23, 'pikeperch', 'Kuha!', 'a pikeperch — my favourite fish, so back into the lake it goes'],
-  [15, 'salmon', 'Lohi!', 'a salmon — my favourite fish to eat, tho'],
-  [20, 'perch', 'Ahven!', 'a perch: stripy, spiky and deeply indignant'],
+  [23, 'pikeperch', 'Kuha!', 'a pikeperch, my favourite fish, so back into the lake it goes'],
+  [15, 'salmon', 'Lohi!', 'a salmon, my favourite fish to eat, tho'],
+  [20, 'perch', 'Ahven!', 'a perch: stripy and spiky'],
   [11, 'pike', 'Hauki!', 'a pike, looking personally offended'],
   [10, 'roach', 'Siika!', 'Kahen kilon siika, kahen kilon siika!'],
   [9, 'boot', 'Kumisaapas…', 'a rubber boot. size 43, left foot'],
   [7, 'shoe', 'Kenkä…', 'an old shoe. whose?'],
-  [3, 'lorem', 'Paper', 'Even fishing is not an escape from papers.']
+  [3, 'lorem', 'Paperi…', 'Even fishing is not an escape from papers.']
 ];
 const sayT = {};
 function say(which, p, big, small, ms = 4200, delay = 0) {
@@ -1708,15 +1689,15 @@ function reel() {
   let big, small;
   if (fish.st === 'dip' && t - fish.dipAt <= 1.0) {
     let r = Math.random() * 100; let c = CATCH.find(k => (r -= k[0]) < 0) || CATCH[0];
-    if (S.frozen && c[1] === 'salmon') c = [0, 'burbot', 'Matikka!', 'a burbot — the winter fish; looks like a sock, tastes like lobster'];
+    if (S.frozen && c[1] === 'salmon') c = [0, 'burbot', 'Matikka!', 'a burbot, the winter fish: looks like a sock, tastes like lobster'];
     fish.catch = { kind: c[1] }; big = c[2]; small = c[3];
-    window.__rv.lastCatch = c[1];
-  } else if (fish.st === 'dip' || (fish.missed && t - fish.missed < 1.2)) { big = 'Helkutti!'; small = 'Se irtois koukost'; window.__rv.lastCatch = 'late'; }
-  else if (!fish.bait) { big = 'Syötti meni.'; small = 'Kiitos, et ruokit kaloja.'; window.__rv.lastCatch = 'bait'; }
-  else { big = fish.dips ? 'Ai aikaisin.' : 'Tota tyhjä.'; small = 'Ootas ku koho uppoaa.'; window.__rv.lastCatch = 'early'; }
+    DBG.lastCatch = c[1];
+  } else if (fish.st === 'dip' || (fish.missed && t - fish.missed < 1.2)) { big = 'Helkutti!'; small = 'Se irtos koukust.'; DBG.lastCatch = 'late'; }
+  else if (!fish.bait) { big = 'Syötti meni.'; small = 'Kiitos, et ruokit kaloja.'; DBG.lastCatch = 'bait'; }
+  else { big = fish.dips ? 'Ai, aikaisin.' : 'Tota, tyhjä.'; small = 'Ootas, ku koho uppoaa.'; DBG.lastCatch = 'early'; }
   Object.assign(fish, { st: 'reel', t0: t });
   rings.push({ x: tgt[0], y: tgt[1], t0: t, life: 1.2, s: 2, a: 0.6 });
-  setTimeout(() => { fish.st = 'show'; say('fish', [JET.tip0[0], JET.tip0[1]], big, small, 4000); }, 600);
+  setTimeout(() => { if (fish.st !== 'reel') return; fish.st = 'show'; say('fish', [JET.tip0[0], JET.tip0[1]], big, small, 4000); }, 600);
   setTimeout(() => { if (fish.st === 'show') { fish.st = 'idle'; fish.catch = null; rodButton(); } }, fish.catch ? 3400 : 1400);
   rodButton();
 }
@@ -1747,9 +1728,10 @@ function poissonSkips(lambda = RV.luck()) {
 }
 const SHORT = ['', 'yy', 'kaa', 'koo', 'nee', 'vii', 'kuu', 'see', 'kasi', 'ysi', 'kymppi'];
 const SHORTKYT = ['', 'yks', 'kaks', 'kol', 'nel', 'viis', 'kuus', 'seis', 'kasi', 'ysi', 'kymppi'];
-const FULL = ['nolla', 'yksi', 'kaksi', 'kolome', 'neljä', 'viisi', 'kuusi', 'seittemän', 'kaheksan', 'yheksän', 'kymmenen'];
+const FULL = ['nolla', 'yksi', 'kaksi', 'kolme', 'neljä', 'viisi', 'kuusi', 'seittemän', 'kaheksan', 'yheksän', 'kymmenen'];
 const chantWord = n => n <= 10 ? SHORT[n] : n < 20 ? SHORT[n - 10] + 'too'  : n < 100 ? SHORTKYT[Math.floor(n / 10)] + 'kyt' + (n % 10 ? SHORTKYT[n % 10] : '') : String(n);          // 11 yytoo, 12 kaatoo …
-const fullNumber = n => n <= 10 ? FULL[n] : n < 20 ? FULL[n - 10] + 'toist' : n < 100 ? FULL[Math.floor(n / 10)] + 'kymmentä' + (n % 10 ? FULL[n % 10] : '') : String(n);
+const TEEN = ['', 'yks', 'kaks'];                                                                   // 11 ykstoist, 12 kakstoist (spoken)
+const fullNumber = n => n <= 10 ? FULL[n] : n < 20 ? (TEEN[n - 10] || FULL[n - 10]) + 'toist' : n < 100 ? FULL[Math.floor(n / 10)] + 'kymmentä' + (n % 10 ? FULL[n % 10] : '') : String(n);
 const leipaa = n => n === 1 ? 'vain yks leipä' : `${fullNumber(n)} leipää`;                            // partitive after numbers above one
 const SPLASH = ['loiskis', 'läts', 'löts', 'plums', 'pulahdus', 'molskis', 'polskis'];
 const bestGet = () => RV.store.get('skipBest', null), bestSet = n => RV.store.set('skipBest', n);
@@ -1773,31 +1755,25 @@ function throwStone(x, y) {
   for (let attempt = 0; attempt < 20; attempt++) {           // fit exactly `want` skips on the open water in front of us
     pts = [[x, y]]; let px = X1, pz = z1, L = L0, ok = true;
     let currentDx = dx, currentDz = dz;
-    for (let i = 0; i < want; i++) { 
-      if (i >= 0) {
-        const angleVariance = curve*(Math.random() - 0.15) * Math.min(10, i*3.85) * RAD;  // ±21 degrees
-        const currentAngle = Math.atan2(currentDx, currentDz);  // angle of current direction
-        const newAngle = currentAngle + angleVariance;
-        const mag = Math.hypot(currentDx, currentDz);
-        currentDx = mag * Math.sin(newAngle);
-        currentDz = mag * Math.cos(newAngle);
-      }
-      px += currentDx * L * pz * 0.9; 
-      pz += currentDz * L * pz * 0.9; 
-      L *= (0.97-2/(i+1)/(i+6) );
-      const p = toScreen(px, pz); 
-      if (pz > 60 || p[0] > S.skipMaxX || p[1] < HY + 2) { 
-        ok = false; 
-        break; 
-      } 
-      pts.push(p); 
+    for (let i = 0; i < want; i++) {
+      // each bounce turns the stone a little, mostly one way: by curve × (−0.15 … 0.85) × min(10°, 3.85° · i)
+      const turn = curve * (Math.random() - 0.15) * Math.min(10, i * 3.85) * RAD;
+      const ang = Math.atan2(currentDx, currentDz) + turn, mag = Math.hypot(currentDx, currentDz);
+      currentDx = mag * Math.sin(ang);
+      currentDz = mag * Math.cos(ang);
+      px += currentDx * L * pz * 0.9;
+      pz += currentDz * L * pz * 0.9;
+      L *= 0.97 - 2 / (i + 1) / (i + 6);
+      const p = toScreen(px, pz);
+      if (pz > 60 || p[0] > S.skipMaxX || p[1] < HY + 2) { ok = false; break; }
+      pts.push(p);
     }
     if (ok) break; L0 *= 0.8;
   }
   const skips = pts.length - 1;
   const s = { pts, t0: 0, rings: [], skips, splash: SPLASH[Math.floor(Math.random() * SPLASH.length)] };
   stones.push(s); curStone = s;
-  if ((fish.st === 'wait' || fish.st === 'dip') && pts.some(p => Math.hypot(p[0] - fish.target[0], p[1] - fish.target[1]) < 36)) { fish.nextDip += 6; fish.bait = fish.bait && Math.random() < 0.7; setTimeout(() => say('fish', fish.target, 'Hys!', 'shh — you scared the fish', 2400), 600); }
+  if ((fish.st === 'wait' || fish.st === 'dip') && pts.some(p => Math.hypot(p[0] - fish.target[0], p[1] - fish.target[1]) < 36)) { fish.nextDip += 6; fish.bait = fish.bait && Math.random() < 0.7; setTimeout(() => say('fish', fish.target, 'Hys!', 'shh, you scared the fish', 2400), 600); }
 }
 let curStone = null;
 let chantEl = null;
@@ -1810,7 +1786,7 @@ function chant(p, word) {
 function onBounce(s, i) {           // i = index of the touch that just happened: 0 = the throw lands, 1…skips = skips, last = sinks
   if (s !== curStone || s.ice) return;
   const last = s.pts.length - 1;
-  if (i < last) { if (i + 0 < s.skips) chant(s.pts[i], chantWord(i + 1)); return; }   // touch i bounces: skip i+1, chanted in shorthand — all but the last one
+  if (i < last) { if (i < s.skips) chant(s.pts[i], chantWord(i + 1)); return; }   // touch i bounces: skip i+1, chanted in shorthand — all but the last one
   // the stone sinks: one splash word, and the count in full
   const n = s.skips, prev = bestGet();
   let big = n === 0 ? `${s.splash}!` : `${s.splash}! ${leipaa(n)}!`;
@@ -1818,7 +1794,7 @@ function onBounce(s, i) {           // i = index of the touch that just happened
   if (prev == null || n > prev) bestSet(n);
   if (chantEl) { chantEl.remove(); chantEl = null; }
   say('skip', s.pts[last], big, '', 4200);
-  window.__rv.lastSkip = { skips: n, text: big, best: bestGet() };
+  DBG.lastSkip = { skips: n, text: big, best: bestGet() };
   RV.store.set('skipLast', n);                           // (the $50 claim form on the About page checks this)
 }
 /* a stone sliding on the ice leaves one continuous scratch with feather-like barbs either side — big where it lands fast,
@@ -1874,7 +1850,7 @@ function stepStones(t) {
 }
 
 /* ---------- weather, chimney smoke & wildlife particles ---------- */
-/* smoke: soft puffs that rise, widen, drift with a noisy wind, and fade (the look after pikeperch) */
+/* smoke: soft puffs that rise, widen, drift with a noisy wind, and fade */
 let PUFF = null, puffNight = null;
 function puffSprite() {
   if (PUFF && puffNight === S.night) return PUFF;
@@ -1898,14 +1874,16 @@ function stepSmoke(dt, t) {
   }
 }
 function drawSmoke(c) {
-  if (!puffs.length) return;
-  const spr = puffSprite(), sc = mobile ? .7 : 1.1;
+  if (!puffs.length) return null;
+  const spr = puffSprite(), sc = mobile ? .7 : 1.1, bb = [Infinity, Infinity, -Infinity, -Infinity];   // bb: where the smoke went (see drawWx)
   for (const p of puffs) {
     const k = p.age / p.life, r = p.r0 + Math.sqrt(k) * 28 * sc * (0.7 + 0.6 * ((p.seed * 7) % 1));
     c.globalAlpha = smooth(0, .06, k) * (1 - smooth(.2, 1, k)) * (S.sauna ? .44 : .34);
     c.drawImage(spr, p.x - r, p.y - r, r * 2, r * 2);
+    bb[0] = Math.min(bb[0], p.x - r); bb[1] = Math.min(bb[1], p.y - r); bb[2] = Math.max(bb[2], p.x + r); bb[3] = Math.max(bb[3], p.y + r);
   }
   c.globalAlpha = 1;
+  return bb;
 }
 function stepParticles(dt, t) {
   const red = reduced();
@@ -1932,16 +1910,21 @@ function stepParticles(dt, t) {
 let wxEmpty = false;
 function drawWx() {
   const c = wctx, none = !puffs.length && !drops.length && !snow.length;
-  if (none && wxEmpty) return;                           // kaunotar: an empty weather canvas is left alone (every touched canvas is re-sent to the screen each frame)
+  if (none && wxEmpty) return;                           // an empty weather canvas is left alone (every touched canvas is re-sent to the screen each frame)
   wxEmpty = none;
-  c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, H);
-  drawSmoke(c);
-  if (drops.length) {
-    c.strokeStyle = S.sun.alt < -4 ? 'rgba(190,205,220,1)' : 'rgba(70,84,102,1)'; c.lineWidth = 1; const sl = S.wind * 5 / 600;
-    for (const d of drops) { c.globalAlpha = d.a; c.beginPath(); c.moveTo(d.x, d.y); c.lineTo(d.x + sl * d.l * 2, d.y + d.l); c.stroke(); }
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const onlySmoke = puffs.length && !drops.length && !snow.length, pb = drawWx.bb;
+  if (onlySmoke && pb) c.clearRect(pb[0] - 2, pb[1] - 2, pb[2] - pb[0] + 4, pb[3] - pb[1] + 4);   // just smoke: clear only where it was
+  else c.clearRect(0, 0, W, H);
+  const bb = drawSmoke(c);
+  drawWx.bb = onlySmoke ? bb : null;
+  if (drops.length) {                                    // the drops in a few bands of alpha, one path each
+    c.strokeStyle = S.sun.alt < -4 ? 'rgba(190,205,220,1)' : 'rgba(70,84,102,1)'; c.lineWidth = 1; const sl = S.wind * 5 / 600, band = new Map();
+    for (const d of drops) { const a = Math.round(d.a * 10); let p = band.get(a); if (!p) band.set(a, p = new Path2D()); p.moveTo(d.x, d.y); p.lineTo(d.x + sl * d.l * 2, d.y + d.l); }
+    for (const [a, p] of band) { c.globalAlpha = a / 10; c.stroke(p); }
     c.globalAlpha = 1;
   }
-  if (snow.length) { c.fillStyle = S.night ? 'rgba(235,240,245,.8)' : 'rgba(255,255,255,.92)'; for (const f of snow) { c.beginPath(); c.arc(f.x, f.y, f.r, 0, 7); c.fill(); } }
+  if (snow.length) { c.fillStyle = S.night ? 'rgba(235,240,245,.8)' : 'rgba(255,255,255,.92)'; c.beginPath(); for (const f of snow) { c.moveTo(f.x + f.r, f.y); c.arc(f.x, f.y, f.r, 0, 7); } c.fill(); }
 }
 
 /* ---------- keeping the text readable on any sky ---------- */
@@ -1951,7 +1934,7 @@ function checkContrast() {
   const txt = $('#heroText'), hr = hero.getBoundingClientRect();
   const els = [...txt.querySelectorAll('h1, .lead')];
   const samples = [];
-  // kaunotar: only the text's own box is read back, at a quarter of the scene's size (was: the whole picture at half size)
+  // only the text's own box is read back, at a quarter of the scene's size
   const rects = []; for (const el of els) { const range = document.createRange(); range.selectNodeContents(el); for (const r of range.getClientRects()) rects.push([(r.left - hr.left) / SC, (r.top - hr.top) / SC, r.width / SC, r.height / SC]); }
   if (!rects.length) return;
   const Q = 4, bx = Math.max(0, Math.floor(Math.min(...rects.map(r => r[0])))), by = Math.max(0, Math.floor(Math.min(...rects.map(r => r[1]))));
@@ -1984,12 +1967,9 @@ function checkContrast() {
 }
 
 /* ---------- the window: clear, steamy after sauna, frosty on cold mornings; lit at night ---------- */
-/* The 16-frame nod (the legacy flipbook) is kept here but switched off until the photo is replaced.
-   To bring it back: set NOD_ENABLED = true (a click / Enter on the window then makes him nod). */
-const NOD_ENABLED = false;
 const Win = (() => {
-  const el = $('#win'), img = $('#winImg'), fc = $('#fog'), fx = fc.getContext('2d');
-  let fw = 0, fh = 0, fr = 1, frost = null, state = null, lastP = null, down = null;
+  const el = $('#win'), fc = $('#fog'), fx = fc.getContext('2d');
+  let fw = 0, fh = 0, fr = 1, frost = null, state = null, lastP = null, down = false;
   const drips = [];
   const size = () => { const r = fc.getBoundingClientRect(); if (!r.width) return; fr = Math.min(2, devicePixelRatio || 1); fw = r.width; fh = r.height; fc.width = fw * fr; fc.height = fh * fr; frost = null; paint(1); };
   function makeFrost() {
@@ -2014,46 +1994,41 @@ const Win = (() => {
     if (state === 'steam' && Math.random() < 0.1 && drips.length < 10) drips.push({ x: x + (Math.random() - .5) * 10, y: y + 8, v: 8 + Math.random() * 14, life: 1 });
   }
   const pos = e => { const r = fc.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-  const active = () => state !== 'clear' || NOD_ENABLED;
-  el.addEventListener('pointerdown', e => { if (!active()) return; down = { x: e.clientX, y: e.clientY, moved: 0 }; lastP = null; wipe(...pos(e)); try { el.setPointerCapture(e.pointerId); } catch (_) {} });
-  el.addEventListener('pointermove', e => { if (!active()) return; if (down) down.moved += Math.abs(e.movementX || 0) + Math.abs(e.movementY || 0); if (e.pointerType === 'mouse' || down) wipe(...pos(e)); });
-  el.addEventListener('pointerup', e => { if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 6 && down.moved < 14) nod(); down = null; lastP = null; });
+  const active = () => state !== 'clear';
+  el.addEventListener('pointerdown', e => { if (!active()) return; down = true; lastP = null; wipe(...pos(e)); try { el.setPointerCapture(e.pointerId); } catch (_) {} });
+  el.addEventListener('pointermove', e => { if (!active()) return; if (e.pointerType === 'mouse' || down) wipe(...pos(e)); });
+  el.addEventListener('pointerup', () => { down = false; lastP = null; });
   el.addEventListener('pointerleave', () => { lastP = null; });
-  el.addEventListener('pointercancel', () => { down = null; lastP = null; });
-  el.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && active()) { e.preventDefault(); if (state !== 'clear') { fx.setTransform(1, 0, 0, 1, 0, 0); fx.clearRect(0, 0, fc.width, fc.height); } nod(); } });   // keyboard: one big wipe
-  const frames = []; let nodding = false;
-  function preload() { if (frames.length) return; for (let i = 1; i <= 16; i++) { const im = new Image(); im.src = `assets/images/alive_2/frame${String(i).padStart(2, '0')}.jpg`; frames.push(im); } }
-  function nod() {
-    if (!NOD_ENABLED) return;
-    preload(); if (nodding || reduced()) return; nodding = true;
-    let i = 0; const step = () => { img.src = frames[i].src; i++; if (i < 16) setTimeout(step, 65); else { img.src = frames[0].src; nodding = false; } }; step();
-  }
-  let lt = performance.now();
+  el.addEventListener('pointercancel', () => { down = false; lastP = null; });
+  el.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && active()) { e.preventDefault(); fx.setTransform(1, 0, 0, 1, 0, 0); fx.clearRect(0, 0, fc.width, fc.height); } });   // keyboard: one big wipe
+  let lt = performance.now(), raf = 0;                    // the fog loop runs only while there is fog (see set)
+  const wake = () => { if (!raf) { lt = performance.now(); raf = requestAnimationFrame(loop); } };
   function loop(now) {
+    raf = 0; if (state === 'clear') return;
     const dt = Math.min(0.05, (now - lt) / 1000); lt = now;
     if (fw && state !== 'clear') {
       paint(dt * 0.06);
       if (drips.length) { fx.setTransform(fr, 0, 0, fr, 0, 0); fx.globalCompositeOperation = 'destination-out';
         for (let i = drips.length - 1; i >= 0; i--) { const d = drips[i], y0 = d.y; d.y += d.v * dt; d.life -= dt * 0.25; fx.strokeStyle = 'rgba(0,0,0,.8)'; fx.lineWidth = 1.6; fx.beginPath(); fx.moveTo(d.x, y0); fx.lineTo(d.x, d.y); fx.stroke(); if (d.life <= 0 || d.y > fh) drips.splice(i, 1); } }
     }
-    requestAnimationFrame(loop);
+    raf = requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
   new ResizeObserver(size).observe(fc);
   function set(st) {
     const changed = st !== state; state = st;
     const wipeable = st !== 'clear';
     el.classList.toggle('wipeable', wipeable);
-    if (wipeable || NOD_ENABLED) { el.setAttribute('role', 'button'); el.tabIndex = 0; } else { el.setAttribute('role', 'img'); el.removeAttribute('tabindex'); }
+    if (wipeable) { el.setAttribute('role', 'button'); el.tabIndex = 0; } else { el.setAttribute('role', 'img'); el.removeAttribute('tabindex'); }
     if (changed) paint(1);
+    if (wipeable) wake();
     const s = el.style, night = S.sun.alt < -2;
     if (S.lamp) { s.setProperty('--win-filter', 'sepia(.28) saturate(1.25) brightness(1.02) contrast(1.05)'); s.setProperty('--win-tint', 'radial-gradient(120% 90% at 50% 20%,rgba(255,190,110,.10),rgba(90,40,10,.35))'); s.setProperty('--win-blend', 'multiply'); s.setProperty('--refl', '.04'); s.setProperty('--pane', '#E8B86A'); }
     else if (night) { s.setProperty('--win-filter', 'brightness(.42) saturate(.5) contrast(1.1)'); s.setProperty('--win-tint', 'linear-gradient(rgba(40,60,90,.35),rgba(10,20,35,.5))'); s.setProperty('--win-blend', 'multiply'); s.setProperty('--refl', '.06'); s.setProperty('--pane', '#0E151C'); }
     else { s.setProperty('--win-filter', 'brightness(.93) contrast(1.02)'); s.setProperty('--win-tint', 'radial-gradient(130% 100% at 50% 30%,rgba(0,0,0,0) 45%,rgba(20,24,28,.35))'); s.setProperty('--win-blend', 'normal'); s.setProperty('--refl', S.sun.alt > 8 ? '.2' : '.12'); s.setProperty('--pane', '#2A3740'); }
     $('#winGlow').classList.toggle('on', S.lamp);
-    el.setAttribute('aria-label', `Vlad, looking out of the cabin window${st === 'steam' ? ', which has steamed up after the sauna — drag across the glass to wipe it' : st === 'frost' ? ', which is covered in frost — drag across the glass to rub it clear' : ''}.`);
+    el.setAttribute('aria-label', `Vlad, looking out of the cabin window${st === 'steam' ? ', which has steamed up after the sauna. Drag across the glass to wipe it' : st === 'frost' ? ', which is covered in frost. Drag across the glass to rub it clear' : ''}.`);
   }
-  return { set, size, nod, get state() { return state; } };
+  return { set, size, get state() { return state; } };
 })();
 
 /* the ground's colour and the hedgehog's night look follow the sun gradually through dusk and dawn (SCENE.groundColors, SCENE.twilight):
@@ -2066,12 +2041,12 @@ function applyGround() {
   col = mix(col, [0, 0, 0], 0.16 * S.cloud * (1 - nk));                  // a little duller under a grey sky
   hero.style.setProperty('--ground', rgba(col));
   hogEl.style.setProperty('--inv', nk.toFixed(3));
-  hero.style.setProperty('--paper-k', (SK.grain * (1 - 0.4 * nk)).toFixed(3));   // lyijykynä: the paper's grain, a little fainter at night
+  hero.style.setProperty('--paper-k', (SK.grain * (1 - 0.4 * nk)).toFixed(3));   // the paper's grain, a little fainter at night
 }
 /* ---------- tick: every 20 s (or every second in a time-lapse) ---------- */
 let lastTheme = null;
-const themeKey = () => S.night + S.leaves + S.snowGround + S.pile + S.frozen + S.lamp;   // what the foreground SVG depends on
-function tick() {
+const themeKey = () => S.night + S.leaves + S.snowGround + S.frozen + S.lamp;   // what the foreground SVG depends on
+function tick(light) {                                   // light: during a fade (rm sun …), skip the contrast check, the saved wash and the chip
   computeState();
   applyTheme(); applyGround();
   const th = themeKey();
@@ -2081,18 +2056,18 @@ function tick() {
   const a = S.sun.alt, dim = (S.night ? 0.95 : 1 - 0.32 * smooth(4, -7, a) - 0.18 * S.cloud) * (1 - 0.5 * S.voidK), warm = S.night ? 0 : 0.22 * Math.exp(-Math.pow((a - 2) / 4, 2)) * (1 - S.cloud);
   S.dim = dim;
   const flt = `brightness(${dim.toFixed(3)}) sepia(${warm.toFixed(3)})`;
-  const cab = $('#cabin'); if (cab) cab.style.filter = flt;
+  S.cabFlt = flt; const cab = $('#cabin'); if (cab) cab.style.filter = flt;
   $('#mailbox svg').style.filter = flt;
   renderStatic(); needDraw = true;
-  wxChip();
-  requestAnimationFrame(() => { drawFrame(performance.now() / 1000); checkContrast(); saveWash(); });
+  if (!light) wxChip();
+  requestAnimationFrame(() => { drawFrame(performance.now() / 1000); if (!light) { checkContrast(); saveWash(); } });
 }
 /* the on-screen readout of today's shower (in the dock), while it rains and for the rainbow minutes after */
 function wxChip() {
   const w = S.w, hm = A.hm; if (!w || dry() || (RMS.snow && w.kind === 'snow')) return RV.wxChip(null);
   const spans = RV.forecast(S.ms), cur = spans.find(s => S.ms >= s[0] && S.ms <= s[1]), word = w.kind === 'snow' ? 'snow' : 'rain';
   if ((w.raining || w.snowing) && cur && RV.opt(w.kind) === 'auto') RV.wxChip(`${word} ${hm(cur[0])}–${hm(cur[1])}`, `It is ${w.raining ? 'raining' : 'snowing'} from ${hm(cur[0])} until about ${hm(cur[1])}. Open the weather report.`);
-  else if (w.raining || w.snowing) RV.wxChip(`${word} · by you`, 'It rains because you asked. Open the weather report.');
+  else if (w.raining || w.snowing) RV.wxChip(`${word} · by you`, `It ${w.snowing ? 'snows' : 'rains'} because you asked. Open the weather report.`);
   else if (w.sinceEnd < 10) RV.wxChip(`dry since ${hm(w.endedAt)} · bow until ${hm(w.endedAt + 6e5)}`, `The rain stopped at ${hm(w.endedAt)}; rainbow minutes until ${hm(w.endedAt + 6e5)}. Open the weather report.`);
   else RV.wxChip(null);
 }
@@ -2194,7 +2169,6 @@ function think() {                                       // he's free: what now?
   if (hog.next === 'spot') { hog.next = null; return idle('ground', SEQ.ground().concat(SEQ.ground(), SEQ.stand(2.5))); }   // where the apples land: a long sniff
   if (hog.wantSleep) {
     hog.wantSleep = false;
-    if (S.hibernate && S.pileX != null && Math.hypot(hog.x - S.pileX - 4, hog.y - S.pileY - 2) > 4) { hog.next = 'sleep'; return go('walk', [S.pileX + 4, S.pileY + 2]); }   // in the cold months he beds down in the leaf pile
     return fallAsleep();
   }
   if (!hog.carrying && !reduced() && Math.random() < SCENE.hogJump.chance && startJump()) return;   // once in a blue moon: the long jump
@@ -2258,8 +2232,7 @@ function curl(tm) {                                      // into a ball, from wh
 }
 function uncurl() { setHog('uncurl'); play(SEQ.uncurl(Math.random() < 0.5), () => (threat() < SCENE.hog.watch && !hog.trust ? alert() : think())); }
 function grabHog() { setHog('held'); hog.act = null; hog.wantSleep = false; play(hog.fr === F.ball ? [K(F.ball, Infinity)] : SEQ.curl()); }
-const friendly = () => false;                           // (was: an apple dragged his way — the apple now only falls from the birch)
-function pose() { return friendly() ? F.air : F.alert; }
+const pose = () => F.alert;                             // how he stands when he watches you
 function alert() {                                       // stand still and watch: face the cursor, (4,0) — or sniff the air at an apple, (3,0)
   const p = pose(), want = ptr ? Math.sign(ptr.x - hog.x) || hog.dir : hog.dir;
   setHog('alert'); hog.act = null; hog.calm = 0; hog.near = 0;
@@ -2275,7 +2248,7 @@ function senseHog(dt) {
     if (Math.random() < (S.hibernate ? 0.6 : S.sun && S.sun.alt > 0 ? 0.3 : 0.07)) hog.wantSleep = true;
   }
   if (hog.trust > 0) hog.trust = Math.max(0, hog.trust - dt);
-  const d = threat(), fr = friendly(), scary = !fr && !hog.trust;
+  const d = threat(), scary = !hog.trust;
   if (hog.st === 'sleep') { if (scary && touching()) curl(1.2); return; }          // asleep, only a touch wakes him — straight into a ball
   if (hog.st === 'curl') { if (scary && d < SCENE.hog.flee) hog.calm = 0; else hog.calm += dt; return; }
   if (!AWAKE.includes(hog.st)) return;
@@ -2291,8 +2264,8 @@ function senseHog(dt) {
     } else if ((hog.calm += dt) > 1.2) idle('stand', [K(F.stand, 0.5)]);         // gone: relax
     return;
   }
-  if (!scary && !fr) { hog.near = 0; return; }                                   // just got an apple from you: he trusts you for a bit
-  if (d < SCENE.hog.watch && ['idle', 'walk', 'home'].includes(hog.st)) { if ((hog.near += dt) > (fr ? 0.4 : 2)) alert(); }   // lingering nearby: watch it
+  if (!scary) { hog.near = 0; return; }                                          // he trusts you for a bit
+  if (d < SCENE.hog.watch && ['idle', 'walk', 'home'].includes(hog.st)) { if ((hog.near += dt) > 2) alert(); }   // lingering nearby: watch it
   else hog.near = 0;
 }
 function arrive() {
@@ -2309,7 +2282,6 @@ function hogBoot() {                                     // you may well find hi
   const day = S.sun && S.sun.alt > 0;
   hog.x = clamp(hog.x, 30, Math.max(40, xLimit())); hog.y = hogYMin(hog.x) + 0.45 * (hogYMax(hog.x) - hogYMin(hog.x));
   if (Math.random() < (S.hibernate ? 0.6 : day ? 0.35 : 0.08)) {
-    if (S.hibernate && S.pileX != null) { hog.x = S.pileX + 4; hog.y = S.pileY + 2; }
     setHog('sleep', 30 + Math.random() * 120); hog.fr = F.sleep; dream();
   } else think();
 }
@@ -2353,14 +2325,15 @@ function updateHog(dt) {
   }
   renderHog();
 }
+const setSt = (el, k, v) => { const m = el._st || (el._st = {}); if (m[k] !== v) { m[k] = v; if (k[0] === '-') el.style.setProperty(k, v); else el.style[k] = v; } };   // a style, written only when it changes
 function renderHog() {
   const s = hog.sc || 1, [r, c] = hog.fr;
-  hogEl.style.transform = `translate(${(hog.x - HB / 2).toFixed(1)}px, ${(hog.y - HB * 0.875).toFixed(1)}px)`;
-  hogEl.style.opacity = (hog.op == null ? 1 : hog.op) * ST[2];
-  spr.style.transform = `scale(${(hog.dir > 0 ? -1 : 1) * s}, ${s})`;
-  spr.style.setProperty('--bp', `${c / 7 * 100}% ${r / 7 * 100}%`);
-  if (hog.carrying) { const p = CARRY['' + r + c] || CARRY['00']; carryEl.style.left = p[0] + '%'; carryEl.style.top = p[1] + '%'; }
-  hogEl.style.pointerEvents = (hog.st === 'inside' || hog.st === 'enter' || hog.st === 'exit') ? 'none' : '';
+  setSt(hogEl, 'transform', `translate(${(hog.x - HB / 2).toFixed(1)}px, ${(hog.y - HB * 0.875).toFixed(1)}px)`);
+  setSt(hogEl, 'opacity', String((hog.op == null ? 1 : hog.op) * ST[2]));
+  setSt(spr, 'transform', `scale(${(hog.dir > 0 ? -1 : 1) * s}, ${s})`);
+  setSt(spr, '--bp', `${c / 7 * 100}% ${r / 7 * 100}%`);
+  if (hog.carrying) { const p = CARRY['' + r + c] || CARRY['00']; setSt(carryEl, 'left', p[0] + '%'); setSt(carryEl, 'top', p[1] + '%'); }
+  setSt(hogEl, 'pointerEvents', (hog.st === 'inside' || hog.st === 'enter' || hog.st === 'exit') ? 'none' : '');
 }
 function footprint(x, y) {
   const g = $('#feet'); if (!g) return;
@@ -2372,16 +2345,17 @@ function footprint(x, y) {
 // his senses: the mouse cursor anywhere over the scene; on touch screens, a finger while it's down
 hero.addEventListener('pointermove', e => {
   const [x, y] = heroXY(e);
-  if (e.pointerType === 'mouse') { ptr = { x, y }; cv.style.cursor = lakeHit(x, y) ? 'pointer' : ''; }
+  if (e.pointerType === 'mouse') { ptr = { x, y }; setSt(cv, 'cursor', lakeHit(x, y) ? 'pointer' : ''); }
   else if (e.buttons) ptr = { x, y };
 });
 hero.addEventListener('pointerdown', e => { const [x, y] = heroXY(e); ptr = { x, y }; });
 hero.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') ptr = null; });
 for (const ev of ['pointerup', 'pointercancel']) hero.addEventListener(ev, e => { if (e.pointerType !== 'mouse') ptr = null; });
-function heroXY(e) { const hr = hero.getBoundingClientRect(); return [(e.clientX - hr.left) / SC, (e.clientY - hr.top) / SC]; }   // screen → scene px
+let heroRect = null; addEventListener('scroll', () => { heroRect = null; }, { passive: true }); addEventListener('resize', () => { heroRect = null; });
+function heroXY(e) { const hr = heroRect || (heroRect = hero.getBoundingClientRect()); return [(e.clientX - hr.left) / SC, (e.clientY - hr.top) / SC]; }   // screen → scene px (the rect is cached until a scroll or resize)
 hogEl.addEventListener('pointerdown', e => {
   if (['inside', 'enter', 'exit'].includes(hog.st)) return;
-  e.preventDefault(); hogEl.setPointerCapture(e.pointerId);
+  e.preventDefault(); try { hogEl.setPointerCapture(e.pointerId); } catch (er) {}
   dragging = { what: 'hog', id: e.pointerId }; grabHog();
 });
 hogEl.addEventListener('pointermove', e => { if (!dragging || dragging.what !== 'hog') return; const [x, y] = heroXY(e); hog.x = clamp(x, 20, W - 20); hog.y = y + HS * 0.4; });
@@ -2393,7 +2367,7 @@ const endHog = () => {
   hog.floor = fy; if (hog.y > fy) hog.y = fy;
   hog.vy = 0; setHog('fall');
 };
-hogEl.addEventListener('pointerup', endHog); hogEl.addEventListener('pointercancel', endHog);
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) hogEl.addEventListener(ev, endHog);
 
 /* ---------- the apple: it grows on the birch (it is a birch — never mind). Knock it down and it drops onto the roof, rolls
    down the gable to the eave, drips onto the mailbox's roof, bounces off, and lands on the same spot of grass every time.
@@ -2477,7 +2451,6 @@ function growApple() {                                   // a new one grows on t
   if (apple.st !== 'gone' && apple.st !== 'onhog') return;
   apple.st = 'grow'; apple.tm = 0; apple.sc = 0.1; apple.op = 1; placeOnTree(); appleEl.hidden = false; renderApple();
 }
-function respawnApple() { growApple(); }
 function stepApple(dt) {
   if (appleEl.hidden) return;
   if (apple.st === 'tree') apple.rot = reduced() ? 0 : Math.sin(performance.now() / 900) * 0.07;          // swaying on its stalk
@@ -2496,49 +2469,49 @@ function stepApple(dt) {
 }
 function renderApple() {
   const onTwig = apple.st === 'tree' || apple.st === 'grow';
-  appleEl.style.transformOrigin = onTwig ? '56% 12%' : '50% 53%';
-  appleEl.style.transform = `translate(${(apple.x - 15).toFixed(1)}px, ${(apple.y - 15).toFixed(1)}px) rotate(${(apple.rot || 0).toFixed(3)}rad) scale(${apple.sc.toFixed(3)})`;
-  appleEl.style.opacity = apple.op * ST[2];
+  setSt(appleEl, 'transformOrigin', onTwig ? '56% 12%' : '50% 53%');
+  setSt(appleEl, 'transform', `translate(${(apple.x - 15).toFixed(1)}px, ${(apple.y - 15).toFixed(1)}px) rotate(${(apple.rot || 0).toFixed(3)}rad) scale(${apple.sc.toFixed(3)})`);
+  setSt(appleEl, 'opacity', String(apple.op * ST[2]));
 }
 function openBurrow(on) { apple.st = on ? 'gone' : apple.st; burrowEl.classList.toggle('open', on); burrowEl.tabIndex = on ? 0 : -1; burrowEl.setAttribute('aria-hidden', on ? 'false' : 'true'); }
 burrowEl.addEventListener('click', () => { if (!burrowEl.classList.contains('open')) return; const r = burrowEl.getBoundingClientRect(); RV.descend(r.left + r.width / 2, r.top + r.height * 0.6); });
 function applyHogSetting() {
   const off = RV.opt('hog') === 'off';
   hogEl.hidden = off;
-  if (off && hog.carrying) { hog.carrying = false; hogEl.classList.remove('carrying'); respawnApple(); }
+  if (off && hog.carrying) { hog.carrying = false; hogEl.classList.remove('carrying'); growApple(); }
 }
 RV.hooks.hog = v => {
-  const busy = ['held', 'fall', 'look', 'enter', 'inside', 'exit'].includes(hog.st);
-  if (busy && v !== 'wake') return 'he’s busy just now — try again in a moment.';
+  const busy = ['held', 'fall', 'jump', 'look', 'enter', 'inside', 'exit'].includes(hog.st);
+  if (busy && v !== 'wake') return 'he\'s busy just now. try again in a moment.';
   if (v === 'come') {
     const cx = clamp(W * (mobile ? 0.3 : 0.42), 40, Math.max(40, xLimit())), to = [cx, hogYMin(cx) + 0.55 * (hogYMax(cx) - hogYMin(cx))];
     hog.order = () => { hog.next = 'wait'; go('walk', to); };
     if (hog.st === 'sleep') wakeUp(); else if (hog.st === 'curl') { hog.tm = 0; hog.calm = 9; } else if (hog.st !== 'uncurl' && hog.st !== 'wake') think();
-    return 'he’s coming over. slowly — he’s a hedgehog.';
+    return 'he\'s coming over. slowly: he\'s a hedgehog.';
   }
   if (v === 'sleep') {
-    if (hog.st === 'sleep') return 'he’s already asleep. z z';
-    if (hog.carrying) return 'not now — he has an apple to take home first.';
+    if (hog.st === 'sleep') return 'he\'s already asleep. z z';
+    if (hog.carrying) return 'not now, he has an apple to take home first.';
     fallAsleep(60); return 'he settles down for a nap. z z';
   }
-  if (v === 'roll') { curl(2.5); return 'he rolls into a ball. (he’ll unroll when he feels safe.)'; }
+  if (v === 'roll') { curl(2.5); return 'he rolls into a ball. (he\'ll unroll when he feels safe.)'; }
   if (v === 'wake') {
-    if (hog.st === 'sleep') { wakeUp(); return 'he’s up. slightly grumpy.'; }
+    if (hog.st === 'sleep') { wakeUp(); return 'he\'s up. slightly grumpy.'; }
     if (hog.st === 'curl') { hog.tm = 0; hog.calm = 9; return 'he peeks out of his ball…'; }
-    return 'he’s already awake.';
+    return 'he\'s already awake.';
   }
 };
 RV.hooks.hogJump = (h, d) => {
-  if (['held', 'fall', 'look', 'enter', 'inside', 'exit'].includes(hog.st)) return 'he’s busy just now — try again in a moment.';
-  if (hog.st === 'jump') return 'he’s already in the air!';
-  if (hog.st === 'sleep') return 'he’s asleep. (hog wake first.)';
-  if (hog.st === 'curl') return 'he’s rolled up in a ball. give him a moment.';
+  if (['held', 'fall', 'look', 'enter', 'inside', 'exit'].includes(hog.st)) return 'he\'s busy just now. try again in a moment.';
+  if (hog.st === 'jump') return 'he\'s already in the air!';
+  if (hog.st === 'sleep') return 'he\'s asleep. (hog wake first.)';
+  if (hog.st === 'curl') return 'he\'s rolled up in a ball. give him a moment.';
   const r = startJump(h, d);
   return r ? `hop! ${r.h.toFixed(1)} sprite sizes up, ${r.d.toFixed(1)} along.` : 'no room for a run-up here.';
 };
 RV.hooks.hogStatus = () => hog.st === 'idle' ? ({ stand: 'standing about', blink: 'blinking', air: 'sniffing the air', ground: 'sniffing the ground', turn: 'turning round' })[hog.act] || 'pottering about'
-  : ({ walk: hog.next === 'spot' ? 'off to where the apples land' : 'pottering along', home: 'going home with an apple', alert: friendly() ? 'sniffing at your apple' : 'on the alert — keeping an eye on you', curl: 'rolled up in a ball', uncurl: 'unrolling', sleep: 'asleep', wake: 'waking up', held: 'being carried', fall: 'landing', jump: 'jumping!', look: 'glancing back', enter: 'going into his burrow', inside: 'in his burrow', exit: 'coming out' })[hog.st];
-RV.hooks.fish = () => { if (dry() && fish.st === 'idle') return 'no water, no fishing. (the fish are lying right there, but that would be unsporting.)'; const was = fish.st; rodClick(); return was === 'idle' ? 'casting from the jetty… type fish again (or click the rod) to reel in — within a second of a dip.' : 'reeling in…'; };
+  : ({ walk: hog.next === 'spot' ? 'off to where the apples land' : 'pottering along', home: 'going home with an apple', alert: 'on the alert, keeping an eye on you', curl: 'rolled up in a ball', uncurl: 'unrolling', sleep: 'asleep', wake: 'waking up', held: 'being carried', fall: 'landing', jump: 'jumping!', look: 'glancing back', enter: 'going into his burrow', inside: 'in his burrow', exit: 'coming out' })[hog.st];
+RV.hooks.fish = () => { if (dry() && fish.st === 'idle') return 'no water, no fishing. (the fish are lying right there, but that would be unsporting.)'; const was = fish.st; rodClick(); return was === 'idle' ? 'casting from the jetty… type fish again (or click the rod) to reel in within a second of a dip.' : 'reeling in…'; };
 RV.hooks.skip = () => { if (dry()) return 'the stone lands in the mud. thunk.'; const x = W * (mobile ? 0.22 + Math.random() * 0.2 : 0.18 + Math.random() * 0.25), y = HY + (ground(x) - HY) * (0.55 + Math.random() * 0.3); throwStone(Math.min(x, S.skipMaxX - 10), y); return ''; };
 
 /* ---------- meteors: ~10 sporadic ones an hour every night, plus the Quadrantids, Perseids and Geminids around their peaks,
@@ -2564,7 +2537,7 @@ function spawnMeteor(src, mag, P0) {                     // src: a shower (with 
   const cR = dot3(P, R), T = unit3([P[0] * cR - R[0], P[1] * cR - R[1], P[2] * cR - R[2]]);   // along the great circle, away from the radiant
   const r = src ? src.r : RV.meteors.SPORADIC.r, v = src ? src.v : 25 + Math.random() * 45;
   const m = mag != null ? mag : Math.max(-8, 6.5 + Math.log(Math.random() || 1e-9) / Math.log(r));
-  const mv = m - SCENE.stars.boost;                      // kaunotar: how bright it looks (SCENE.stars.boost brighter than its magnitude m)
+  const mv = m - SCENE.stars.boost;                      // how bright it looks (SCENE.stars.boost brighter than its magnitude m)
   const u = Math.random(), L0 = u < 0.12 ? 50 + 45 * Math.random() : 21 + 30 * Math.pow(Math.random(), 0.8);           // degrees of sky: mostly 15–50°, now and then one across half the sky
   const L = Math.max(4, L0 * Math.pow(Math.sin(rho), 0.6) * (mv < 0 ? 1.25 : 1)) * RAD;                         // foreshortened near the radiant
   const w = (v / 40) * 98 * RAD * Math.max(0.25, Math.sin(rho));                                               // angular speed, rad/s
@@ -2609,10 +2582,10 @@ RV.hooks.meteor = (key, mag) => {
   const mt = spawnMeteor(src, mag); if (!mt) return 'it missed the sky. try again.';
   needDraw = true;
   const fm = m => (m < 0 ? '−' : '') + Math.abs(m).toFixed(1), seen = meteorVis(mt.mv);
-  let s = `${src ? src.one : 'a sporadic meteor'}, magnitude ${fm(mt.m)}${mt.m <= -4 ? ' — a fireball' : ''}${src ? `, out of ${src.from}` : ''}.`;
-  if (src && src.alt < 0) s += ' <span class="m">(its radiant is below the horizon — so it grazes up from the edge of the sky.)</span>';
-  else if (src && src.zhr < 1) s += ` <span class="m">(out of season — they peak the night of ${src.night} — but here’s one anyway.)</span>`;
-  if (seen < 0.06) s += S.sun.alt > -6 ? ' <span class="m">it fell in daylight; nobody saw it. try </span>' + RV.cmdLink('date night') : S.cloud > 0.6 ? ' <span class="m">above the clouds — take my word for it.</span>' : ' <span class="m">too faint to make out against this sky.</span>';
+  let s = `${src ? src.one : 'a sporadic meteor'}, magnitude ${fm(mt.m)}${mt.m <= -4 ? ', a fireball' : ''}${src ? `, out of ${src.from}` : ''}.`;
+  if (src && src.alt < 0) s += ' <span class="m">(its radiant is below the horizon, so it grazes up from the edge of the sky.)</span>';
+  else if (src && src.zhr < 1) s += ` <span class="m">(out of season: they peak the night of ${src.night}. but here's one anyway.)</span>`;
+  if (seen < 0.06) s += S.sun.alt > -6 ? ' <span class="m">it fell in daylight; nobody saw it. try </span>' + RV.cmdLink('date night') : S.cloud > 0.6 ? ' <span class="m">above the clouds. take my word for it.</span>' : ' <span class="m">too faint to make out against this sky.</span>';
   return s;
 };
 
@@ -2674,24 +2647,24 @@ let pfSaved = 0;
 function stepFilter(dt) { if (!PF.spin) return; PF.th = (PF.th + 12 * dt) % 180; POLK = ''; applyGlare(); if (performance.now() - pfSaved > 1000) { pfSaved = performance.now(); setPF(null, null); } }
 function describePF() {
   const c2 = Math.cos(PF.th * RAD) ** 2, day = S.sun.alt > -6;
-  const bow = S.rainbow ? (c2 < 0.12 ? ' <span class="m">the rainbow’s legs stand out brighter — its light is polarized along the arc.</span>' : c2 > 0.88 ? ' <span class="m">and the rainbow all but vanishes: its light is polarized along the arc.</span>' : '') : '';
+  const bow = S.rainbow ? (c2 < 0.12 ? ' <span class="m">the rainbow\'s legs stand out brighter: its light is polarized along the arc.</span>' : c2 > 0.88 ? ' <span class="m">and the rainbow\'s legs fade; only the top of the arc survives. its light is polarized along the arc.</span>' : '') : '';
   return bow ? describePF0(c2, day) + bow : describePF0(c2, day);
 }
 function describePF0(c2, day) {
-  return c2 < 0.12 ? `filter at ${PF.th.toFixed(0)}°: the glare comes off the water — you can see into the lake${day ? ', and the sky deepens away from the sun' : ''}. the window loses its glare too.`
+  return c2 < 0.12 ? `filter at ${PF.th.toFixed(0)}°: the glare comes off the water, and you can see into the lake${day ? ', and the sky deepens away from the sun' : ''}. the window loses its glare too.`
     : c2 > 0.88 ? `filter at ${PF.th.toFixed(0)}°: the reflections at their strongest${day ? '; the sky pales away from the sun' : ''}. turn it to 90° to take them off.`
     : `filter at ${PF.th.toFixed(0)}°: somewhere in between. <span class="m">try</span> ${RV.cmdLink('filter 90')} <span class="m">or</span> ${RV.cmdLink('filter turn')}`;
 }
 RV.register('analyzer', a => {
   const v = (a[0] || '').toLowerCase();
-  if (!v) return [`filter: <span class="a">${PF.on ? PF.th.toFixed(0) + '°' : 'out'}</span>${PF.spin ? ' (turning)' : ''} <span class="m">— filter &lt;deg&gt; | on | off | turn | stop · 0° = horizontal</span>`];
+  if (!v) return [`filter: <span class="a">${PF.on ? PF.th.toFixed(0) + '°' : 'out'}</span>${PF.spin ? ' (turning)' : ''} <span class="m">(filter &lt;deg&gt; | on | off | turn | stop · 0° = horizontal)</span>`];
   if (v === 'off' || v === 'out') { PF.spin = false; setPF(null, false); return ['the filter comes off. the glare is back.']; }
   if (v === 'on' || v === 'in') { setPF(null, true); return [describePF()]; }
-  if (v === 'turn' || v === 'spin') { PF.spin = true; setPF(null, true); return ['the filter turns slowly — watch the lake. <span class="m">(</span>' + RV.cmdLink('filter stop') + '<span class="m"> holds it.)</span>']; }
+  if (v === 'turn' || v === 'spin') { PF.spin = true; setPF(null, true); return ['the filter turns slowly. watch the lake. <span class="m">(</span>' + RV.cmdLink('filter stop') + '<span class="m"> holds it.)</span>']; }
   if (v === 'stop' || v === 'hold') { PF.spin = false; setPF(null, null); return [PF.on ? describePF() : 'the filter is out.']; }
   const x = parseFloat(v); if (!isFinite(x)) return ['<span class="m">usage: filter &lt;degrees&gt; | on | off | turn | stop</span>'];
   PF.spin = false; setPF(x, true); return [describePF()];
-}, { help: 'filter &lt;deg&gt;|off|turn — a polarizing filter over the lake (at 90° the glare comes off the water)' });
+}, { help: 'filter &lt;deg&gt;|off|turn: a polarizing filter over the lake (at 90° the glare comes off the water)' });
 
 /* ---------- rm: what really goes. The lake drains (all of the water: rain, snow, ice, clouds, the rainbow, the steam on the window)
    to a cracked bed with fish flapping about and a lone rubber boot, then fills up again ---------- */
@@ -2704,7 +2677,16 @@ function seedBed() {
 }
 function bedXY(o) { const x = o.fx * W, y = Math.min(HY + o.u * (SHORE + 12 - HY), ground(x) - 6), u = (y - HY) / (SHORE - HY); return [x, y, (0.55 + 1.35 * u) * (mobile ? 0.8 : 1)]; }
 const siltCol = () => [158, 146, 122];                   // dried lake silt: a pale grey-brown
-function drawBed(c, t) {
+function drawBed(c, t) {                                // the dry bed is drawn once (per light and layout); only the fish move
+  const key = [W, H, HY, SHORE, DPR, S.night, (S.dim || 1).toFixed(2), String(S.hor), String(S.mid), !!BED.boot].join();
+  if (drawBed.key !== key) {
+    drawBed.key = key; const cv = drawBed.cv || (drawBed.cv = document.createElement('canvas'));
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); const x = cv.getContext('2d'); x.setTransform(DPR, 0, 0, DPR, 0, 0); bedStatic(x);
+  }
+  c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(drawBed.cv, 0, 0); c.restore();
+  for (const f of BED.fish) { const [x, y, s] = bedXY(f); drawFishBed(c, f, x, y, s, t); }
+}
+function bedStatic(c) {
   const night = S.night, h = SHORE + 12 - HY, dm = S.dim || 1;
   const shade = col => night ? mix(col, [10, 12, 15], 0.8) : mix(col, [0, 0, 0], 1 - dm);
   const g = c.createLinearGradient(0, HY, 0, SHORE + 12);
@@ -2731,7 +2713,6 @@ function drawBed(c, t) {
     drawRock(c, x, y, w, hh, rr, night);
   }
   if (BED.boot) { const [x, y, s] = bedXY(BED.boot); drawBoot(c, x, y, s); }
-  for (const f of BED.fish) { const [x, y, s] = bedXY(f); drawFishBed(c, f, x, y, s, t); }
 }
 function drawRock(c, x, y, w, h, r, night) {
   const k = [r(), r(), r(), r(), r()], path = () => { c.beginPath(); c.moveTo(x - w / 2, y);
@@ -2786,39 +2767,39 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 RV.hooks.rm = what => {
   const mon = MONTH_NAMES[S.L.month - 1];
   if (what === 'leaves') {
-    if (RMS.leaves) return 'they’re already on the ground.';
+    if (RMS.leaves) return 'they\'re already on the ground.';
     if (S.leaves === 'bare') return `rm: cannot remove 'leaves': the birch has none left to give in ${mon}.`;
     const col = S.leaves === 'mouse' || S.leaves === 'green' ? ['#7C8C4E', '#8A9A55'] : S.leaves === 'turning' ? ['#9AA14A', '#D5A44A'] : ['#D9A33A', '#BF7430'];
     if (!reduced()) for (let i = 0; i < (mobile ? 45 : 110); i++) falling.push({ x: BX + (Math.random() - 0.5) * (mobile ? 110 : 360), y: (mobile ? HY * 0.3 : 10) + Math.random() * HY * (mobile ? 0.5 : 0.6), a: Math.random() * 6, v: 18 + Math.random() * 22, c: col[Math.random() < 0.5 ? 0 : 1], p: Math.random() * 6 });
     RMS.leaves = true; tick();
-    return 'the birch lets go of every leaf at once. <span class="m">(it’ll have them back on your next visit — birches are stubborn.)</span>';
+    return 'the birch lets go of every leaf at once. <span class="m">(they grow back by your next visit.)</span>';
   }
   if (what === 'snow') {
-    if (RMS.snow) return 'it’s already gone.';
+    if (RMS.snow) return 'it\'s already gone.';
     if (!S.snowGround && !S.snowing) return `rm: cannot remove 'snow': No such file or directory <span class="m">(not in ${mon}.)</span>`;
     RMS.snow = true; snow.length = 0; tick();
-    return 'every flake and every drift — gone. <span class="m">(the Finns are impressed. it’s back on your next visit.)</span>';
+    return 'every flake and every drift, gone. <span class="m">(it\'s back on your next visit. it always is.)</span>';
   }
   if (what === 'water') {
-    if (LAKE.st === 'filling') return 'it’s filling up again. give it a moment.';
-    if (LAKE.st !== 'full') return 'rm: cannot remove \'water\': it’s already gone. <span class="m">the fish would like a word.</span>';
+    if (LAKE.st === 'filling') return 'it\'s filling up again. give it a moment.';
+    if (LAKE.st !== 'full') return 'rm: cannot remove \'water\': it\'s already gone. <span class="m">the fish would like a word.</span>';
     seedBed(); LAKE.st = 'draining'; LAKE.k = reduced() ? 1 : 0.001; snow.length = 0; drops.length = 0; rings.length = 0;
-    if (fish.st !== 'idle') { fish.st = 'idle'; fish.bob = null; fish.catch = null; rodButton(); }   // the line comes up empty
+    if (fish.st !== 'idle') { fish.st = 'idle'; fish.catch = null; rodButton(); }   // the line comes up empty
     tick();
     return '<span class="r">what have you done...</span>';
   }
   if (what === 'sun') {                                  // the sun shrinks to a point and goes out; the moon goes with it (it only reflected the sun); a moonless night
-    if (RMS.sun || RMS.stars) return 'rm: cannot remove \'sun\': it’s already gone.';
+    if (RMS.sun || RMS.stars) return 'rm: cannot remove \'sun\': it\'s already gone.';
     const up = S.sun.alt > -0.8, moonUp = S.moonReal.alt > -0.5 && S.phase.frac > 0.03;
     RMS.sun = performance.now(); tick();
     setTimeout(() => RV.say('<span class="m">(reload the page to get it back.)</span>'), STARS_FADE * 1000 + 800);
-    return (up ? 'the sun shrinks to a point and goes out.' : 'the sun was below the horizon anyway — now it’s gone for good.')
-      + (moonUp ? ' the moon, with nothing left to reflect, goes dark too.' : '') + (S.auroraK > 0.05 ? ' so does the aurora: no sun, no solar wind.' : '') + (up ? ' night falls — a moonless one.' : ' a moonless night.');
+    return (up ? 'the sun shrinks to a point and goes out.' : 'the sun was below the horizon anyway. now it\'s gone for good.')
+      + (moonUp ? ' the moon, with nothing left to reflect, goes dark too.' : '') + (S.auroraK > 0.05 ? ' so does the aurora: no sun, no solar wind.' : '') + (up ? ' night falls, a moonless one.' : ' a moonless night.');
   }
   if (what === 'moon') {
-    if (RMS.moon || RMS.sun || RMS.stars) return 'rm: cannot remove \'moon\': it’s already gone.';
-    if (S.moonReal.alt <= -0.5) return 'rm: cannot remove \'moon\': it’s below the horizon right now. <span class="m">(come back when it’s up.)</span>';
-    if (S.phase.frac < 0.03) return 'rm: cannot remove \'moon\': it’s a new moon — there’s nothing up there to remove.';
+    if (RMS.moon || RMS.sun || RMS.stars) return 'rm: cannot remove \'moon\': it\'s already gone.';
+    if (S.moonReal.alt <= -0.5) return 'rm: cannot remove \'moon\': it\'s below the horizon right now. <span class="m">(come back when it\'s up.)</span>';
+    if (S.phase.frac < 0.03) return 'rm: cannot remove \'moon\': it\'s a new moon. there\'s nothing up there to remove.';
     RMS.moon = performance.now(); tick();
     return `the ${S.phase.frac > 0.96 ? 'full moon' : S.phase.frac < 0.45 ? 'crescent' : 'moon'} fades out of the sky.${S.sun.alt < -6 ? ' the stars come out brighter.' : ' <span class="m">(it was a pale daytime moon anyway.)</span>'} <span class="m">(reload the page to get it back.)</span>`;
   }
@@ -2829,9 +2810,9 @@ RV.hooks.rm = what => {
       STARQ.push({ i, m: st[2], P: vecAA(p.alt, p.az), at: performance.now() + (sunUp ? 900 : 150) + 3800 * Math.sqrt(Math.random()) }); });   // by day they go as the sky darkens
     STARQ.sort((a, b) => a.at - b.at);
     const n = STARQ.length; RMS.stars = performance.now(); tick();
-    setTimeout(() => RV.say('<span class="m">the sky is empty. the moon, with nothing left to reflect, goes dark too. it’s very dark out here — only the cabin windows are lit.</span>'), STARS_FADE * 1000 + 1400);
+    setTimeout(() => RV.say('<span class="m">the sky is empty. the moon, with nothing left to reflect, goes dark too. it\'s very dark out here. only the cabin windows are lit.</span>'), STARS_FADE * 1000 + 1400);
     setTimeout(() => RV.say('<span class="m">(reload the page for a new universe.)</span>'), STARS_FADE * 1000 + 2600);
-    return `rm: removing ${n} stars from the sky${sunUp ? ' — starting with the nearest one: the sun is a star too' : ''}…`;
+    return `rm: removing ${n} stars from the sky${sunUp ? ', starting with the nearest one: the sun is a star too' : ''}…`;
   }
   if (what === 'birds') {
     if (!birds.length) return 'rm: no birds in the sky just now. <span class="m">(the swans pass through in spring and in autumn.)</span>';
@@ -2846,7 +2827,7 @@ RV.hooks.rm = what => {
 /* rm -rf /: the scene goes piece by piece — the hedgehog, a protected species, stays — then a kernel panic, and the backup */
 let wiping = false;
 RV.hooks.wipe = () => {
-  if (wiping) return ['<span class="m">rm: already in progress. it’s a big lake.</span>'];
+  if (wiping) return ['<span class="m">rm: already in progress. it\'s a big lake.</span>'];
   wiping = true; hero.classList.add('wiping'); hogEl.style.setProperty('--inv', '1');   // his night look: pale lines, so he shows in the void
   const fgg = n => [...fg.querySelectorAll('.st-' + n)];
   const steps = [
@@ -2859,34 +2840,11 @@ RV.hooks.wipe = () => {
   for (const [ms, els, msg] of steps) setTimeout(() => { els.filter(Boolean).forEach(e => e.classList.add('rm-gone')); RV.say(msg); }, ms);
   setTimeout(() => { RV.say("removed '/bin/bash' <span class=\"m\">(the shell you are typing into)</span>"); RV.disintegrate(2600, 0.5); }, 2600);   // the dock and the terminal start coming apart
   setTimeout(() => RV.say('<span class="r">rm: cannot remove \'/hedgehog\': Operation not permitted</span> <span class="m">(protected species)</span>'), 3400);
-  setTimeout(() => RV.say('<span class="r">Kernel panic — not syncing: no lake found</span>'), 5000);
+  setTimeout(() => RV.say('<span class="r">Kernel panic - not syncing: no lake found</span>'), 5000);
   setTimeout(() => { hero.querySelectorAll('.rm-gone').forEach(e => e.classList.remove('rm-gone')); RV.reintegrate(); RV.say('<span class="m">…rebooting from the backup. there is always a backup.</span>'); }, 6600);
   setTimeout(() => { hero.classList.remove('wiping'); applyGround(); wiping = false; RV.say('the lake is read-only. nice try, though.'); }, 7400);
   return ["rm: descending into '/'…"];
 };
-
-/* ---------- the note on the birch: "check this out" (from SITE.psst in data.js) — off unless SCENE.note ---------- */
-const POOL = SITE.psst;
-let noteIdx = Math.floor(Math.random() * POOL.length), noteFoldUser = null;
-const noteEl = $('#note'), pinOnly = $('#pinOnly');
-function setFold(f) { noteEl.classList.toggle('folded', f); $('#noteFold').setAttribute('aria-expanded', !f); }
-$('#noteFold').addEventListener('click', () => { noteFoldUser = !noteEl.classList.contains('folded'); setFold(noteFoldUser); });
-function fillNote() { $('#noteText').innerHTML = SITE.md(POOL[noteIdx].text); }
-noteEl.hidden = !SCENE.note; if (!SCENE.note) pinOnly.hidden = true;         // switched off: SCENE.note = true brings it back
-function placeNote() {
-  if (!W || !SCENE.note) return;
-  const nw = mobile ? Math.min(220, W - 40) : 232, trunkX = BX + (mobile ? 8 : 14);
-  noteEl.style.width = nw + 'px';
-  const y = mobile ? HY - 44 : Math.max(HY - 270, 150);
-  const left = mobile ? clamp(trunkX, 10, W - nw - 12) : trunkX;
-  noteEl.style.left = left + 'px'; noteEl.style.top = y + 'px';
-  if (noteFoldUser === null) setFold(mobile);
-  pinOnly.style.left = (left) + 'px'; pinOnly.style.top = (y - 11) + 'px';
-}
-$('#noteNext').addEventListener('click', () => { noteEl.classList.add('swap'); setTimeout(() => { noteIdx = (noteIdx + 1 + Math.floor(Math.random() * (POOL.length - 1))) % POOL.length; fillNote(); noteEl.classList.remove('swap'); }, 450); });
-$('#noteClose').addEventListener('click', () => { noteEl.classList.add('gone'); setTimeout(() => { noteEl.hidden = true; pinOnly.hidden = false; }, 1100); });
-pinOnly.addEventListener('click', () => { pinOnly.hidden = true; noteEl.hidden = false; noteIdx = (noteIdx + 1) % POOL.length; fillNote(); requestAnimationFrame(() => noteEl.classList.remove('gone')); });
-fillNote();
 
 /* ---------- clicks on the lake; the "skipping stones" words throw one too ---------- */
 cv.addEventListener('click', e => {
@@ -2907,12 +2865,13 @@ function stepReveal(now) {
   if (revealT0 == null || ST[3] >= 1) return;
   const t = (now - revealT0) / 1000;
   for (let k = 1; k <= 3; k++) {
-    const v = reduced() ? 1 : smooth(0, 1, (t - [0, 0, 0.051, 0.1][k]) / 0.11);   // starts at 0 s, 0.25 s, 0.6 s; each fades in over 0.45 s
+    const v = reduced() ? 1 : smooth(0, 1, (t - [0, 0, 0.051, 0.1][k]) / 0.11);   // starts at 0 s, 0.05 s, 0.1 s; each fades in over 0.11 s
     if (v !== ST[k]) { ST[k] = v; hero.style.setProperty('--st' + k, v.toFixed(3)); }
   }
   needDraw = true;                                       // the jetty fades in on the canvas
 }
 function saveWash() {                                    // the colours of this scene, for the first paint of the next visit
+  if (!W || !H) return;
   try {
     const night = S.night, lake = S.frozen ? mix(S.hor, [236, 240, 243], night ? 0.08 : 0.5) : mix(S.mid, night ? hex('#07111A') : hex('#35596B'), night ? .55 : .45);
     const hy = (HY / H * 100).toFixed(1), gy = (ground(W * 0.4) / H * 100).toFixed(1), gc = hero.style.getPropertyValue('--ground').trim() || rgba(lake);
@@ -2920,7 +2879,7 @@ function saveWash() {                                    // the colours of this 
     localStorage.setItem('rv.wash', JSON.stringify({ g, t: Date.now() }));
   } catch (e) {}
 }
-/* kaunotar: a slow machine steps down once. For 2.5 s after the reveal the frame rate is watched; if frames come slower than ~22 a second
+/* a slow machine steps down once. For 2.5 s after the reveal the frame rate is watched; if frames come slower than ~22 a second
    (the canvas work doesn't fit in a frame), the canvases drop to SCENE.perf.slowRes and the redraws to SCENE.perf.slowFps for the rest of the visit */
 const PW = { t0: 0, n: 0, done: !SCENE.perf.auto };
 function perfWatch(now, live) {
@@ -2933,33 +2892,37 @@ function perfWatch(now, live) {
 }
 function perfStepDown() {
   if (PERF.slow) return;
-  PERF.slow = true; PERF.fps = SCENE.perf.slowFps;
-  if (SCENE.perf.slowRes < PERF.res) { PERF.res = SCENE.perf.slowRes; layout(); renderStatic(); drawFrame(performance.now() / 1000); drawWx(); }
+  PERF.slow = true; PERF.fps = Math.max(1, SCENE.perf.slowFps);
+  const eff = r => Math.min(r, window.devicePixelRatio || 1);                  // what the screen actually gets
+  if (eff(SCENE.perf.slowRes) < eff(PERF.res)) { PERF.res = SCENE.perf.slowRes; layout(); renderStatic(); drawFrame(performance.now() / 1000); drawWx(); }
 }
 function loop(now) {
   stepReveal(now);
   const dt = clamp((now - lastT) / 1000, 0, 0.04); lastT = now;   // (the first rAF stamp can predate lastT: a negative dt walked the hedgehog backwards into RUNF[-1])
   const t = now / 1000;
-  if ([RMS.stars, RMS.sun, RMS.moon].some(t => t && now - t < STARS_FADE * 1000 + 600) && now - lastTick > 100) { lastTick = now; tick(); }   // rm stars / sun / moon: the light drains away
+  const fading = [RMS.stars, RMS.sun, RMS.moon].some(t => t && now - t < STARS_FADE * 1000 + 600);
+  if (fading && now - lastTick > 100) { lastTick = now; tick(true); }   // rm stars / sun / moon: the light drains away
+  else if (!fading && loop.fading) { lastTick = now; tick(); }          // …and once it has, one full tick
+  loop.fading = fading;
   if (now - lastTick > (RV.speed() > 1 ? 1000 : S.w && S.w.sinceEnd < 12 ? 4000 : 20000)) { lastTick = now; tick(); }
   updateHog(dt);
   stepApple(dt);
   if (visible) {
     stepParticles(dt, t); stepStones(t); stepFish(t); stepMeteors(dt); stepLake(dt); stepFilter(dt);
-    const busy = stones.length || fish.st !== 'idle' || rings.length || puffs.length || drops.length || snow.length || meteors.length || STARQ.length || LAKE.k > 0 || PF.spin;
+    const busy = stones.length || fish.st !== 'idle' || rings.length || (puffs.length && !reduced()) || drops.length || snow.length || meteors.length || STARQ.length || LAKE.k > 0 || PF.spin;
     const animate = !reduced() || busy || needDraw;
     if (animate && now - lastDraw > 1000 / PERF.fps - 3) { drawFrame(t); drawWx(); lastDraw = now; needDraw = false; perfWatch(now, animate && !reduced()); }
   }
   requestAnimationFrame(loop);
 }
-RV.onChange(p => { applyHogSetting(); lastTick = performance.now(); tick(); });
+RV.onChange(p => { if (!W) return; applyHogSetting(); lastTick = performance.now(); tick(); });
 
 /* ---------- boot ---------- */
-window.__rv = { lastSkip: null, lastCatch: null };
+const DBG = { lastSkip: null, lastCatch: null };          // the last throw and catch, for ?debug
 function boot() {
   TIMING.boot = performance.now();
   computeState(); applyTheme();
-  { const t = performance.now(); if (SK.on) makeTextures(); else $('#paper').hidden = true; TIMING.textures = performance.now() - t; }   // lyijykynä: the stroke tile and the paper, once
+  { const t = performance.now(); if (SK.on) makeTextures(); else $('#paper').hidden = true; TIMING.textures = performance.now() - t; }   // the stroke tile and the paper, once
   applyGround();
   layout();                                                // measure the window; build the forest, the clouds and the foreground once
   lastTheme = themeKey();                                  // (so the first tick below doesn't build the foreground a second time)
@@ -2967,17 +2930,22 @@ function boot() {
   hog.x = mobile ? W * 0.3 : W * 0.46; hogBoot(); setAppleTree(); appleRelayout();
   for (let i = 0; i < 160; i++) stepSmoke(0.05, i * 0.05);        // the chimney has been going for a while
   tick();
-  addEventListener('resize', () => { layout(); renderStatic(); Win.size(); requestAnimationFrame(checkContrast); });
+  const sizeKey = () => [innerWidth, innerHeight, window.devicePixelRatio, textBox()].join();
+  let rzKey = sizeKey(), rzQueued = false;
+  addEventListener('resize', () => {
+    if (rzQueued) return; rzQueued = true;
+    requestAnimationFrame(() => { rzQueued = false; const k = sizeKey(); if (k === rzKey) return; rzKey = k; layout(); renderStatic(); checkContrast(); });
+  });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(() => { if (textBox() === laidOutText) return; layout(); renderStatic(); drawFrame(performance.now() / 1000); checkContrast(); }));   // the text's final size moves the horizon — re-lay out only if it did change
   requestAnimationFrame(loop);
   TIMING.boot = performance.now() - TIMING.boot; TIMING.scriptStart = BOOT0; TIMING.scriptEnd = performance.now();
   requestAnimationFrame(() => requestAnimationFrame(startReveal));   // the reveal starts once the first frame is drawn
 }
-// kaunotar: the first layout waits for the web fonts (0.45 s at most, as the reveal always did) — the text's size sets the horizon, so laying
+// the first layout waits for the web fonts (0.45 s at most, as the reveal always did) — the text's size sets the horizon, so laying
 // out with the fallback font first meant building the whole scene twice on every first visit. Meanwhile the page shows the colour wash.
 (document.fonts && document.fonts.status !== 'loaded' ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 450))]) : Promise.resolve()).then(boot);
 
-/* test & tinkering hooks (no UI) */
+/* test & tinkering hooks (no UI): window.__rv, with ?debug in the address */
 const HOOKS = {
   get state() { return { sun: S.sun, night: S.night, aurora: S.aurora, frozen: S.frozen, leaves: S.leaves, raining: S.raining, snowing: S.snowing, precip: S.precip, cloud: S.cloud, sinceEnd: S.w.sinceEnd, rainbow: S.rainbow, smoke: S.smoke, sauna: S.sauna, win: S.win, lamp: S.lamp, doy: S.doy }; },
   get contrast() { return contrastInfo; },
@@ -2997,7 +2965,7 @@ const HOOKS = {
   get perf() { return { ...PERF, watch: { ...PW }, dpr: DPR }; }, slow: () => perfStepDown(),
   get meteors() { return { live: meteors.length, total: METN, mags: meteors.map(m => +m.m.toFixed(1)) }; }, get lake() { return { ...LAKE }; }, get filter() { return { ...PF }; }
 };
-Object.defineProperties(window.__rv, Object.getOwnPropertyDescriptors(HOOKS));   // keep the getters live
+if (/[?&]debug\b/.test(location.search)) window.__rv = Object.defineProperties(DBG, Object.getOwnPropertyDescriptors(HOOKS));   // keep the getters live
 })();
 </script>
 </body>

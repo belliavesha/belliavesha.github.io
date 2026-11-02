@@ -1,11 +1,11 @@
-/* revontuli · the $50. A button that offers fifty dollars; what follows is a claim form, an agreement with no end and a
+/* the $50. A button that offers fifty dollars; what follows is a claim form, an agreement with no end and a
    CAPTCHA drawn from a gas pixel detector — and then an error. Self-contained: it brings its own styles and dialogs, and wires
    up the button with id="get50" on whichever page loads it (after data.js and site.js).
    Nothing typed into the form leaves the browser; the "numbers on the back of the card" are wiped as soon as they're typed. */
 (() => {
 'use strict';
 const $ = (s, r = document) => r.querySelector(s);
-const BASE = new URL('.', document.currentScript ? document.currentScript.src : location.href).href;   // where this file lives (the site root)
+if (!$('#get50')) return;                                // no button on this page: nothing to wire up
 
 /* ---------- styles: the About page's two inks and its buttons (copied here, so the dialogs look the same on any page) ---------- */
 const CSS = `
@@ -15,7 +15,7 @@ const CSS = `
 .f50 .act:focus-visible{outline:2px solid var(--ink);outline-offset:2.7px}
 dialog.err{border:0;padding:10.8px;width:min(504px,calc(100vw - 28.8px));background:var(--paper) var(--laid);border-radius:3px;box-shadow:0 27px 54px -18px rgba(20,20,40,.55),0 0 0 1px rgba(43,49,66,.35);color:var(--ink)}   /* the page's paper, as a mount for the picture */
 dialog.err::backdrop{background:rgba(30,32,48,.35)}
-.err-img{position:relative;aspect-ratio:16/9;background:#3b4150 url(${BASE}assets/images/wha.png) center/cover no-repeat;border-radius:1px;outline:1.5px solid var(--ink);overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:16.2px 18px}
+.err-img{position:relative;aspect-ratio:16/9;background:#3b4150 url(assets/images/wha.jpg) center/cover no-repeat;border-radius:1px;outline:1.5px solid var(--ink);overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:16.2px 18px}
 .err-msg{margin:0;max-width:17em;font-family:var(--serif);font-size:clamp(18px,3.2vw,24.3px);line-height:1.22;font-weight:600;color:var(--peach-3);text-shadow:0 2px 5.4px rgba(0,0,0,.6),0 0 2px rgba(0,0,0,.45)}   /* the pale peach of the page's second ink */
 .err-t{margin:0 0 5.4px;font-family:var(--sc);font-size:11.7px;letter-spacing:.2em;color:var(--peach);opacity:.9;text-shadow:0 1px 2.7px rgba(0,0,0,.6)}
 .err-b{align-self:flex-end;font-family:var(--sc);font-weight:700;letter-spacing:.08em;font-size:13.5px;line-height:1.2;color:var(--ink);background:var(--peach);border:1px solid var(--ink);border-radius:2px;padding:5.4px 14.4px 6.3px;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}   /* the page's own button (.act) */
@@ -30,6 +30,7 @@ dialog.tos::backdrop{background:rgba(30,32,48,.45)}
 .tos-h{padding:18px 22px 10px;border-bottom:1.5px solid var(--ink)}
 .tos-h h3{margin:0;font-family:var(--sc);font-weight:700;font-size:21px;letter-spacing:.06em;line-height:1.15}
 .tos-h p{margin:4px 0 0;font-style:italic;color:var(--ink-2);font-size:15px;line-height:1.3}
+.tos-h p.joke{font-style:normal;font-size:13.5px}
 .tos-doc{position:relative;flex:1 1 auto;min-height:180px;height:56vh;overflow-y:auto;overflow-anchor:none;padding:6px 22px 18px;font-size:16px;line-height:1.45;text-align:justify;hyphens:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .tos-doc:focus-visible{outline:2px solid var(--peach-2);outline-offset:-2px}
 .tos-doc h4{margin:20px 0 6px;font-family:var(--sc);font-weight:700;font-size:15.5px;letter-spacing:.08em;text-align:left}
@@ -53,27 +54,28 @@ dialog.tos::backdrop{background:rgba(30,32,48,.45)}
 .tos-f .act small{font-family:var(--serif);font-style:italic;letter-spacing:0;font-weight:500;text-transform:none;margin-left:.3em}
 .claim-f{flex:1 1 auto;overflow-y:auto;padding:8px 22px 14px;overscroll-behavior:contain;max-height:62vh}
 .claim-f .fld{margin:12px 0 0}
-.claim-f label{display:block;font-family:var(--sc);font-weight:700;letter-spacing:.05em;font-size:14.5px}
+.claim-f label,.claim-f .lbl{display:block;font-family:var(--sc);font-weight:700;letter-spacing:.05em;font-size:14.5px}
 .claim-f label small{font-family:var(--serif);font-style:italic;font-weight:500;letter-spacing:0;color:var(--ink-2)}
 .claim-f input{display:block;width:100%;box-sizing:border-box;margin:3px 0 0;padding:4px 2px;font:inherit;font-size:17px;color:var(--ink);background:transparent;border:0;border-bottom:1.5px solid var(--ink);border-radius:0}
 .claim-f input::placeholder{color:var(--ink-3);font-style:italic}
-.claim-f input:focus{outline:none;border-bottom-color:var(--peach-2);background:rgba(231,196,166,.18)}
+.claim-f input:focus{outline:none;border-bottom-color:var(--ink);background:rgba(231,196,166,.18)}
 .claim-f .msg{margin:3px 0 0;min-height:1.2em;font-style:italic;font-size:14.5px;line-height:1.3;color:var(--ink-2)}
 .claim-f .msg.ok::before{content:"✓ ";font-style:normal;color:#4E7A4A}
 .claim-f .msg.bad{color:#A1291C}
 .claim-f .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px}
 .claim-f .row .msg{margin:0}
+.claim-f #mCap{margin:0 0 6px}                    /* the verdict sits above the track (an empty line until then), so it stays in view while drawing */
 .claim-f .hint{margin:3px 0 6px;font-size:14.5px;line-height:1.35;color:var(--ink-2)}
 .claim-f .cap{display:block;width:100%;max-width:420px;aspect-ratio:3/2;border:1.5px solid var(--ink);background:#14121c;touch-action:none;cursor:crosshair}
 .claim-f .skip{font:inherit;font-style:italic;background:none;border:0;padding:0;color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--peach-2);text-underline-offset:.18em;cursor:pointer;font-size:14.5px}
 @media (max-width:576px){.claim-f{padding:6px 16px 12px}}
 `;
 document.head.insertAdjacentHTML('beforeend', `<style id="f50-css">${CSS}</style>`);
-
+// <p class="joke">(But nothing you type here leaves the page.)</p>
 /* ---------- the dialogs: the agreement, the claim form, the error ---------- */
 document.body.insertAdjacentHTML('beforeend', `
 <dialog class="f50 tos" id="tos" aria-labelledby="tosT">
-  <div class="tos-h"><h3 id="tosT">Terms and Conditions</h3><p>Please read the Agreement below before accepting it. At least of it.</p></div>
+  <div class="tos-h"><h3 id="tosT">Terms and Conditions</h3><p>Please read the Agreement below before accepting it. At least some of it.</p></div>
   <div class="tos-doc" id="tosDoc" tabindex="0" role="document" aria-label="The Terms and Conditions"></div>
   <div class="tos-f">
     <div class="prog" aria-live="off"><span id="tosProg">You have read 0% of the Agreement.</span><div class="bar"><i id="tosBar"></i></div></div>
@@ -84,25 +86,27 @@ document.body.insertAdjacentHTML('beforeend', `
 </dialog>
 
 <dialog class="f50 tos claim" id="claim" aria-labelledby="claimT">
-  <div class="tos-h"><h3 id="claimT">Claim your <span id="prize">$50</span></h3><p>All fields are mandatory, except the ones that are compulsory.</p></div>
+  <div class="tos-h"><h3 id="claimT">Claim your <span id="prize">$50</span></h3><p>All fields are mandatory, except the ones that are compulsory.</p> 
+  </div>
   <form class="claim-f" id="claimF" autocomplete="off" novalidate onsubmit="return false">
     <div class="fld"><label for="cName">Full name</label><input id="cName" name="hog-name" placeholder="e.g. Hedger McHogface'); DROP TABLE recipients;" autocomplete="off" spellcheck="false"><p class="msg" id="mName" aria-live="polite"></p></div>
     <div class="fld"><label for="cDob">Date of birth <small>(Julian date, 7 decimals)</small></label><input id="cDob" name="hog-jd" inputmode="decimal" autocomplete="off"><p class="msg" id="mDob" aria-live="polite"></p></div>
-    <div class="fld"><label for="cSkip">Skips in your last throw on <a href="${BASE}index.html">the lake</a></label><input id="cSkip" name="hog-skips" inputmode="numeric" autocomplete="off"><p class="msg" id="mSkip" aria-live="polite"></p></div>
+    <div class="fld"><label for="cSkip">Skips in your last throw on <a href="index.html">the lake</a></label><input id="cSkip" name="hog-skips" inputmode="numeric" autocomplete="off"><p class="msg" id="mSkip" aria-live="polite"></p></div>
     <div class="fld"><label for="cSpin">Spin of the black hole in Cyg X-1</label><input id="cSpin" name="hog-spin" inputmode="decimal" placeholder="−1 &lt; a &lt; 1" autocomplete="off"><p class="msg" id="mSpin" aria-live="polite"></p></div>
     <div class="fld"><label for="cBack">The three numbers on the back of your credit card</label><input id="cBack" name="hog-digits" inputmode="numeric" maxlength="4" autocomplete="off" data-lpignore="true" data-1p-ignore><p class="msg" id="mBack" aria-live="polite"></p></div>
-    <div class="fld"><label>Terms and Conditions</label><div class="row"><button type="button" class="act no" id="cTerms">Read &amp; accept…</button><p class="msg" id="mTerms" aria-live="polite">not accepted yet.</p></div></div>
-    <div class="fld" id="robot" hidden><label>Confirm you are not a robot</label>
-      <p class="hint">A photoelectron track in a gas pixel detector. Draw the direction in which the electron set off: it starts at the small blob (the Auger electron) and ends in the big one (the Bragg peak).</p>
+    <div class="fld"><span class="lbl">Terms and Conditions</span><div class="row"><button type="button" class="act no" id="cTerms">Read &amp; accept…</button><p class="msg" id="mTerms" aria-live="polite">not accepted yet.</p></div></div>
+    <div class="fld" id="robot" hidden><span class="lbl">Confirm you are not a robot</span>
+      <p class="hint">A photoelectron track in a gas pixel detector. Draw the direction in which the photoelectron set off.</p>
+      <p class="msg" id="mCap" aria-live="polite"></p>
       <canvas id="cap" class="cap" role="img" aria-label="A photoelectron track on a hexagonal pixel grid. Drag across it to draw the emission direction."></canvas>
-      <div class="row"><button type="button" class="skip" id="capNew">another track</button><p class="msg" id="mCap" aria-live="polite"></p></div></div>
+      <div class="row"><button type="button" class="skip" id="capNew">another track</button></div></div>
   </form>
   <div class="tos-f"><button type="button" class="act no" id="claimNo">Cancel</button><button type="button" class="act" id="claimYes" disabled>Confirm</button></div>
 </dialog>
 
 <dialog class="f50 err" id="err" aria-labelledby="errMsg">
   <div class="err-img">
-    <div><p class="err-t">Error occured</p><p class="err-msg" id="errMsg">Something went wrong. Maybe it’s a bug. Maybe it’s you. Maybe a cosmic ray flipped a bit. Who knows? Not you.</p></div>
+    <div><p class="err-t">Error occurred</p><p class="err-msg" id="errMsg">Something went wrong. Maybe it's a bug. Maybe it's you. Maybe a cosmic ray flipped a bit. Who knows? Not you.</p></div>
     <button type="button" class="err-b" id="errOk" autofocus>Try again later</button>
   </div>
 </dialog>
@@ -128,14 +132,11 @@ const TOS = (() => {
       'a Reasonable number of fish',
       'the Universe',
       'the Observer (and, where applicable, the Observed)', 
-      // 'any Schrödinger’s pet (alive or otherwise)', 
       'Reviewer No. 2', 
       'any Sufficiently Advanced Civilization',
       'the Spherical Cow (wherever situated in the Vacuum)', 
-      // 'the Local Group of Galaxies', 
-      // 'a Duly Appointed Penguin', 
       'the Grant Committee', 
-      'Maxwell’s Demon',
+      'Maxwell\'s Demon',
       'the Neighbouring Cabin',
       'any entity caught in breach hereof',
     ],
@@ -167,7 +168,6 @@ const TOS = (() => {
       'shall, subject to peer review,', 
       'may, with a probability of one half,', 
       'shall, in superposition, both agree and decline to',
-      // 'shall, at the speed of light,'
     ],
     // what is to be done comes in three kinds (deed(), below, picks one):
     // act: a whole action, needing nothing more:  “the Claimant shall {act}” → “… shall hibernate”
@@ -210,7 +210,6 @@ const TOS = (() => {
       'ray-trace',
       'waive',
       'assign',
-      // 'carry home on its back',
       'file in triplicate',
       'dredge',
       'renormalize', 
@@ -224,7 +223,6 @@ const TOS = (() => {
       'time-dilate', 
       'quantize', 
       'spaghettify',
-      // 'invoice', 
       'overfit',
       'pie-chart', 
       'cite', 
@@ -294,10 +292,10 @@ const TOS = (() => {
       'any spare dimensions', 
       'the Hubble tension',
       'the error bars', 
-      'the reviewer’s comments',  
+      'the reviewer\'s comments',  
       'the speed of light (in a vacuum, or approximately)', 
       'the arrow of time',
-      'all muon neutrinos interactions with the water in the Lake', 
+      'all muon-neutrino interactions with the water in the Lake', 
       'the last slice of pie', 
       'any anomalous result',
       'the fine print', 
@@ -320,7 +318,7 @@ const TOS = (() => {
       'one (1) Cow of Unit (1) Radius',
       'the next of kin of the Hedgehog',
       'the nearest postdoc',
-      'the neighbour’s dog',
+      'the neighbour\'s dog',
       'a Reasonable Water Creature'],
 
     // cond: a condition word — introduces a whole circumstance:  “…, {cond} {circ}.”
@@ -347,7 +345,6 @@ const TOS = (() => {
       'the Sun is below the horizon',
       'the spin parameter exceeds 0.998',
       'the polarization angle is undefined',
-      // 'the morning coffee cup is completely empty',
       'it is an odd day of the year',
       'the apple has fallen from the birch',
       'Form K-50 has been filed in triplicate',
@@ -363,11 +360,9 @@ const TOS = (() => {
       'the tide is high',
       'the tide goes out indefinitely',
       'the Universe expands faster than anticipated',
-      'the Moon is feeling particularly dramatic tonight',
-      'a rubber duck has squeaked in affirmation',
       'the Universe is still expanding', 
       'the result is not statistically significant', 
-      'Reviewer No. 2 has returned his comments', 
+      'Reviewer No. 2 has returned their comments', 
       'the coffee machine is out of order', 
       'Pluto is reinstated as a planet', 
       'entropy has decreased', 
@@ -394,7 +389,7 @@ const TOS = (() => {
       'before the next solar maximum', 
       'by the end of the fiscal aeon',
       'no sooner than the heat death of the Universe and no later than the Big Crunch', 
-      'by next Tuesday (in the Claimant’s rest frame)', 
+      'by next Tuesday (in the Claimant\'s rest frame)', 
       'when pigs fly (as defined in Schedule 4)',
       'once the arXiv submission clears moderation', 
       'shortly after the deadline',
@@ -404,7 +399,7 @@ const TOS = (() => {
       'Business Day|Business Days',
       'hedgehog-length|hedgehog-lengths',
       'jetty-crossing-time|jetty-crossing-times',
-      'business eon|business eons',
+      'business aeon|business aeons',
       'Hubble time|Hubble times',
       'Planck time|Planck times',
       'micro-century|micro-centuries',
@@ -462,15 +457,13 @@ const TOS = (() => {
       'conflict of interest',
       'splash'],
     // where: who hears disputes:  “… shall be referred to {where}, …”  (half the time a generated court is used instead, see BODY below)
-    where: ['the courts of the Turku, Finland',
+    where: ['the courts of Turku, Finland',
       'the lake shore, sitting in plenary session',
       'the International Astronomical Union',
       'the Hedgehog, whose decision shall be final and unappealable',
-      'a Parliament of Owls',
       'the basement of the Municipal Printing Office',
       'the Department of Unresolved Grievances',
       'a Wisdom of Wombats acting as a board of mediation',
-      'a Conspiracy of Ravens in closed session',
       'a quiet bench in the city park, subject to weather conditions',
       'the edge of the pier, at low tide',
       'Reviewer No. 2, whose decision shall be final and unhelpful', 
@@ -510,7 +503,6 @@ const TOS = (() => {
       'jet fuel can melt steel beams',
       'the moon landing was staged on Mars',
       'birds sit on power lines strictly to recharge their internal lithium-ion batteries',
-      // 'Epstein did not kill himself',
       'the irrationality measure of pi is 2',
       'the barber shaves every man in town who does not shave himself, except on public holidays',
       'a tautology is a statement that is true because it is true',
@@ -593,7 +585,7 @@ const TOS = (() => {
       'gravitational time dilation', 
       'spaghettification', 
       'loss of the arrow of time', 
-      'acts of God, gods or sufficiently advanced civilisations',
+      'acts of God, gods or sufficiently advanced civilizations',
       'cosmic-ray bit-flips', 
       'existential crisis',
       'loss of plausible deniability'],
@@ -684,7 +676,6 @@ const TOS = (() => {
       'without loss of generality',
       'up to isomorphism',
       'up to homotopy',
-      // 'modulo the Hubble constant',
       'almost surely',
       'almost everywhere',
       'in the weak sense',
@@ -774,53 +765,24 @@ const TOS = (() => {
   // what all of the above are of / for — plural or mass nouns, Title Case:  “the Court of {SUBJ}”, “the Writ of {SUBJ}”
   const SUBJ = [
     'Delayed Gratification',
-    // 'Pies and Powder', 
-    // 'Lost Umbrellas', 
     'Small Claims and Smaller Talks', 
-    // 'Things Left in the Sauna', 
-    // 'Unclaimed Socks', 
-    // 'Wandering Comets', 
-    // 'Disputed Apples', 
     'Moderate Inconvenience',
-    // 'Overdue Library Books', 
     'Strange Attractors', 
     'Lost Appeals',
-    // 'Excessive Footnotes', 
     'Rubber Ducks and Other Vessels', 
-    // 'Hats', 
     'Unreasonable Doubt', 
     'Perpetual Motion', 
-    // 'Leap Seconds', 
     'the Drop of Water in the Lake',
-    // 'Fog', 
-    // 'Misplaced Decimal Points', 
-    // 'Mild Surprise', 
-    // 'Puddles', 
-    // 'Ambiguous Signage', 
-    // 'Errant Commas', 
-    // 'Teaspoons', 
-    // 'Stray Cats and Strange Quarks', 
-    // 'Odd Socks and Even Socks', 
-    // 'Loud Chewing',
-    // 'Unattended Kettles', 
-    // 'Spherical Cows', 
-    // 'Things That Go Bump in the Night', 
-    // 'Unexplained Draughts', 
     'Odd Numbers and Even Odder Numbers',
     'Coffee Break Snacks', 
     'Minuses and Dashes',
     'Upper Limits',
     'Universal Rejection',
-    // 'Orbital Debris and Lesser Debris'
   ];
   // optional endings for a court ('' = none, so most have none):  “the Court of Hats{TAIL}”
   const TAIL = ['',  '', '',  '',  '', 
     ' (Appellate Division)', 
-    // ' (sitting in Chambers)', 
     ' and its Successors in Title', 
-    // ' (Sauna Division)', 
-    // ' (Black Hole Division)', 
-    // ' (Northern Circuit)', 
     ', in Perpetuity'
   ];
   const inst = () => `${pick(BODY)} ${pick(SUBJ)}${pick(TAIL)}`, officer = () => `${pick(OFFICE)} ${pick(SUBJ)}`, instr = () => `${pick(INSTR)} ${pick(SUBJ)}`;
@@ -833,11 +795,11 @@ const TOS = (() => {
     '1905', 
     '1919', 
     '1969', 
-    '4713 BC', 
+    '4713 BCE', 
     '417 BCE', 
     'the year of the Great Fog', 
     'the year immemorial', 
-    'the year of reign of the Great Hog']);
+    'the year of the reign of the Great Hog']);
 
   /* the Articles' headings: a fixed few (W.head, above), but mostly put together on the spot, so that a hundred Articles in,
      the headings are still new — “Supplementary Lemmas Concerning Teaspoons”, “Entropy in the Limit of Biscuits” */
@@ -864,7 +826,6 @@ const TOS = (() => {
     'Dark Energy',
     'Dark Matter',
     'Salty Licorice',
-    // 'Spherical Cows',
     'the Small Print',
     'Gravity',
     'Polarization',
@@ -891,7 +852,6 @@ const TOS = (() => {
     'Ducks',
     'Interest (Compound)',
     'Interest (Lack of)',
-    // 'Pie (Mathematical and Otherwise)',
     'Error Bars',
     'Lemmas',
     'the Null Hypothesis',
@@ -1128,7 +1088,7 @@ const TOS = (() => {
     `“${dt('Reasonable')}” means reasonable to a reasonable person.`,
     `“${dt('Apple')}” means any fruit that falls from a birch.`,
     `“${dt('Form K-50b')}” means the Application for Permission to Apply for the Fifty Dollars, available by post only, in Swedish, upon submission of Form K-50a.`,
-    `“${dt('Force Majeure')}” means any event beyond the reasonable control of an omnipotent God, including meteors, Mondays and acts of the God when he was drunk.`,
+    `“${dt('Force Majeure')}” means any event beyond the reasonable control of an omnipotent God, including meteors, Mondays and drunk messages.`,
     `“${dt('Signature')}” means a mark made by the Claimant or, failing that, a photoelectron track of an X-ray photon emitted by the Claimant.`,
     `“${dt('Fifty')}” means 50 (fifty), or sometimes also 40 (forty).`,
     `“${dt('Infinity')}” means a number larger than the number of clauses in this Agreement.`,
@@ -1136,7 +1096,7 @@ const TOS = (() => {
     `“${dt('Hereinafter')}” means after here, i.e. there.`,
     `“${dt('Notwithstanding')}” means withstanding, but not.`,
     `“${dt('Fine Print')}” means print that is fine.`,
-    `“${dt('Immediately')}” means as soon as it is not yet considered unimmediate.`,
+    `“${dt('Immediately')}” means within one (1) Hubble time.`,
     `“${dt('Majority')}” is defined by total mass.`,
     `Silence shall be deemed consent, save the silence of the Hedgehog, which shall be deemed sleep.`,
     `Headings are for convenience only and shall not affect the interpretation of this Agreement, except where they are funnier than the clause beneath them.`,
@@ -1149,17 +1109,17 @@ const TOS = (() => {
     'Accept already.',
     'Consider the recommended option. It is not recommended for nothing.',
     'Nine (9) out of ten (10) dentists recommend skipping the rest.',
-    'Nobody reads licence agreements. Don’t be a hero.',
+    'Nobody reads licence agreements. Don\'t be a hero.',
     'One in three people keeps reading after this point. Are you the odd one out?',
     'Still here? The Fifty Dollars should have had an expiry date.',
     'You have now read more of this Agreement than its author.',
-    'At this rate, you will reach the end of this Agreement before the heat death of the Universe! Please plan accordingly.',
+    'At this rate, you will reach the end of this Agreement shortly after the heat death of the Universe. Please plan accordingly.',
     'Your patience has been noted, and can be used against you.',
     'Achievement unlocked: none.',
-    'Don’t you need a nap?',
+    'Don\'t you need a nap?',
     'Reading on will not increase the cash prize. It will, however, increase the Agreement.',
     'Just one last article before the next one!',
-    'Look at you go! Your lawyer would be proud.',
+    'Your lawyer would be proud. Your supervisor would not.',
     'The button that says “recommended” means it.',
     'So many exciting papers on arXiv today, and you are reading Terms and Conditions.'];
   let teased = [];                                        // no aside twice, until all have been seen
@@ -1183,7 +1143,7 @@ const TOS = (() => {
   function chunk() {                                      // one Article: a heading and 3–7 clauses
     art++; cl = 0;
     used = new Set(); let h = `<h4>Article ${ROMAN(art)}. ${art === 1 ? 'Definitions' : heading()}</h4>`;
-    if (art === 1009) h += `<div class="mix"><b>Congratulations!</b><span>You have read your way to Article MIX (not to be confused with a Mix of Articles). Such dedication is rarely seen. You have read so far you started seeing words in Roman numerals. Keep scrolling until you start seeing ghosts! </div>`;   // 1009 = MIX
+    if (art === 1009) h += `<div class="mix"><b>Congratulations!</b><span>You have read your way to Article MIX (not to be confused with a Mix of Articles). Such dedication is rarely seen. You have read so far that the numbers have turned Roman. Keep scrolling until you start seeing ghosts!</span></div>`;   // 1009 = MIX
     else if (art > 1 && Math.random() < TEASE_P) h += `<div class="tease">${tease()}</div>`;   // (now and then)
     const n = art === 1 ? DEFS.length : 3 + Math.floor(Math.random() * 8);
     for (let i = 0; i < n; i++) {
@@ -1211,7 +1171,7 @@ const TOS = (() => {
 })();
 const tos = $('#tos'), tosDoc = $('#tosDoc'), dlg = $('#err');
 // the progress counter: after k clauses it reads  100 · k / (k + TOS_HALF) %   (k counted from the last clause in full view, beyond those on the first screen)
-//   so 50% after TOS_HALF clauses, 90% after 9·TOS_HALF, 99% after 99·TOS_HALF; an Article has 6.5 clauses on average, so with 132: about XXI, CLXXXIV, MMI.
+//   so 50% after TOS_HALF clauses, 90% after 9·TOS_HALF, 99% after 99·TOS_HALF; an Article has 6.5 clauses on average, so with 133: about XXI, CLXXXIV, MMI.
 //   Larger = slower. In general, to show p (as a fraction), one has to read TOS_HALF · p / (1 − p) clauses.
 const TOS_HALF = 133;
 let tosAt = -1, tosBase = 0;                              // where the counter last stood, and the clause it started from
@@ -1232,10 +1192,10 @@ function tosFill() {                                      // keep a few screens 
   $('#tosProg').textContent = `You have read ${pct < 99 ? pct.toFixed(1) : pct.toFixed(Math.min(6, 1 + Math.ceil(-Math.log10(100 - pct))))}% of the Agreement · ${TOS.clauses} clauses so far.`;
   $('#tosBar').style.width = pct + '%';
 }
-tosDoc.addEventListener('scroll', () => requestAnimationFrame(tosFill), { passive: true });
+let tosQueued = false;
+tosDoc.addEventListener('scroll', () => { if (tosQueued) return; tosQueued = true; requestAnimationFrame(() => { tosQueued = false; tosFill(); }); }, { passive: true });
 const open_ = d => { if (d.showModal) d.showModal(); else d.setAttribute('open', ''); };
 const close_ = d => { if (d.close) d.close(); else d.removeAttribute('open'); };
-let tosRead = 0;
 $('#cTerms').addEventListener('click', () => {
   TOS.reset(); tosDoc.innerHTML = ''; tosDoc.scrollTop = 0; tosAt = -1;
   open_(tos); tosFill(); tosDoc.focus({ preventScroll: true });
@@ -1249,23 +1209,30 @@ $('#tosNo').addEventListener('click', () => { close_(tos); if (!CL.terms) say('m
 $('#tosYes').addEventListener('click', () => {
   const pct = parseFloat(($('#tosProg').textContent.match(/[\d.]+/) || ['0'])[0]);
   close_(tos); CL.terms = true;
-  say('mTerms', pct > 2 ? `accepted without reading. (you read ${pct}% — that doesn’t count.)` : 'accepted without reading. a wise choice.', 'ok');
+  say('mTerms', pct > 2 ? `accepted without reading. (you read ${pct}%. that doesn't count.)` : 'accepted without reading. a wise choice.', 'ok');
   $('#cTerms').textContent = 'Read again…'; $('#robot').hidden = false; capNew(); check();
 });
 tos.addEventListener('click', e => { if (e.target === tos) close_(tos); });
 
 /* ---------- the claim form ---------- */
-const claim = $('#claim'), CL = { name: false, dob: false, skip: false, spin: false, back: false, terms: false, robot: false, off: false };
+const claim = $('#claim'), CL = { name: false, dob: false, skip: false, spin: false, back: false, terms: false, robot: false };
 const say = (id, html, cls) => { const m = $('#' + id); m.innerHTML = html; m.className = 'msg' + (cls ? ' ' + cls : ''); };
-const check = () => { $('#claimYes').disabled = !Object.keys(CL).filter(k => k !== 'off').every(k => CL[k]); };
+const check = () => { $('#claimYes').disabled = !Object.values(CL).every(Boolean); };
+function resetClaim() {                                   // closing the form forgets what was typed into it
+  $('#claimF').reset(); for (const k in CL) CL[k] = false;
+  for (const id of ['mName', 'mDob', 'mSkip', 'mSpin', 'mBack', 'mCap']) say(id, '');
+  say('mTerms', 'not accepted yet.'); $('#cTerms').textContent = 'Read & accept…'; $('#robot').hidden = true; check();
+}
+claim.addEventListener('close', resetClaim);
+const closeClaim = () => { close_(claim); if (!claim.close) resetClaim(); };
 $('#get50').addEventListener('click', () => { open_(claim); });
-$('#claimNo').addEventListener('click', () => close_(claim));
-claim.addEventListener('click', e => { if (e.target === claim) close_(claim); });
-$('#claimYes').addEventListener('click', () => { close_(claim); open_(dlg); });
+$('#claimNo').addEventListener('click', closeClaim);
+claim.addEventListener('click', e => { if (e.target === claim) closeClaim(); });
+$('#claimYes').addEventListener('click', () => { closeClaim(); open_(dlg); });
 // the name
 $('#cName').addEventListener('input', e => {
   const v = e.target.value.trim(); CL.name = v.length > 1;
-  say('mName', !v ? '' : v.length < 2 ? 'a little longer, please.' : /mchogface/i.test(v) ? 'welcome, Hedgehog.' : /^vlad|loktev/i.test(v) ? 'nice try.' : 'noted.', v.length > 1 ? 'ok' : 'bad'); check();
+  say('mName', !v ? '' : v.length < 2 ? 'a little longer, please.' : /mchogface/i.test(v) ? 'welcome, Hedgehog.' : /\b(vlad|loktev)/i.test(v) ? 'nice try.' : 'noted.', v.length > 1 ? 'ok' : 'bad'); check();
 });
 // the date of birth, as a Julian date — and, since we're at it, a horoscope (the discount applies whichever way Mercury is going)
 const SIGNS = [[120, 'Capricorns'], [219, 'Aquarians'], [321, 'Pisceans'], [420, 'Ariens'], [521, 'Taureans'], [621, 'Geminis'], [723, 'Cancerians'], [823, 'Leos'], [923, 'Virgos'], [1023, 'Librans'], [1122, 'Scorpios'], [1222, 'Sagittarians'], [1232, 'Capricorns']];
@@ -1282,15 +1249,15 @@ $('#cDob').placeholder = 'e.g. ' + JD_EXAMPLE;
 $('#cDob').addEventListener('input', e => {
   const v = e.target.value.trim().replace(',', '.'), m = v.match(/^(\d+)\.(\d+)$/); CL.dob = false;
   if (!v) say('mDob', '');
-  else if (!m) say('mDob', 'a Julian date, please — the number of days since noon, 1 January 4713 BC (e.g. 2449849.8384606).', 'bad');
+  else if (!m) say('mDob', 'a Julian date, please: the number of days since noon, 1 January 4713 BC (e.g. 2449849.8384606).', 'bad');
   else if (m[2].length !== 7) say('mDob', `exactly 7 decimals, please (you gave ${m[2].length}): a precision of about 9 milliseconds.`, 'bad');
   else {
     const ms = (parseFloat(v) - 2440587.5) * 864e5, d = new Date(ms);
     if (!isFinite(ms) || ms > Date.now()) say('mDob', 'born in the future? the form does not accept time travellers.', 'bad');
-    else if (ms < Date.UTC(1890, 0, 1)) say('mDob', 'congratulations on your longevity, but this grant is only for <i>young</i> researchers.', 'bad');
+    else if (ms < Date.UTC(1890, 0, 1)) say('mDob', 'congratulations on your longevity, but this offer is only for <i>young</i> researchers.', 'bad');
     else {
       CL.dob = true; const retro = mercuryRetrograde(Date.now());
-      say('mDob', `that’s ${d.toUTCString().slice(5, 22)} UTC. lucky day for ${sign(d)}: Mercury is ${retro ? 'retrograde' : 'prograde'}, so you get 20% off! (now it’s $40)`, 'ok');
+      say('mDob', `that's ${d.toUTCString().slice(5, 22)} UTC. lucky day for ${sign(d)}: Mercury is ${retro ? 'retrograde' : 'prograde'}, so you get 20% off! (now it's $40)`, 'ok');
       $('#prize').textContent = '$40';
     }
   }
@@ -1301,7 +1268,7 @@ $('#cSkip').addEventListener('input', e => {
   const v = e.target.value.trim(), n = /^\d+$/.test(v) ? +v : NaN, last = RV.store.get('skipLast', null); CL.skip = false;
   if (!v) say('mSkip', '');
   else if (!isFinite(n)) say('mSkip', 'a whole number of skips, please. (half-skips are called plunks.)', 'bad');
-  else if (last == null) { CL.skip = true; say('mSkip', 'we have no record of you throwing a stone, so we’ll take your word for it. <a href="${BASE}index.html">throw one?</a>', 'ok'); }
+  else if (last == null) { CL.skip = true; say('mSkip', 'we have no record of you throwing a stone, so we\'ll take your word for it. <a href="index.html">throw one?</a>', 'ok'); }
   else if (n !== last) say('mSkip', `our records show ${last}. please be honest.`, 'bad');
   else { CL.skip = true; say('mSkip', last === 0 ? 'zero. honest, at least.' : last > 7 ? 'verified. impressive.' : 'verified.', 'ok'); }
   check();
@@ -1312,7 +1279,7 @@ $('#cSpin').addEventListener('input', e => {
   if (!v) say('mSpin', '');
   else if (!isFinite(a)) say('mSpin', 'a number, please: the dimensionless spin, between −1 and 1.', 'bad');
   else if (Math.abs(a) >= 1) say('mSpin', a === 1 || a === -1 ? 'exactly maximal? the Universe forbids it (and so does this form).' : 'naked singularities are not accepted. |a| must be below 1.', 'bad');
-  else { CL.spin = true; say('mSpin', a > 0.998 ? 'beyond the Thorne limit, but we’ll allow it.' : a > 0.9 ? 'bold. some papers agree with you.' : a < 0 ? 'retrograde? an interesting choice.' : 'accepted. (the literature can’t agree either.)', 'ok'); }
+  else { CL.spin = true; say('mSpin', a > 0.998 ? 'beyond the Thorne limit, but we\'ll allow it.' : a > 0.9 ? 'bold. some papers agree with you.' : a < 0 ? 'retrograde? an interesting choice.' : 'accepted. (the literature can\'t agree either.)', 'ok'); }
   check();
 });
 // the three numbers on the back of the card: never kept — the moment there are three, they're wiped, with a word of advice
@@ -1331,6 +1298,7 @@ function capSize() { const r = cap.getBoundingClientRect(), dpr = Math.min(2, de
 const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 function capNew() {
   if (!cap.getBoundingClientRect().width) return;
+  capW = Math.round(cap.getBoundingClientRect().width);
   const [w, h] = capSize(), L = Math.min(w, h) * 0.66, phi = Math.random() * 2 * Math.PI, pts = [];
   let x = 0, y = 0, a = phi;
   for (let k = 0; k < 40; k++) pts.push([gauss() * 4, gauss() * 4, 1]);                                      // the Auger electron
@@ -1368,20 +1336,21 @@ cap.addEventListener('pointerdown', e => { if (capBusy || CL.robot || !TR) retur
 cap.addEventListener('pointermove', e => { if (!drag) return; const [x, y] = capXY(e); drag[2] = x; drag[3] = y; drawCap(drag); });
 cap.addEventListener('pointerup', () => {
   if (!drag) return; const d = drag; drag = null;
-  if (Math.hypot(d[2] - d[0], d[3] - d[1]) < 15) { drawCap(); say('mCap', 'draw a line, please — drag across the track.', 'bad'); return; }
+  if (Math.hypot(d[2] - d[0], d[3] - d[1]) < 15) { drawCap(); say('mCap', 'draw a line, please: drag across the track.', 'bad'); return; }
   const deg = x => ((x * 180 / Math.PI) % 180 + 180) % 180, ua = Math.atan2(d[3] - d[1], d[2] - d[0]);
   const diff = Math.abs(deg(ua) - deg(TR.phi)), err = Math.min(diff, 180 - diff);
   const shown = a => Math.round(((-a * 180 / Math.PI) % 180 + 180) % 180);                                      // as an angle on the sky: counter-clockwise from the right
-  if (err < 1) { capBusy = true; drawCap(d, true); say('mCap', `<b>ROBOT DETECTED.</b> off by only ${err.toFixed(2)}° — no human draws like that. free money is for humans only. try again, more sloppily.`, 'bad');   // too good to be human
+  if (err < 1) { capBusy = true; drawCap(d, true); say('mCap', `<b>ROBOT DETECTED.</b> off by only ${err.toFixed(2)}°. no human draws like that. free money is for humans only. try again, more sloppily.`, 'bad');   // too good to be human
     setTimeout(() => { capBusy = false; capNew(); }, 3200); }
-  else if (err <= 20) { CL.robot = true; drawCap(d, true); say('mCap', err < 3 ? `not a robot — but suspiciously close (off by ${err.toFixed(1)}°). we’re keeping an eye on you.` : `not a robot. (off by ${err.toFixed(0)}° — a robot would have been more precise.)`, 'ok'); check(); }
-  else { capBusy = true; drawCap(d, true); say('mCap', `the electron set off at ${shown(TR.phi)}°; you drew ${shown(ua)}°. the track bends after the first few hundred microns — easy to be fooled. another one…`, 'bad');
+  else if (err <= 20) { CL.robot = true; drawCap(d, true); say('mCap', err < 3 ? `not a robot, but suspiciously close (off by ${err.toFixed(1)}°). we're keeping an eye on you.` : `not a robot. (off by ${err.toFixed(0)}°; a robot would have been more precise.)`, 'ok'); check(); }
+  else { capBusy = true; drawCap(d, true); say('mCap', `the electron set off at ${shown(TR.phi)}°; you drew ${shown(ua)}°. the track bends after the first few hundred microns and the Bragg peak is where it ends. easy to be fooled. another one…`, 'bad');
     setTimeout(() => { capBusy = false; capNew(); }, 2400); }
 });
 $('#capNew').addEventListener('click', () => { if (!CL.robot) { say('mCap', ''); capNew(); } });
-addEventListener('resize', () => { if (!$('#robot').hidden && !CL.robot) capNew(); });
+let capW = 0, capT = 0;                                  // a new track only when the width really changes (a phone's keyboard fires resize too)
+addEventListener('resize', () => { clearTimeout(capT); capT = setTimeout(() => { const w = Math.round(cap.getBoundingClientRect().width); if (w === capW) return; capW = w; if (!$('#robot').hidden && !CL.robot) capNew(); }, 250); });
 
 /* ---------- the error at the end of the $50 ---------- */
-$('#errOk').addEventListener('click', () => { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); });
-dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+$('#errOk').addEventListener('click', () => close_(dlg));
+dlg.addEventListener('click', e => { if (e.target === dlg) close_(dlg); });
 })();

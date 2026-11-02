@@ -1,11 +1,21 @@
 <!doctype html>
 <html lang="en" data-light="day">
-<!-- revontuli · merits: inside the cabin — the flower wallpaper, warmed to the almanac's paper, and the framed certificates -->
+<!-- merits: inside the cabin — the flower wallpaper, warmed to the almanac's paper, and the framed certificates -->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Merits — Vlad Loktev</title>
+<title>Merits · Vlad Loktev</title>
 <meta name="description" content="Certificates and diplomas of Vladislav Loktev, framed on the wall.">
+<link rel="canonical" href="https://belliavesha.github.io/merits.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vlad Loktev">
+<meta property="og:title" content="Merits · Vlad Loktev">
+<meta property="og:description" content="Certificates and diplomas of Vladislav Loktev, framed on the wall.">
+<meta property="og:url" content="https://belliavesha.github.io/merits.html">
+<meta property="og:image" content="https://belliavesha.github.io/assets/images/og/lake.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A red cabin by a lake in Finland, drawn in pencil, with a hedgehog on the shore.">
 <link rel="icon" href="assets/images/favicon/hedgehog.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" type="image/png" href="assets/images/favicon/hedgehog-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/images/favicon/hedgehog-180.png">
@@ -33,7 +43,7 @@ a{color:inherit}
    version only ever covers one viewport's worth and goes flat below the fold. z-index:-1 keeps both
    behind .wall's real (static) content without having to touch that content's stacking at all. */
 .paper{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
-.paper::before{content:"";position:absolute;inset:0;background:url(assets/images/flowers_tiled2.png) 0 0/1036.8px 1036.8px repeat;
+.paper::before{content:"";position:absolute;inset:0;background:url(assets/images/flowers_tiled2.jpg) 0 0/1036.8px 1036.8px repeat;
   filter:sepia(.45) saturate(.9) brightness(1.1) contrast(.68)}
 .paper::after{content:"";position:absolute;inset:0;background:#F1E6D0;mix-blend-mode:screen;opacity:.32}
 /* the light in the room: daylight from the window by day, a warm lamp at night (kept mild — no jump in brightness from page to page) */
@@ -95,18 +105,20 @@ a{color:inherit}
 html.rv-reduced .sleeper{animation:none}
 .sleeper[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){.frame{transition:none}.sleeper{animation:none}}
+html.rv-reduced .frame{transition:none}html.rv-reduced .sleeper{animation:none}
 </style>
 </head>
 <body data-page="merits">
 <a class="rv-skip" href="#wall">Skip to content</a>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><radialGradient id="nailG" cx="35%" cy="35%" r="65%"><stop offset="0" stop-color="#B4AAA0"/><stop offset="1" stop-color="#3B342D"/></radialGradient></defs></svg>
 <main class="wall" id="wall">
+<noscript><p style="text-align:center;padding:2em 1em">The certificates hang here with JavaScript on. They are also listed in the <a href="assets/pdfs/CV_Loktev.pdf">CV</a>.</p></noscript>
   <div class="paper" aria-hidden="true"></div>
   <div class="room" aria-hidden="true"></div>
   <header class="head">
     <div class="words">
       <h1>Merits</h1>
-      <p>Pieces of paper my mom would proudly frame and put on the wall.</p>
+      <p>Pieces of paper my mum would proudly frame and put on the wall.</p>
     </div>
     <a class="peek" id="peek" href="index.html" aria-label="The window: back outside, to the lake"><canvas id="peekC" width="300" height="236" aria-hidden="true"></canvas><span class="tag">to the lake</span></a>
   </header>
@@ -116,7 +128,7 @@ html.rv-reduced .sleeper{animation:none}
 <script src="data.js"></script>
 <script src="site.js"></script>
 <script>
-/* revontuli · merits. Frames from SITE.merits; the room light and the little window follow the sun over Turku. */
+/* merits. Frames from SITE.merits; the room light and the little window follow the sun over Turku. */
 (() => {
 'use strict';
 const { clamp, smooth, mix, rgba, esc } = RV;
@@ -132,7 +144,7 @@ $('#hang').innerHTML = SITE.merits.map((m, k) => {
     `<svg class="string" aria-hidden="true"><line x1="50%" y1="3.6" x2="23%" y2="38.7"/><line x1="50%" y1="3.6" x2="77%" y2="38.7"/><circle class="eye" cx="23%" cy="39.2" r="2.2"/><circle class="eye" cx="77%" cy="39.2" r="2.2"/><circle class="nail" cx="50%" cy="3.6" r="3.6"/></svg>` +
     (m.badge ? `<span class="badge" aria-hidden="true">${m.badge}</span>` : '') +
     `<span class="moulding"><span class="mat"><img src="assets/images/logos/${esc(m.logo)}" alt="${esc(m.alt)}" loading="lazy"></span></span>` +
-    `<span class="plaque"><b>${esc(m.title)}</b><span>${esc(m.where)} · ${esc(m.when)}</span><span class="pdf">open the pdf</span></span></a></li>`;
+    `<span class="plaque"><b>${esc(m.title)}</b><span>${esc(m.where)} · ${esc(m.when)}</span><span class="pdf">open the PDF</span></span></a></li>`;
 }).join('');
 function room() {
   const ms = RV.now(), env = RV.env(ms), sun = env.sun, w = env.w;

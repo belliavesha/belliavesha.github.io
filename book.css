@@ -1,4 +1,4 @@
-/* revontuli — the book: the paper stock, type and running head shared by Research and About.
+/* the book: the paper stock, type and running head shared by Research and About.
    Cormorant Garamond + Cormorant SC on laid almanac paper; one rubric colour (About swaps the inks). */
 :root{
   --paper:#F1E9D6; --plate:#F7F2E6; --ink:#1E1A15; --ink-2:#554B3E; --ink-3:#8A7E6B;
@@ -18,7 +18,7 @@ body{margin:0;color:var(--ink);background:var(--paper) var(--laid);font-family:v
   padding-bottom:var(--rv-reserve)}
 @media (max-width:576px){body{font-size:16.7px;line-height:1.48}}
 .sc{font-family:var(--sc);font-weight:600;letter-spacing:.04em}
-a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,var(--ink) 34%,transparent);text-underline-offset:.16em}
+a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:rgba(30,26,21,.34);text-decoration-color:color-mix(in srgb,var(--ink) 34%,transparent);text-underline-offset:.16em}
 a:hover{color:var(--rubric);text-decoration-color:var(--rubric)}
 a:focus-visible,button:focus-visible,[tabindex]:focus-visible,canvas:focus-visible{outline:2px solid var(--rubric);outline-offset:2.7px;border-radius:2px}
 button{font:inherit;color:inherit}
@@ -55,6 +55,5 @@ section.ch{padding:50.4px 0 18px;border-bottom:1px solid var(--faint)}
 .ch-h{display:flex;align-items:baseline;gap:14.4px;margin:0 0 19.8px;flex-wrap:wrap}
 .ch-h .num{font-family:var(--sc);font-weight:700;font-size:18px;color:var(--rubric);letter-spacing:.08em}
 .ch-h h2{margin:0;font-family:var(--sc);font-weight:600;font-size:clamp(25.2px,3.2vw,34.2px);letter-spacing:.1em;line-height:1.1}
-.ch-h .fi{font-style:italic;color:var(--ink-3);font-size:16.2px}
 footer.colo{padding:32.4px 0 27px;text-align:center;font-size:14.4px;color:var(--ink-2);font-style:italic}
 footer.colo .orn{display:block;font-style:normal;color:var(--rubric);letter-spacing:.6em;margin-bottom:5.4px}
