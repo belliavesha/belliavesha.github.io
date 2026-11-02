@@ -217,6 +217,7 @@ window.SITE = {
     ['', 'Correlation does not imply causation. People do. Therefore, people are not correlation.'],
     ['', 'The Moon landing was staged on Mars.'],
     ['', 'This statement is false.']
+    ['', 'Anything that can be written in JavaScript, will eventually be written in JavaScript'],
   ]
 };
 
