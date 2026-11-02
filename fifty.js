@@ -1189,7 +1189,7 @@ function tosFill() {                                      // keep a few screens 
   const done = k - tosBase;
   if (done <= tosAt) return; tosAt = done;               // (the counter only moves on, clause by clause, and never back)
   const pct = 100 * done / (done + TOS_HALF);            // asymptotically: never quite all of it
-  $('#tosProg').textContent = `You have read ${pct < 99 ? pct.toFixed(1) : pct.toFixed(Math.min(6, 1 + Math.ceil(-Math.log10(100 - pct))))}% of the Agreement · ${TOS.clauses} clauses so far.`;
+  $('#tosProg').textContent = `You have read ${pct < 99 ? pct.toFixed(1) : pct.toFixed(Math.min(6, 1 + Math.ceil(-Math.log10(100 - pct))))}% of the Agreement. ${TOS.clauses} clauses so far.`;
   $('#tosBar').style.width = pct + '%';
 }
 let tosQueued = false;

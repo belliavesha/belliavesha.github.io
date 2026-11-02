@@ -2064,12 +2064,14 @@ function tick(light) {                                   // light: during a fade
 }
 /* the on-screen readout of today's shower (in the dock), while it rains and for the rainbow minutes after */
 function wxChip() {
-  const w = S.w, hm = A.hm; if (!w || dry() || (RMS.snow && w.kind === 'snow')) return RV.wxChip(null);
-  const spans = RV.forecast(S.ms), cur = spans.find(s => S.ms >= s[0] && S.ms <= s[1]), word = w.kind === 'snow' ? 'snow' : 'rain';
-  if ((w.raining || w.snowing) && cur && RV.opt(w.kind) === 'auto') RV.wxChip(`${word} ${hm(cur[0])}–${hm(cur[1])}`, `It is ${w.raining ? 'raining' : 'snowing'} from ${hm(cur[0])} until about ${hm(cur[1])}. Open the weather report.`);
-  else if (w.raining || w.snowing) RV.wxChip(`${word} · by you`, `It ${w.snowing ? 'snows' : 'rains'} because you asked. Open the weather report.`);
-  else if (w.sinceEnd < 10) RV.wxChip(`dry since ${hm(w.endedAt)} · bow until ${hm(w.endedAt + 6e5)}`, `The rain stopped at ${hm(w.endedAt)}; rainbow minutes until ${hm(w.endedAt + 6e5)}. Open the weather report.`);
-  else RV.wxChip(null);
+  // only weather you ordered gets a chip (its ⟲ hands the sky back to nature); the forecast lives in the weather report
+  const w = S.w, o = k => RV.opt(k), set = ['rain', 'snow', 'aurora'].filter(k => o(k) !== 'auto');
+  if (!w || !set.length) return RV.wxChip(null);
+  const falls = w && w.snowing ? 'snow' : 'rain';
+  const sky = o('rain') === 'off' && o('snow') === 'off' ? ['clear skies']
+    : ['rain', 'snow'].filter(k => o(k) !== 'auto').map(k => o(k) === 'on' ? falls : 'no ' + k);
+  const t = [...new Set(sky.concat(o('aurora') === 'auto' ? [] : [o('aurora') === 'on' ? 'aurora' : 'no aurora']))].join(', ');
+  RV.wxChip(t, `Weather set by you: ${t}. Open the weather report.`);
 }
 RV.hooks.wxChip = () => { if (S.w) wxChip(); };
 
@@ -2657,7 +2659,7 @@ function describePF0(c2, day) {
 }
 RV.register('analyzer', a => {
   const v = (a[0] || '').toLowerCase();
-  if (!v) return [`filter: <span class="a">${PF.on ? PF.th.toFixed(0) + '°' : 'out'}</span>${PF.spin ? ' (turning)' : ''} <span class="m">(filter &lt;deg&gt; | on | off | turn | stop · 0° = horizontal)</span>`];
+  if (!v) return [`filter: <span class="a">${PF.on ? PF.th.toFixed(0) + '°' : 'out'}</span>${PF.spin ? ' (turning)' : ''} <span class="m">(filter &lt;deg&gt; | on | off | turn | stop. 0° = horizontal)</span>`];
   if (v === 'off' || v === 'out') { PF.spin = false; setPF(null, false); return ['the filter comes off. the glare is back.']; }
   if (v === 'on' || v === 'in') { setPF(null, true); return [describePF()]; }
   if (v === 'turn' || v === 'spin') { PF.spin = true; setPF(null, true); return ['the filter turns slowly. watch the lake. <span class="m">(</span>' + RV.cmdLink('filter stop') + '<span class="m"> holds it.)</span>']; }

@@ -257,7 +257,7 @@ function buildDock() {
     <span class="rv-sep" aria-hidden="true"></span>
     <form class="rv-cli" id="rvCli" autocomplete="off" role="search" aria-label="Command line"><label class="rv-ps" id="rvPs" for="rvIn">~ $</label><input id="rvIn" type="text" placeholder="type help" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Command line: type help for the list of commands"></form>
     <span class="rv-chip clock" id="rvClock"><span class="rv-chip-t" id="rvClockT"></span><button type="button" id="rvClockX" aria-label="Back to the real time" title="back to the real time">⟲</button></span>
-    <button type="button" class="rv-chip wx" id="rvWx" aria-label="Today's showers"></button>
+    <span class="rv-chip wx" id="rvWx"><button type="button" class="rv-chip-b" id="rvWxT" aria-label="Open the weather report"></button><button type="button" class="x" id="rvWxX" aria-label="Back to the real weather" title="back to the real weather">⟲</button></span>
     <button class="rv-icon rv-only-s" id="rvCliBtn" type="button" aria-label="Open the command line">${ICON.term}</button>
     <button class="rv-icon rv-only-s rv-menu" id="rvMenuBtn" type="button" aria-expanded="false" aria-controls="rvSheet" aria-label="Menu">${ICON.menu}</button>
     <button class="rv-icon rv-only-l rv-collapse" id="rvCollapse" type="button" aria-expanded="true" aria-label="Collapse the menu">${ICON.chev}</button>
@@ -306,7 +306,8 @@ function initDock() {
   $('#rvClear').addEventListener('click', () => { clearLog(); input.focus(); });
   $('#rvCli').addEventListener('click', () => input.focus());
   $('#rvClockX').addEventListener('click', e => { e.stopPropagation(); RV.resetClock(); RV.toast('back to the real time'); });
-  $('#rvWx').addEventListener('click', e => { e.stopPropagation(); run('weather'); if (!narrow()) input.focus({ preventScroll: true }); });
+  $('#rvWxT').addEventListener('click', e => { e.stopPropagation(); run('weather'); if (!narrow()) input.focus({ preventScroll: true }); });
+  $('#rvWxX').addEventListener('click', e => { e.stopPropagation(); for (const k of ['rain', 'snow', 'aurora']) RV.setOpt(k, 'auto'); RV.toast('back to the real weather'); });
   document.addEventListener('click', e => {
     const t = e.target;
     if (t.closest && t.closest('[data-run]') && (out.contains(t) || t.closest('.rv-cmdlink'))) { e.preventDefault(); run(t.closest('[data-run]').dataset.run, true); return; }
@@ -356,7 +357,7 @@ function status() {
 }
 RV.status = status;
 /* home sets this: a small on-screen readout of today's showers while it rains (or just stopped) */
-RV.wxChip = (text, label) => { const b = $('#rvWx'); if (!b) return; b.classList.toggle('on', !!text); b.innerHTML = text ? '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M6 1.2C4.6 3.4 3 5.2 3 7.2a3 3 0 0 0 6 0c0-2-1.6-3.8-3-6z" fill="currentColor"/></svg><span class="rv-chip-t">' + esc(text) + '</span>' : ''; if (label) { b.setAttribute('aria-label', label); b.title = text; } };
+RV.wxChip = (text, label) => { const c = $('#rvWx'), b = $('#rvWxT'); if (!c) return; c.classList.toggle('on', !!text); b.innerHTML = text ? '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M6 1.2C4.6 3.4 3 5.2 3 7.2a3 3 0 0 0 6 0c0-2-1.6-3.8-3-6z" fill="currentColor"/></svg><span class="rv-chip-t">' + esc(text) + '</span>' : ''; if (label) { b.setAttribute('aria-label', label); b.title = text; } };
 RV.hooks = RV.hooks || {};
 
 /* ================= the repository, as a tiny read-only file system ================= */
@@ -500,11 +501,11 @@ collatztree/style.css	26028
 collatztree/trajectory_9_light.png	84714
 collatztree/tree_99_light.png	320055
 collatztree/tree_math.js	12456
-data.js	21833
+data.js	21931
 favicon.ico	829
-fifty.js	89953
+fifty.js	89958
 google6c75a693b5d196cc.html	53
-index.html	252332
+index.html	252121
 mandelburger/css/app.css	19674
 mandelburger/index.html	30123
 mandelburger/js/core/cocycle.js	20994
@@ -526,10 +527,10 @@ mandelburger/js/ui/plots.js	15558
 mandelburger/js/workers/compute.worker.js	532
 mandelburger/js/workers/pool.js	3476
 merits.html	15848
-research.html	84066
+research.html	84064
 robots.txt	111
-site.css	13418
-site.js	105998
+site.css	13638
+site.js	106371
 sitemap.xml	636`;
 const HIDDEN_N = 33;
 // the underside stays under the ice: never listed, never found, never opened from here
@@ -573,7 +574,7 @@ const say = (lines, cls) => (Array.isArray(lines) ? lines : [lines]).forEach(l =
 RV.say = (html, cls) => print(html, cls === 'o warn' || cls === 'warn' ? 'r' : cls || 'o');
 function clearLog() { log.innerHTML = ''; logH = []; store.sset('log', logH); }
 function restoreLog() { log.innerHTML = logH.map(([c, h]) => `<div class="l ${c}">${h}</div>`).join(''); }
-function greet() { print(`<span class="m">moi! this is a small shell for the site. try</span> ${cmdLink('help')}<span class="m">,</span> ${cmdLink('ls')} <span class="m">or</span> ${cmdLink('weather')}<span class="m">. tab completes · ↑ recalls · / brings you back.</span>`, 'm'); }
+function greet() { print(`<span class="m">moi! this is a small shell for the site. try</span> ${cmdLink('help')}<span class="m">,</span> ${cmdLink('ls')} <span class="m">or</span> ${cmdLink('weather')}<span class="m">. Tab completes, ↑ recalls. Press / anywhere on a page to get back to this line.</span>`, 'm'); }
 const cmdLink = (c, label) => `<button class="e a" data-run="${esc(c)}">${esc(label || c)}</button>`;
 RV.cmdLink = cmdLink;
 const onHome = () => PAGE === 'home';
@@ -649,8 +650,8 @@ function parseWhen(s) {
 RV.parseWhen = parseWhen;
 function describeTime() {
   const ms = RV.now(), L = local(ms), sun = sunPos(ms), sp = RV.speed();
-  return [`${when(ms)} in Turku <span class="m">(day ${L.doy} of the year · ${new Date(ms).toISOString().slice(0, 16).replace('T', ' ')} UTC)</span>`,
-    `<span class="m">sun ${sun.alt.toFixed(1)}° ${sun.alt >= 0 ? 'up' : 'below the horizon'}, azimuth ${sun.az.toFixed(0)}° · ${RV.simulated() ? `simulated clock${sp !== 1 ? `, running ×${sp}` : ''}: </span>${cmdLink('date --reset')}` : 'real time</span>'}`];
+  return [`${when(ms)} in Turku <span class="m">(day ${L.doy} of the year, ${new Date(ms).toISOString().slice(0, 16).replace('T', ' ')} UTC)</span>`,
+    `<span class="m">sun ${sun.alt.toFixed(1)}° ${sun.alt >= 0 ? 'up' : 'below the horizon'}, azimuth ${sun.az.toFixed(0)}°. ${RV.simulated() ? `simulated clock${sp !== 1 ? `, running ×${sp}` : ''}: </span>${cmdLink('date --reset')}` : 'real time</span>'}`];
 }
 function weatherReport() {
   const ms = RV.now(), e = RV.env(ms), w = e.w, L = w.L, sp = RV.forecast(ms), sun = e.sun;
@@ -665,7 +666,7 @@ function weatherReport() {
   const curSpan = sp.find(s => ms >= s[0] && ms <= s[1]);
   lines.push(`now: ${nowTxt}${curSpan && (w.raining || w.snowing) && !forced ? ` <span class="m">(since ${hm(curSpan[0])}, until about ${hm(curSpan[1])})</span>` : ''}${forced ? ' <span class="r">(forced by you: </span>' + cmdLink('weather auto') + '<span class="r">)</span>' : ''}`);
   if (w.sinceEnd < 10) lines.push(`<span class="a">the rain stopped at ${hm(w.endedAt || ms)}. rainbow minutes until ${hm((w.endedAt || ms) + 10 * 6e4)}.</span> <span class="m">${sun.alt > 42 ? 'but the sun is too high for a bow.' : sun.alt < -1 ? 'but there is no sunlight.' : 'look away from the sun.'}</span>`);
-  lines.push(`<span class="m">chimney: ${e.smoke ? (e.smokeWhy === 'sauna' ? 'smoking: the sauna is on' : e.smokeWhy === 'cold' ? 'smoking: it is cold' : 'smoking') : 'quiet'} · window: ${{ clear: 'clear', steam: 'steamed up', frost: 'frosted' }[e.win]}</span>`);
+  lines.push(`<span class="m">chimney: ${e.smoke ? (e.smokeWhy === 'sauna' ? 'smoking: the sauna is on' : e.smokeWhy === 'cold' ? 'smoking: it is cold' : 'smoking') : 'quiet'}. window: ${{ clear: 'clear', steam: 'steamed up', frost: 'frosted' }[e.win]}.</span>`);
   return lines;
 }
 function rainbowTalk() {
@@ -693,7 +694,7 @@ const MAN = {
   luck: ['luck             how lucky your throws are: the mean number of skips (a Poisson λ)', 'luck 5           a better arm. remembered in this browser; `reset` puts it back to ' + SKIP_LAMBDA],
   ls: ['ls [-a] [-l] [dir]   list the repository of this site (names are clickable)'],
   cd: ['cd &lt;dir&gt;    move around the repository', 'cd &lt;page&gt;   go to a page: ~ (home), research, about, merits, papers, talks, contact'],
-  cat: ['cat &lt;file&gt;   print a text file from the repository · head [-n N] &lt;file&gt; prints the first lines'],
+  cat: ['cat &lt;file&gt;   print a text file from the repository. head [-n N] &lt;file&gt; prints the first lines.'],
   open: ['open &lt;file|page&gt;   open a PDF, image or page'],
   weather: ['weather                  today\'s showers over the lake, to the minute', 'rain on|off|auto · snow on|off|auto · aurora on|off|auto', 'weather clear · weather auto', 'rainbow                  what a rainbow needs (and, when the sun is right, a shower)'],
   motion: ['motion reduced|full|auto   calm the animations (auto follows your system setting)'],
@@ -812,7 +813,7 @@ function treeOut(arg) {
 }
 function settingsOut() {
   const rows = [['hedgehog', `${RV.opt('hog')}, ×${S.hogSpeed}`], ['luck', `λ = ${RV.luck()}`], ['clock', RV.simulated() ? when(RV.now()) + (RV.speed() !== 1 ? ' ×' + RV.speed() : '') : 'real'], ['rain', RV.opt('rain')], ['snow', RV.opt('snow')], ['aurora', RV.opt('aurora')], ['window', RV.opt('window')], ['smoke', RV.opt('smoke')], ['motion', S.motion + (RV.reduced() ? ' (calm)' : '')], ['directory', '~' + (cwd ? '/' + cwd : '')]];
-  return [`<div class="tbl">${rows.map(r => `<span>${r[0]}</span><span class="a">${esc(r[1])}</span>`).join('')}</div>`, `<span class="m">stored in this browser only · </span>${cmdLink('reset')}<span class="m"> puts everything back</span>`];
+  return [`<div class="tbl">${rows.map(r => `<span>${r[0]}</span><span class="a">${esc(r[1])}</span>`).join('')}</div>`, `<span class="m">stored in this browser only. </span>${cmdLink('reset')}<span class="m"> puts everything back.</span>`];
 }
 function skyOut() {
   const now = RV.now(), s = sunPos(now), di = dayInfo(now), ph = moonPhase(now), mo = moonPos(now);
@@ -985,7 +986,7 @@ function meteorsOut() {
   const lines = ['<span class="hd">meteors over the lake</span>'];
   for (const s of R) {
     const name = cmdLink('meteor ' + s.key, s.name.padEnd(12));
-    if (s.zhr >= 0.5) lines.push(`  ${name} ZHR <span class="a">${Math.round(s.zhr)}</span> <span class="m">(${s.dpk < -0.5 ? 'peak in ' + Math.round(-s.dpk) + ' d' : s.dpk > 0.5 ? 'peak ' + Math.round(s.dpk) + ' d ago' : 'peak tonight'})</span> · radiant ${s.alt > 0 ? s.alt.toFixed(0) + '° up' : 'below the horizon'} → about <span class="a">${Math.round(s.hr)}</span>/h now`);
+    if (s.zhr >= 0.5) lines.push(`  ${name} ZHR <span class="a">${Math.round(s.zhr)}</span> <span class="m">(${s.dpk < -0.5 ? 'peak in ' + Math.round(-s.dpk) + ' d' : s.dpk > 0.5 ? 'peak ' + Math.round(s.dpk) + ' d ago' : 'peak tonight'})</span>, radiant ${s.alt > 0 ? s.alt.toFixed(0) + '° up' : 'below the horizon'} → about <span class="a">${Math.round(s.hr)}</span>/h now`);
     else { const days = s.dpk < 0 ? -s.dpk : 365.25 - s.dpk; lines.push(`  ${name} <span class="m">peaks the night of ${s.night}, ZHR ~${s.zhrMax}, in ${Math.round(days)} days</span>`); }
   }
   lines.push(`  ${cmdLink('meteor', 'sporadic'.padEnd(12))} about ${SPORADIC.hr}/h, every night, from anywhere`);
@@ -1024,7 +1025,7 @@ const C = {
     }
     if (['come', 'here', 'sleep', 'nap', 'wake', 'roll'].includes(s)) { if (RV.opt('hog') === 'off') return ['<span class="m">he\'s away. </span>' + cmdLink('hog on') + '<span class="m"> first.</span>']; const r = hookHome('hog', s === 'here' ? 'come' : s === 'nap' ? 'sleep' : s); return r ? [r] : homeOnly('the hedgehog'); }
     const st = hookHome('hogStatus');
-    return [`the hedgehog: <span class="a">${RV.opt('hog') === 'on' ? 'on the shore' : 'away'}</span>, speed ×${S.hogSpeed}${st ? ' · ' + esc(st) : ''}`, '<span class="m">hog on|off|come|sleep|wake|roll|speed &lt;x&gt;|status</span>'];
+    return [`the hedgehog: <span class="a">${RV.opt('hog') === 'on' ? 'on the shore' : 'away'}</span>, speed ×${S.hogSpeed}${st ? ', ' + esc(st) : ''}`, '<span class="m">hog on|off|come|sleep|wake|roll|speed &lt;x&gt;|status</span>'];
   },
   date: a => {
     if (!a.length) return describeTime();
@@ -1037,7 +1038,6 @@ const C = {
     RV.setClock(t); return describeTime().concat(onHome() ? [] : ['<span class="m">(the lake follows this clock.)</span>']);
   },
   speed: a => a.length ? C.date(['--speed', a[0]]) : [`time runs at ×${RV.speed()}`],
-  time: () => describeTime(),
   weather: a => {
     const s = (a[0] || '').toLowerCase();
     if (['clear', 'sunny', 'fair', 'off'].includes(s)) { const was = RV.weather().raining; delete URLOV.rain; delete URLOV.snow; RV.set(Object.assign({ rain: 'off', snow: 'off' }, was ? { rainOffAt: RV.now() } : {})); return ['clear skies ordered. <span class="m">(</span>' + cmdLink('weather auto') + '<span class="m"> to undo)</span>']; }
@@ -1046,7 +1046,7 @@ const C = {
   },
   forecast: () => weatherReport(),
   rain: a => {
-    const v = onoff(a[0]); if (!v) return [`rain: <span class="a">${RV.opt('rain')}</span> · ${RV.weather().raining ? 'it is raining' : 'dry'}`, '<span class="m">rain on|off|auto</span>'];
+    const v = onoff(a[0]); if (!v) return [`rain: <span class="a">${RV.opt('rain')}</span>. ${RV.weather().raining ? 'it is raining.' : 'dry.'}`, '<span class="m">rain on|off|auto</span>'];
     const was = RV.weather().raining; RV.setOpt('rain', v);
     if (v === 'off') RV.set({ rainOffAt: was ? RV.now() : 0 });
     const snowy = RV.snowSeason(local(RV.now()));
@@ -1101,7 +1101,7 @@ const C = {
   moi: () => ['moi! <span class="m">(hello in Finnish. “moi moi” is goodbye. yes, really.)</span>'],
   fortune: () => { const f = SITE.fortunes, p = SITE.psst; if (Math.random() < 0.45) { const x = f[Math.floor(Math.random() * f.length)]; return (x[0] ? [`<b lang="${x[2] || 'fi'}">${esc(x[0])}</b>`] : []).concat([esc(x[1])]); } return [SITE.md(p[Math.floor(Math.random() * p.length)].text)]; },
   uptime: () => ['up since 2013 (astronomy), load average: polarized, turbulent, rotating.'],
-  ping: () => ['pong · 0.04 ms · from a lake at 60.45° N (it\'s all in your browser)'],
+  ping: () => ['pong from a lake at 60.45° N: time=0.04 ms (it\'s all in your browser)'],
   uname: () => ['Lakeside 6.0-birch #1 SMP PREEMPT hedgehog-powered aarch64 GNU/Mökki'],
   lorem: () => ['ipsum, especially of the dolor variety, but sit amet.'],
   piano: () => ['♪ … (progressively losing this skill) …'],
@@ -1110,13 +1110,13 @@ const C = {
   // the underside: undocumented. a hole in the ice, and down you go.
   avanto: () => { dive(); return []; }
 };
-const ALIAS = { ll: 'ls', dir: 'ls', less: 'cat', more: 'cat', emacs: 'vim', nano: 'vim', vi: 'vim', hei: 'moi', hello: 'moi', hi: 'moi', terve: 'moi', guitar: 'piano', polarizer: 'analyzer', filter: 'analyzer', hedgehog: 'hog', logout: 'exit', quit: 'exit', now: 'time', cls: 'clear', xdg: 'open',
+const ALIAS = { ll: 'ls', dir: 'ls', less: 'cat', more: 'cat', emacs: 'vim', nano: 'vim', vi: 'vim', hei: 'moi', hello: 'moi', hi: 'moi', terve: 'moi', guitar: 'piano', polarizer: 'analyzer', filter: 'analyzer', hedgehog: 'hog', logout: 'exit', quit: 'exit', now: 'date', time: 'date', cls: 'clear', xdg: 'open',
   rmdir: 'rm', unlink: 'rm', killall: 'kill', pkill: 'kill', 'tähdenlento': 'meteor', shootingstar: 'meteor', wget: 'curl' };
 const HIDDEN = new Set(['avanto', ':q', ':q!', ':wq', ':wq!', ':x', 'zz', ':qa!', ':w', 'esc', 'curl', 'who', 'lorem', 'piano', 'sisu', 'apple', 'uptime', 'revontulet', 'forecast', 'effects', 'time', 'almanac', 'interests', 'career', 'contacts', 'bio', 'wall', 'certificates', 'cabin', 'lake', 'figures']);
 for (const k of Object.keys(PAGES)) if (!C[k]) C[k] = () => openOut(k);
 for (const k of Object.keys(EXT)) if (!C[k]) C[k] = () => openURL(EXT[k][0], EXT[k][1]);
 for (const e of SITE.explorers) if (!C[e.key]) C[e.key] = () => go(e.href, e.title);
-C.analyzer = () => ['the polarizing filter goes over the plates on the research page, and over the lake at home. ' + cmdLink('cd research') + ' · ' + cmdLink('cd ~')];
+C.analyzer = () => ['the polarizing filter goes over the plates on the research page, and over the lake at home. ' + cmdLink('cd research') + ' or ' + cmdLink('cd ~')];
 C.plate = () => ['the plates are on the research page. ' + cmdLink('cd research')];
 /* pages add their own commands: RV.register('name', fn(args, raw) → lines, { help: 'shown under “this page”', hidden }) */
 for (const t of [MAN, PAGES, C, ALIAS, DIR_SAY]) Object.setPrototypeOf(t, null);   // typed words index these: no 'constructor' or '__proto__' from Object

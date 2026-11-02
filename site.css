@@ -71,8 +71,11 @@
 .rv-chip.clock{background:rgba(235,185,107,.13);color:var(--rv-lamp)}
 .rv-chip.clock button{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:var(--rv-lamp)}
 .rv-chip.clock button:hover{background:rgba(235,185,107,.2)}
-.rv-chip.wx{background:rgba(156,198,216,.12);color:#B9D6E2;padding:0 10px;cursor:pointer;gap:6px}
-.rv-chip.wx:hover{background:rgba(156,198,216,.2)}
+.rv-chip.wx{background:rgba(156,198,216,.12);color:#B9D6E2;gap:2px}
+.rv-chip.wx .rv-chip-b{display:flex;align-items:center;gap:6px;height:100%}
+.rv-chip.wx .rv-chip-b:hover{text-decoration:underline;text-underline-offset:3px}
+.rv-chip.wx .x{width:22px;height:22px;border-radius:50%;display:grid;place-items:center}
+.rv-chip.wx .x:hover{background:rgba(156,198,216,.2)}
 
 /* ---------- panels above the dock: terminal log, menu sheet, explorers ---------- */
 .rv-panel{
