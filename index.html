@@ -103,12 +103,17 @@ button{font:inherit;color:inherit}
 .hero.ready .scrim{transition:opacity 1.5s ease,background-color 1.5s ease}
 .hero h1{margin:0;font-weight:360;font-size:clamp(34.5px,5.25vw,75px);font-size:clamp(34.5px,5.25cqw,75px);line-height:.98;letter-spacing:-.018em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144}
 .lead{margin:.6em 0 0;font-size:clamp(16.6px,1.43vw,20.4px);font-size:clamp(16.6px,1.43cqw,20.4px);line-height:1.5;max-width:30em;font-variation-settings:"SOFT" 80,"WONK" 0}
-.lead a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:currentColor;text-decoration-color:color-mix(in srgb,currentColor 50%,transparent)}
-.lead a:hover{text-decoration-color:currentColor;text-decoration-thickness:2px}
-.lead .chill{display:inline;border:0;background:none;padding:0;cursor:pointer;font:inherit;font-style:italic;color:inherit;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:.22em;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent)}
-.lead .chill:hover{text-decoration-color:currentColor}
+/* what can be clicked in the text: one look for every link, the “chill” one included (it is a link too, so it is not a button, which a browser draws differently). Upright (the italic is not for links), a little heavier,
+   a solid underline and a faint marker-pen tint, all drawn from the text's own colour, so it works by day, by night and under any scrim.
+   An arrow marks the links that leave the site. */
+.lead a{font-weight:440;font-style:normal;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:.2em;text-decoration-skip-ink:auto;
+  text-decoration-color:currentColor;text-decoration-color:color-mix(in srgb,currentColor 58%,transparent);
+  background:color-mix(in srgb,currentColor 7%,transparent);border-radius:3px;padding:0 .15em;margin:0 -.15em;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background-color .15s ease,text-decoration-color .15s ease}
+.lead a:hover{text-decoration-color:currentColor;background:color-mix(in srgb,currentColor 17%,transparent)}
+.lead a:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.lead a[target=_blank]::after{content:"\2060\2197";display:inline-block;font-size:.8em;font-weight:400;margin-left:.2em;vertical-align:.12em;opacity:.8;text-decoration:none}
 .lead .or{white-space:nowrap}
-.lead .psst-k{font-style:italic}
 @container (max-width:699px){.hero-text{top:clamp(40px,6.5cqh,72px)}.hero h1{font-size:33px}.lead{font-size:15.7px;line-height:1.48}}
 
 /* the cabin window, with Vlad in it */
@@ -210,7 +215,7 @@ html.rv-reduced .win img{transition:none}
     <div class="scrim" aria-hidden="true"></div>
     <h1>Hi, I'm Vlad!</h1>
     <p class="lead">
-      Don't be afraid of the hedgehog, but try not to scare him either. I'm an <a href="research.html">astrophysicist</a>, currently living in Prague - <a href="about.html">more about me</a>. <span class="psst" id="psst"><span class="psst-k">By the way…</span> <span id="psstText"></span></span> <span class="or">…or just <button type="button" class="chill" id="chill">chill here skipping stones</button>.</span>
+      Don't be afraid of the hedgehog, but try not to scare him either. I'm an <a href="research.html">astrophysicist</a>, currently living in Prague - <a href="about.html">more about me</a>. <span class="psst" id="psst"><span class="psst-k">By the way…</span> <span id="psstText"></span></span> <span class="or">…or just <a href="#" class="chill" id="chill" role="button">chill here skipping stones</a>.</span>
     </p>
   </div>
   <svg class="fg" id="fg" aria-hidden="true"></svg>
@@ -2854,7 +2859,8 @@ cv.addEventListener('click', e => {
   if (fish.st === 'wait' || fish.st === 'dip') { if (Math.hypot(x - fish.target[0], y - fish.target[1]) < 22) { reel(); return; } }
   if (lakeHit(x, y)) throwStone(x, y);
 });
-$('#chill').addEventListener('click', () => RV.hooks.skip());
+$('#chill').addEventListener('click', e => { e.preventDefault(); RV.hooks.skip(); });
+$('#chill').addEventListener('keydown', e => { if (e.key === ' ') { e.preventDefault(); RV.hooks.skip(); } });   // (a link answers to Enter; a button-like one to Space too)
 
 /* ---------- main loop ---------- */
 let lastT = performance.now(), lastTick = 0, lastDraw = 0, visible = true;
