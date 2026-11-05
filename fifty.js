@@ -774,7 +774,7 @@ const TOS = (() => {
     'Perpetual Motion', 
     'the Drop of Water in the Lake',
     'Odd Numbers and Even Odder Numbers',
-    'Coffee Break Snacks', 
+    'Coffee Break Catering', 
     'Minuses and Dashes',
     'Upper Limits',
     'Universal Rejection',

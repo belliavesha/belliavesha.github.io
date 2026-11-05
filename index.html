@@ -117,7 +117,7 @@ button{font:inherit;color:inherit}
 .win .top{position:absolute;inset:0;z-index:1;pointer-events:none}
 .win .top::after{content:'';position:absolute;left:0;right:0;top:30%;height:5px;background:var(--trim);box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .win .top::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:5px;margin-left:-2.5px;background:var(--trim);box-shadow:1px 0 0 rgba(0,0,0,.25)}
-.win .glass{position:absolute;inset:0;overflow:hidden;background:#7C7F7E;border-radius:1px}
+.win .glass{position:absolute;inset:5px;overflow:hidden;background:#7C7F7E;border-radius:1px}
 .win img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 22%;display:block;filter:var(--win-filter,none);transition:filter 2s ease}
 .win .tint{position:absolute;inset:0;background:var(--win-tint,transparent);mix-blend-mode:var(--win-blend,normal);pointer-events:none;transition:background 2s ease}
 .win .refl{position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,var(--refl,.14)) 42%,rgba(255,255,255,0) 58%);pointer-events:none}
@@ -2834,7 +2834,7 @@ RV.hooks.wipe = () => {
   const fgg = n => [...fg.querySelectorAll('.st-' + n)];
   const steps = [
     [300, fgg('birch').concat([$('#apple')]), "removed '/birch' <span class=\"m\">(and the apple on it)</span>"],
-    [750, fgg('house').concat([$('#win'), $('#winGlow'), $('#mailbox'), $('#doorHandle')]), "removed '/mökki' <span class=\"m\">(and the sauna. that one hurts.)</span>"],
+    [750, fgg('house').concat([$('#win'), $('#winSk'), $('#winGlow'), $('#mailbox'), $('#doorHandle')]), "removed '/mökki' <span class=\"m\">(and the sauna. that one hurts.)</span>"],
     [1200, [cv, wxc, $('#rod')].concat(fgg('lake')), "removed '/sky', '/stars', '/lake' <span class=\"m\">(and everything in it)</span>"],
     [1650, fgg('land').concat([$('#feet')]), "removed '/ground'"],
     [2100, [$('#heroText')], "removed '/home/vlad/index.html'"]
