@@ -2112,7 +2112,7 @@ const SEQ = {
   sleepTurn: () => [K(F.stretch, 0.55), K(F.back, 0.6, true), K(F.stretch, 0.5), K(F.sleep, 0.4)],
   wake: () => [K(F.sleep2, 0.4), K(F.stretch, 1.45), K(F.stand, 0.3), K(F.blink, 0.13), K(F.stand, 0.3)],
   curl: () => [K(F.curl1, 0.09), K(F.curl2, 0.09), K(F.ball, Infinity)],
-  uncurl: flip => [K(F.un1, 0.26, flip), K(F.un2, 0.38), K(F.un1, 0.16, flip), K(F.stand, 0.25)]
+  uncurl: flip => [K(F.un1, 0.26, flip), K(F.un2, 0.38), K(F.un1, 0.16), K(F.stand, 0.25)]   // (he turns, if at all, once, as he opens: the last un1 used to turn him back, mid-uncurl)
 };
 function play(steps, then = null) { hog.seq = steps; hog.si = -1; hog.sq = 0; hog.then = then; nextStep(); }
 function nextStep() {
