@@ -1099,7 +1099,7 @@ const C = {
   ':w': () => ['written. <span class="m">you\'re still in vim, though.</span>'],
   esc: () => ['normal mode. <span class="m">(you were never in vim to begin with.)</span>'],
   moi: () => ['moi! <span class="m">(hello in Finnish. “moi moi” is goodbye. yes, really.)</span>'],
-  fortune: () => { const f = SITE.fortunes, p = SITE.psst; if (Math.random() < 0.45) { const x = f[Math.floor(Math.random() * f.length)]; return (x[0] ? [`<b lang="${x[2] || 'fi'}">${esc(x[0])}</b>`] : []).concat([esc(x[1])]); } return [SITE.md(p[Math.floor(Math.random() * p.length)].text)]; },
+  fortune: () => { const f = SITE.fortunes, p = SITE.psst; if (Math.random() < 0.70) { const x = f[Math.floor(Math.random() * f.length)]; return (x[0] ? [`<b lang="${x[2] || 'fi'}">${esc(x[0])}</b>`] : []).concat([esc(x[1])]); } return [SITE.md(p[Math.floor(Math.random() * p.length)].text)]; },
   uptime: () => ['up since 2013 (astronomy), load average: polarized, turbulent, rotating.'],
   ping: () => ['pong from a lake at 60.45° N: time=0.04 ms (it\'s all in your browser)'],
   uname: () => ['Lakeside 6.0-birch #1 SMP PREEMPT hedgehog-powered aarch64 GNU/Mökki'],

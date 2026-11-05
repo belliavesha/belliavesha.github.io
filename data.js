@@ -52,7 +52,11 @@ window.SITE = {
     { text: 'Code, experiments and odd little tools on [my GitHub](https://github.com/belliavesha).' },
     { text: 'A beats B, B beats C, C beats A. [A note on the best intransitive dice](pdf:Random_variable_regular_tournaments.pdf).' },
     { text: '[Turn a black hole\'s spin up to 0.8 and watch its disc change.](page:research.html#plate2).' },
-    { text: 'Does a $50 giveaway sound too good to be true? It is. [Just fill in the form on my about-me page](page:about.html#contact).' }
+    { text: 'Does a $50 giveaway sound too good to be true? It is. [Just fill in the form on my about-me page](page:about.html#contact).'},
+    {text: 'You are doing better than you think.'},
+    {text: 'All models are wrong, but some of them are useful.'},
+    {text: 'Rest is productive.'},
+    {text: 'Stay hydrated.'}
   ],
 
   /* ---------- Research, chapter I ---------- */
@@ -212,7 +216,6 @@ window.SITE = {
     ['', 'Zero is a positive emotion.'],
     ['', 'Finland does not actually exist and is merely a fishing coordinate reserved by the UN.'],
     ['', 'All non-black things are not ravens.'],
-    ['', 'All models are wrong, but some of them are useful.'],
     ['', 'Socrates was mortal before God was dead.'],
     ['', 'Correlation does not imply causation. People do. Therefore, people are not correlation.'],
     ['', 'The Moon landing was staged on Mars.'],
