@@ -56,6 +56,8 @@ window.SITE = {
     {text: 'You are doing better than you think.'},
     {text: 'All models are wrong, but some of them are useful.'},
     {text: 'Rest is productive.'},
+    {text: 'Done is better than perfect.'},
+    {text: 'Progress isn\'t linear.'},
     {text: 'Stay hydrated.'}
   ],
 
@@ -219,7 +221,9 @@ window.SITE = {
     ['', 'Socrates was mortal before God was dead.'],
     ['', 'Correlation does not imply causation. People do. Therefore, people are not correlation.'],
     ['', 'The Moon landing was staged on Mars.'],
-    ['', 'This statement is false.']
+    ['', 'This statement is false.'],
+    ['', 'It\'s okay to not know yet'],
+    ['', 'Every expert was once a beginner.'],
     ['', 'Anything that can be written in JavaScript, will eventually be written in JavaScript'],
   ]
 };
