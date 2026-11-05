@@ -2842,9 +2842,9 @@ RV.hooks.wipe = () => {
   for (const [ms, els, msg] of steps) setTimeout(() => { els.filter(Boolean).forEach(e => e.classList.add('rm-gone')); RV.say(msg); }, ms);
   setTimeout(() => { RV.say("removed '/bin/bash' <span class=\"m\">(the shell you are typing into)</span>"); RV.disintegrate(2600, 0.5); }, 2600);   // the dock and the terminal start coming apart
   setTimeout(() => RV.say('<span class="r">rm: cannot remove \'/hedgehog\': Operation not permitted</span> <span class="m">(protected species)</span>'), 3400);
-  setTimeout(() => RV.say('<span class="r">Kernel panic - not syncing: no lake found</span>'), 5000);
-  setTimeout(() => { hero.querySelectorAll('.rm-gone').forEach(e => e.classList.remove('rm-gone')); RV.reintegrate(); RV.say('<span class="m">…rebooting from the backup. there is always a backup.</span>'); }, 6600);
-  setTimeout(() => { hero.classList.remove('wiping'); applyGround(); wiping = false; RV.say('the lake is read-only. nice try, though.'); }, 7400);
+  setTimeout(() => RV.say('<span class="r">Kernel panic - not syncing: no lake found</span>'), 5100);
+  setTimeout(() => { hero.querySelectorAll('.rm-gone').forEach(e => e.classList.remove('rm-gone')); RV.reintegrate(); RV.say('<span class="m">…rebooting from the backup.</span>'); }, 6700);
+  setTimeout(() => { hero.classList.remove('wiping'); applyGround(); wiping = false; RV.say('the lake is read-only. nice try, though.'); }, 7500);
   return ["rm: descending into '/'…"];
 };
 
