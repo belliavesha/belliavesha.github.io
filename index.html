@@ -451,6 +451,12 @@ const pk = a => Array.isArray(a) ? a[mobile ? 1 : 0] : a;
    per frame: the per-frame loop only blits the cached jetty. */
 const SK = SCENE.sketch;
 const PERF = { res: SCENE.perf.res, fps: Math.max(1, SCENE.perf.fps), slow: false };   // the live settings (they step down once on a slow machine)
+// while the browser window isn't focused (the visitor is working in another window) and the pointer isn't over the page, the canvas idles at a few frames a second
+const FOCUS = { on: document.hasFocus(), hover: 0, fps: 8 };
+addEventListener('focus', () => { FOCUS.on = true; });
+addEventListener('blur', () => { FOCUS.on = false; });
+document.addEventListener('pointermove', () => { FOCUS.hover = performance.now(); }, { passive: true });
+const idling = now => !FOCUS.on && now - FOCUS.hover > 3000;
 if (/[?&]sketch=0\b/.test(location.search)) SK.on = false;   // ?sketch=0: the same page without the pencil (for comparing)
 const f1 = n => n.toFixed(1);
 let PR = rng(1);                                         // the pencil's own dice (never the scene's R: with the pencil off, the scene is unchanged)
@@ -1130,6 +1136,7 @@ function xmasBind() {
 function xmasGlow() { for (const g of fg.querySelectorAll('.xmas')) g.style.setProperty('--xk', (0.3 + 0.7 * (S.nightK || 0)).toFixed(2)); }   // the halos are faint by day
 function xmasStep(force) {
   const n = XM.els.length; if (!n || (force !== true && !visible)) return;
+  if (force !== true && idling(performance.now()) && performance.now() - XM.last < 1000 / FOCUS.fps - 3) return;   // the window unfocused: the lights idle too
   const now = performance.now(), dt = (now - XM.last) / 1000; XM.last = now;
   if (now > XM.until) xmasRandom();
   const t = (now - XM.t0) / 1000, sp = XM.spd, calm = reduced(), pat = calm ? 7 : XM.pat;
@@ -3010,22 +3017,28 @@ function perfStepDown() {
   const eff = r => Math.min(r, window.devicePixelRatio || 1);                  // what the screen actually gets
   if (eff(SCENE.perf.slowRes) < eff(PERF.res)) { PERF.res = SCENE.perf.slowRes; layout(); renderStatic(); drawFrame(performance.now() / 1000); drawWx(); }
 }
+let lastLoop = 0;
 function loop(now) {
+  const idle = idling(now);
+  if (idle && now - lastLoop < 1000 / FOCUS.fps - 3) { requestAnimationFrame(loop); return; }   // idling: everything (hedgehog, apple, canvas) at a few frames a second
+  lastLoop = now;
   stepReveal(now);
-  const dt = clamp((now - lastT) / 1000, 0, 0.04); lastT = now;   // (the first rAF stamp can predate lastT: a negative dt walked the hedgehog backwards into RUNF[-1])
+  const el = clamp((now - lastT) / 1000, 0, idle ? 0.5 : 0.04); lastT = now;   // (the first rAF stamp can predate lastT: a negative dt walked the hedgehog backwards into RUNF[-1])
+  const nSub = Math.max(1, Math.ceil(el / 0.04 - 1e-9)), dt = el / nSub;        // an idling frame is stepped in the same small steps as a live one (live: always one step, as before)
   const t = now / 1000;
   const fading = [RMS.stars, RMS.sun, RMS.moon].some(t => t && now - t < STARS_FADE * 1000 + 600);
   if (fading && now - lastTick > 100) { lastTick = now; tick(true); }   // rm stars / sun / moon: the light drains away
   else if (!fading && loop.fading) { lastTick = now; tick(); }          // …and once it has, one full tick
   loop.fading = fading;
   if (now - lastTick > (RV.speed() > 1 ? 1000 : S.w && S.w.sinceEnd < 12 ? 4000 : 20000)) { lastTick = now; tick(); }
-  updateHog(dt);
-  stepApple(dt);
+  for (let k = 0; k < nSub; k++) { updateHog(dt); stepApple(dt); }
   if (visible) {
-    stepParticles(dt, t); stepStones(t); stepFish(t); stepMeteors(dt); stepLake(dt); stepFilter(dt);
+    for (let k = 0; k < nSub; k++) { stepParticles(dt, t); stepMeteors(dt); stepLake(dt); stepFilter(dt); }
+    stepStones(t); stepFish(t);
     const busy = stones.length || fish.st !== 'idle' || rings.length || (puffs.length && !reduced()) || drops.length || snow.length || meteors.length || STARQ.length || LAKE.k > 0 || PF.spin;
     const animate = !reduced() || busy || needDraw;
-    if (animate && now - lastDraw > 1000 / PERF.fps - 3) { drawFrame(t); drawWx(); lastDraw = now; needDraw = false; perfWatch(now, animate && !reduced()); }
+    const fps = idle ? Math.min(FOCUS.fps, PERF.fps) : PERF.fps;
+    if (animate && now - lastDraw > 1000 / fps - 3) { drawFrame(t); drawWx(); lastDraw = now; needDraw = false; perfWatch(now, animate && !reduced() && !idle); }   // (an idling page isn't a slow machine)
   }
   requestAnimationFrame(loop);
 }
