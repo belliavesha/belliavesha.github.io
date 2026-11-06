@@ -84,6 +84,8 @@ button{font:inherit;color:inherit}
 #sky{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
 .fg{position:absolute;inset:0;z-index:2;pointer-events:none;width:100%;height:100%;overflow:visible}
 .fg .foot{animation:footfade 22s linear forwards}
+.fg .xl{transition:opacity .12s linear}   /* the Christmas lights: a bulb's glow fades in and out (see xmasStep) */
+.fg .xh{opacity:var(--xk,1)}
 .hero.ready .fg .ground{transition:fill 18s linear}
 @keyframes footfade{from{opacity:.55}to{opacity:0}}
 #wx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
@@ -332,6 +334,7 @@ function computeState() {
   S.leaves = md >= 1105 || md < 501 ? 'bare' : md < 521 ? 'mouse' : md < 901 ? 'green' : md < 926 ? 'turning' : md < 1021 ? 'gold' : 'falling';
   S.flowers = md >= 415 && md <= 610; S.blueberries = md >= 705 && md <= 831; S.lingon = md >= 820 && md <= 1015;
   S.fallen = md >= 920 && md <= 1130; S.hibernate = md >= 1101 || md <= 415;
+  { const lq = /[?&]lights=(on|off)\b/.exec(location.search); S.xmas = lq ? lq[1] === 'on' : md >= 1220 || md <= 107; }   // Christmas lights on the birch: 20 Dec – 7 Jan (?lights=on|off to try them out of season)
   S.fallenCol = ['#D9A33A', '#BF7430'];
   if (RMS.leaves) { if (!S.fallen && (S.leaves === 'green' || S.leaves === 'mouse')) S.fallenCol = ['#7C8C4E', '#8A9A55']; S.leaves = 'bare'; S.fallen = true; }   // rm leaves: all of them on the ground
   if (RMS.snow || dry()) S.snowGround = false;                             // rm snow · rm water (snow is water too)
@@ -399,7 +402,7 @@ const SCENE = {
     lair: 0.2,                  // the hedgehog's lair (a hole in the plinth), ÷ front width from the left wall
   },
   mailbox: { height: 0.5, x: 0.8 },    // height ÷ wall height · its centre sits this many mailbox-widths left of the house's left wall
-  birch: { x: 0.18, top: [-40, -40], width: [26, 16], lean: [14, 5], limbs: [14, 8], limbLength: [215, 92], curtain: [118, 50] },
+  birch: { x: 0.18, top: [-40, -40], width: [26, 16], lean: [14, 5], limbs: [14, 8], limbLength: [330, 110], curtain: [118, 50] },
   //       trunk ÷ front width from the left wall · trunk top (px; null = just below the text) · trunk width px · lean px · limbs · limb length px · hanging-twig length px
   rainbow: { spread: 3.0, width: 1.25, fade: [3, 24], baseBoost: 1.2, alpha: 0.62 },
   //         colour-band spread (1 = a thin bow) · stroke width · fully bright below fade[0]°, gone above fade[1]° · extra width at the base · opacity
@@ -871,7 +874,9 @@ function placeThings() {
 const inPoly = (x, y, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) if ((P[i][1] > y) !== (P[j][1] > y) && x < (P[j][0] - P[i][0]) * (y - P[i][1]) / (P[j][1] - P[i][1]) + P[i][0]) c = !c; return c; };
 
 /* ---------- the birch: a silver birch, grown procedurally — long arching limbs and hanging curtains of twigs ---------- */
+let LIMBS = [];                                          // the main limbs ({ pts, side, tx: the trunk's x where it leaves }), for the Christmas lights (see xmasSVG)
 function birchSVG(R, night, topY, gy, tx, tww) {
+  LIMBS = [];
   const out = { limbs: [], twigs: new Map(), leaves: new Map(), snow: [] };   // (twigs and leaves are pooled by look into a handful of <path>s — ~2,000 elements fewer to parse, style and paint)
   const pool = (m, key, d) => { const a = m.get(key); if (a) a.push(d); else m.set(key, [d]); };
   const sc = mobile ? 0.62 : 1;
@@ -933,7 +938,7 @@ function birchSVG(R, night, topY, gy, tx, tww) {
     const a0 = 14 + R() * 26 + u0 * 30, a1 = 70 + R() * 55 + u0 * 30;                                       // steep at the top, flatter and droopier below
     const x0 = tx(y0) + side * tww(y0) * 0.25;
     const pts = grow2(x0, y0, side, a0, a1, len, 26, 0.18 + R() * 0.3);
-    out.limbs.push(stroke(pts, Math.max(1.2, tww(y0) * 0.26), 0.55, 0.62));
+    out.limbs.push(stroke(pts, Math.max(1.2, tww(y0) * 0.26), 0.55, 0.62)); LIMBS.push({ pts, side, tx: tx(y0) });
     if (S.snowGround) out.snow.push(`<path d="${path(pts.slice(1, 12))}" transform="translate(0,-1.4)" stroke="${night ? '#C9D2DA' : '#FBFCFD'}" stroke-opacity=".85" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-dasharray="${(14 + RS() * 20).toFixed(0)} ${(8 + RS() * 14).toFixed(0)}"/>`);
     const ex = tx(y0), ew = tww(y0);
     out.limbs.push(`<path d="M${(ex - ew * 0.5).toFixed(1)} ${(y0 + 3).toFixed(1)} Q${ex.toFixed(1)} ${(y0 - 4).toFixed(1)} ${(ex + ew * 0.5).toFixed(1)} ${(y0 + 3).toFixed(1)} Q${ex.toFixed(1)} ${(y0 + 1).toFixed(1)} ${(ex - ew * 0.5).toFixed(1)} ${(y0 + 3).toFixed(1)}Z" fill="var(--bark-mark)" opacity=".8"/>`);
@@ -984,7 +989,7 @@ function buildFG0() {
   const tww = y => tw * (0.42 + 0.58 * Math.pow(tu(y), 0.8));
   let Lp = '', Rr = '';
   for (let y = topY; y <= gy + 10; y += 8) { Lp += `${(tx(y) - tww(y) / 2).toFixed(1)} ${y.toFixed(1)} `; Rr = `${(tx(y) + tww(y) / 2).toFixed(1)} ${y.toFixed(1)} ` + Rr; }
-  const crown = birchSVG(R, night, topY, crownBase, tx, tww);
+  const crown = birchSVG(R, night, topY, crownBase, tx, tww), xm = xmasSVG();
   const marks = [];
   for (let y = topY + 6; y < crownBase + 40; y += 5 + R() * 15) {
     const w = tww(y), left = R() < 0.5, ml = w * (R() < 0.18 ? 0.7 + R() * 0.3 : 0.15 + R() * 0.4);
@@ -1044,9 +1049,110 @@ function buildFG0() {
     shadowSk = fringe([CAB.x0 - 12, CAB.base + 1], [W + 6, CAB.base + 1], [-0.6, 1], 13, { op: 1.1, gap: 0.8 }) +   // the cabin's shadow on the grass
       fringe([MB.left + MB.w * 0.1, MB.base + 2], [MB.left + MB.w * 0.85, MB.base + 2], [-0.5, 1], 6, { op: 0.9, gap: 0.8 });   // and the mailbox's
   }
-  fg.innerHTML = `<g class="st-lake">${lakeSketch()}</g><g class="st-birch">${crown}<path d="M${Lp}L${Rr}Z" fill="var(--bark)"/>${marks.join('')}${trunkSk}${twig}</g>` +
+  fg.innerHTML = `<g class="st-lake">${lakeSketch()}</g><g class="st-birch">${crown}${xm.back}<path d="M${Lp}L${Rr}Z" fill="var(--bark)"/>${marks.join('')}${trunkSk}${twig}${xm.front}</g>` +
     `<g class="st-land"><path class="ground" d="${d}" fill="var(--ground, var(--paper))"${SK.on ? '' : ' style="filter:drop-shadow(0 -1px 2px rgba(0,0,0,.14))"'}/>${landSk}${pile}${det}</g>` +
     `<g class="st-house">${shadowSk}${cabinSVG(R, night)}</g><g id="feet"></g>`;
+  xmasBind();
+}
+/* ---------- Christmas lights on the birch (S.xmas: 20 Dec – 7 Jan): one wire wound up the crown in catenaries, red, green, blue and yellow bulbs, eight patterns of blinking (see xmasStep) ---------- */
+const XCOL = ['#E4372E', '#3FB552', '#3F86E0', '#F4C430'];
+function xmasSVG() {                                    // one wire, wound up the crown: from branch to branch, alternately across the front and round the back, hanging in catenaries
+  const none = { front: '', back: '' };
+  if (!S.xmas || LIMBS.length < 2) return none;
+  const RX = rng(hashStr('xmas' + W)), gap = mobile ? 13 : 16, rb = mobile ? 3.15 : 3.9, f = n => n.toFixed(1);   // (their own dice: the tree itself is the same with or without them)
+  // where the wire may rest: anywhere on the outer two thirds of a limb
+  const cand = [];
+  for (const { pts, side, tx } of LIMBS) for (let k = Math.round(0.3 * (pts.length - 1)); k <= Math.round(0.85 * (pts.length - 1)); k++) cand.push({ x: pts[k][0], y: pts[k][1] - 0.8, side, r: Math.abs(pts[k][0] - tx) });
+  // the climb: evenly spaced turns, alternately left and right, from the bottom of the crown to the top; each rests on the limb point nearest
+  // its height, about three quarters of the way out (a little further in towards the top, where the crown narrows)
+  const yB = Math.max(...cand.map(c => c.y)) - 6, yT = Math.min(...cand.map(c => c.y)) + 6, step = mobile ? 34 : 46;
+  const nT = Math.max(2, Math.round((yB - yT) / step)), rMax = { '-1': 1, '1': 1 };
+  for (const c of cand) rMax[c.side] = Math.max(rMax[c.side], c.r);
+  const seq = []; let side = RX() < 0.5 ? -1 : 1;
+  for (let k = 0; k <= nT; k++, side = -side) {
+    const yt = yB - (yB - yT) * k / nT, want = rMax[side] * (0.74 - 0.26 * k / nT) * (0.92 + 0.16 * RX());
+    let best = null, bs = Infinity;
+    for (const c of cand) if (c.side === side) { const sc = Math.abs(c.y - yt) + 0.4 * Math.abs(c.r - want); if (sc < bs) { bs = sc; best = c; } }
+    if (best && (!seq.length || best.y < seq[seq.length - 1].y + 4)) seq.push(best);   // (never back down)
+  }
+  if (seq.length < 2) return none;
+  // a catenary through (x1,y1) and (x2,y2) with parameter a (screen y grows downwards): y = ym − a(cosh((x − x0)/a) − 1)
+  const caten = (p, q) => {
+    const span = Math.abs(q.x - p.x) || 1, a = span / (1.7 + 0.4 * RX()), dir = q.x > p.x ? 1 : -1;
+    const x1 = p.x, x2 = q.x, xm = (x1 + x2) / 2;
+    const u = x => (x - x0) / a;
+    // y1 − y2 = a(cosh u2 − cosh u1) = 2a sinh((xm − x0)/a) sinh(span/2a)·dir
+    const x0 = xm - a * Math.asinh((p.y - q.y) / (2 * a * Math.sinh(span / (2 * a)) * dir));
+    const ym = p.y + a * (Math.cosh(u(x1)) - 1);
+    const n = Math.max(8, Math.ceil(span / 4)), out = [];
+    for (let k = 0; k <= n; k++) { const x = x1 + (x2 - x1) * k / n; out.push([x, ym - a * (Math.cosh(u(x)) - 1)]); }
+    return out;
+  };
+  const parts = { front: { wire: '', stubs: '', base: '', lit: '' }, back: { wire: '', stubs: '', base: '', lit: '' } };
+  let i = 0, carry = gap * (0.3 + 0.5 * RX());
+  for (let k = 0; k < seq.length - 1; k++) {
+    const P = parts[k % 2 ? 'back' : 'front'], c = caten(seq[k], seq[k + 1]), back = k % 2 === 1, r = back ? rb * 0.8 : rb;
+    P.wire += 'M' + c.map(q => f(q[0]) + ' ' + f(q[1])).join('L');
+    // bulbs every `gap` along the wire, carried over from span to span
+    for (let j = 1; j < c.length; j++) {
+      const sl = Math.hypot(c[j][0] - c[j - 1][0], c[j][1] - c[j - 1][1]); let d = carry;
+      while (d <= sl) {
+        const fr = d / sl, x = c[j - 1][0] + (c[j][0] - c[j - 1][0]) * fr, y = c[j - 1][1] + (c[j][1] - c[j - 1][1]) * fr, col = XCOL[i % 4], cy = y + 3 + r * 1.1;
+        P.stubs += `M${f(x)} ${f(y)}v3`;
+        P.base += `<ellipse cx="${f(x)}" cy="${f(cy)}" rx="${f(r * 0.8)}" ry="${f(r * 1.15)}" fill="${col}" fill-opacity=".5" stroke="#1d2b22" stroke-opacity=".35" stroke-width=".4"/>`;
+        P.lit += `<g class="xl" data-i="${i}" style="opacity:0"><circle class="xh" cx="${f(x)}" cy="${f(cy)}" r="${f(r * 3.3)}" fill="url(#xg${i % 4})"/><ellipse cx="${f(x)}" cy="${f(cy)}" rx="${f(r * 0.8)}" ry="${f(r * 1.15)}" fill="${col}"/><ellipse cx="${f(x - r * 0.25)}" cy="${f(cy - r * 0.35)}" rx="${f(r * 0.25)}" ry="${f(r * 0.4)}" fill="#fff" fill-opacity=".7"/></g>`;
+        i++; d += gap * (0.9 + 0.2 * RX());
+      }
+      carry = d - sl;
+    }
+  }
+  const defs = XCOL.map((c, k) => `<radialGradient id="xg${k}"><stop offset="0" stop-color="${c}" stop-opacity=".62"/><stop offset=".45" stop-color="${c}" stop-opacity=".22"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`).join('');
+  const g = (P, cls, extra) => `<g class="xmas${cls}"${extra}>${cls ? '' : `<defs>${defs}</defs>`}<path d="${P.wire}" stroke="#2E5A3A" stroke-opacity=".9" stroke-width="${mobile ? 0.8 : 1}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${P.stubs}" stroke="#2E5A3A" stroke-opacity=".9" stroke-width="${mobile ? 0.8 : 1}" fill="none"/>${P.base}${P.lit}</g>`;
+  return { front: g(parts.front, '', ''), back: g(parts.back, ' back', ' opacity=".62"') };   // round the back: behind the trunk, a little dimmer and smaller
+}
+// how the string blinks: a pattern × a speed × a direction along the wire (up from the bottom, or down from the top), changed every 8–18 s.
+// One bulb, picked at random once, is faulty: always the opposite of what it should be.
+const XPAT = ['colours', 'blink', '3on3off', 'fill', 'drain', 'snakes', 'twinkle', 'steady'], XSPD = ['fast', 'regular', 'slow'], XDIR = ['up', 'down'];
+const XM = { els: [], on: [], rnd: [], pat: -1, spd: 1, dir: 0, bad: -1, t0: 0, last: 0, until: 0, timer: 0 };   // (els in order along the wire, from the bottom up)
+function xmasMode(pat, spd, dir) {
+  const n = XM.els.length; Object.assign(XM, { pat, spd, dir }); XM.t0 = XM.last = performance.now(); XM.until = XM.t0 + (8 + 10 * Math.random()) * 1000;
+  XM.rnd = Array.from({ length: n }, () => Math.random() < 0.5);
+}
+const xmasRandom = () => { let p; do { p = Math.floor(Math.random() * XPAT.length); } while (p === XM.pat); xmasMode(p, Math.floor(Math.random() * 3), Math.floor(Math.random() * 2)); };
+function xmasBind() {
+  XM.els = [...fg.querySelectorAll('.xmas .xl')].sort((a, b) => a.dataset.i - b.dataset.i); XM.on = new Array(XM.els.length).fill(-1);
+  const n = XM.els.length; if (!n) return;
+  if (XM.bad < 0) XM.bad = Math.floor(Math.random() * n); else XM.bad %= n;
+  if (XM.pat < 0) xmasRandom(); else xmasMode(XM.pat, XM.spd, XM.dir);
+  xmasStep(true); xmasGlow();
+  if (!XM.timer) XM.timer = setInterval(xmasStep, 40);
+}
+function xmasGlow() { for (const g of fg.querySelectorAll('.xmas')) g.style.setProperty('--xk', (0.3 + 0.7 * (S.nightK || 0)).toFixed(2)); }   // the halos are faint by day
+function xmasStep(force) {
+  const n = XM.els.length; if (!n || (force !== true && !visible)) return;
+  const now = performance.now(), dt = (now - XM.last) / 1000; XM.last = now;
+  if (now > XM.until) xmasRandom();
+  const t = (now - XM.t0) / 1000, sp = XM.spd, calm = reduced(), pat = calm ? 7 : XM.pat;
+  const beat = [0.3, 0.6, 1.2][sp], k = Math.floor(t / beat);                       // blink, 3on3off, colours: one change per beat
+  const sk = Math.floor(t / [0.05, 0.1, 0.2][sp]);                                   // snakes: one bulb per step
+  const fT = [3, 6, 10][sp] / n, hold = 0.8, fk = Math.floor(((t % (n * fT + hold)) / fT));   // fill, drain: one bulb per step, the whole string in 3 / 6 / 10 s, then a pause
+  if (pat === 6) { const pf = Math.min(1, [3, 1.5, 0.6][sp] * dt); for (let i = 0; i < n; i++) if (Math.random() < pf) XM.rnd[i] = !XM.rnd[i]; }
+  for (let i = 0; i < n; i++) {
+    const j = XM.dir ? n - 1 - i : i;                                                // position along the wire, in the direction of travel
+    let v;
+    switch (pat) {
+      case 0: v = i % 4 === ((XM.dir ? -k : k) % 4 + 4) % 4; break;                 // one colour at a time: the lit ones step along the wire
+      case 1: v = k % 2 === 0; break;                                                // all together
+      case 2: v = Math.floor(i / 3) % 2 === k % 2; break;                            // three on, three off, swapping
+      case 3: v = j < fk; break;                                                     // from all off, one more on each step
+      case 4: v = j >= fk; break;                                                    // from all on, one more off each step
+      case 5: v = ((j - sk) % 16 + 16) % 16 < 8; break;                              // eight on, eight off, crawling along
+      case 6: v = XM.rnd[i]; break;                                                  // each bulb on its own
+      default: v = true;                                                             // steady (and always, with the motion calmed)
+    }
+    if (i === XM.bad) v = !v;                                                        // the faulty one
+    const o = v ? 1 : 0; if (XM.on[i] !== o) { XM.on[i] = o; XM.els[i].style.opacity = o; }
+  }
 }
 /* the red cabin (Falu red, white trim): gable end towards the lake, on a stone plinth with the hedgehog's lair dug in under it */
 function cabinSVG(R, night) {
@@ -2045,12 +2151,12 @@ function applyGround() {
   if (S.voidK > 0) col = mix(col, [2, 3, 3], 0.75 * S.voidK);
   col = mix(col, [0, 0, 0], 0.16 * S.cloud * (1 - nk));                  // a little duller under a grey sky
   hero.style.setProperty('--ground', rgba(col));
-  hogEl.style.setProperty('--inv', nk.toFixed(3));
+  hogEl.style.setProperty('--inv', nk.toFixed(3)); xmasGlow();
   hero.style.setProperty('--paper-k', (SK.grain * (1 - 0.4 * nk)).toFixed(3));   // the paper's grain, a little fainter at night
 }
 /* ---------- tick: every 20 s (or every second in a time-lapse) ---------- */
 let lastTheme = null;
-const themeKey = () => S.night + S.leaves + S.snowGround + S.frozen + S.lamp;   // what the foreground SVG depends on
+const themeKey = () => S.night + S.leaves + S.snowGround + S.frozen + S.lamp + S.xmas;   // what the foreground SVG depends on
 function tick(light) {                                   // light: during a fade (rm sun …), skip the contrast check, the saved wash and the chip
   computeState();
   applyTheme(); applyGround();
@@ -2969,6 +3075,8 @@ const HOOKS = {
   poisson: n => { const a = []; for (let i = 0; i < n; i++) a.push(poissonSkips()); return a; },
   chantWord, leipaa,
   recheck: () => tick(), win: Win,
+  get lights() { const g = fg.querySelector('.xmas'); return { n: XM.els.length, pattern: XPAT[XM.pat], speed: XSPD[XM.spd], dir: XDIR[XM.dir], bad: XM.bad, lit: XM.on.filter(v => v === 1).length, on: XM.on.slice(), xmas: !!S.xmas, xk: g ? g.style.getPropertyValue('--xk') : null, left: Math.round(XM.until - performance.now()) }; },
+  setLights: (p, sp = 1, d = 0) => xmasMode(typeof p === 'string' ? XPAT.indexOf(p) : p, sp, d),
   get timing() { return { ...TIMING }; },
   get perf() { return { ...PERF, watch: { ...PW }, dpr: DPR }; }, slow: () => perfStepDown(),
   get meteors() { return { live: meteors.length, total: METN, mags: meteors.map(m => +m.m.toFixed(1)) }; }, get lake() { return { ...LAKE }; }, get filter() { return { ...PF }; }
