@@ -971,10 +971,14 @@ const TOS = (() => {
   };
   // ── the grammar: who does what to whom. The clauses below are built from these, not from the lists directly ──
   const cap = t => t[0].toUpperCase() + t.slice(1);
-  const P = () => Math.random() < 0.2 ? officer() : pick(W.party);   // someone who acts, the subject (now and then an official)
-  const who = () => { const r = Math.random(); return r < 0.2 ? officer() : r < 0.4 ? pick(W.being) : pick(W.party); };   // someone to act upon or answer to
+  let answer = false;                                   // Article XLII: every number is 42 (see to42)
+  let demon = false;                                    // Article DCLXVI: the Demon takes part in every clause (see demonClause)
+  const DEMON_NAME = 'Maxwell\'s Demon';
+  const P = () => demon && Math.random() < 0.9 ? DEMON_NAME : Math.random() < 0.2 ? officer() : pick(W.party);   // someone who acts, the subject (now and then an official)
+  const whoElse = () => { const r = Math.random(); return r < 0.2 ? officer() : r < 0.4 ? pick(W.being) : pick(W.party); };   // (never the Demon)
+  const who = () => demon && Math.random() < 0.4 ? DEMON_NAME : whoElse();   // someone to act upon or answer to
   const an = w => (/^[aeiou]/i.test(w) && !/^(uni|use|one|eu)/i.test(w) ? 'an ' : 'a ') + w;   // “an apple”, “a unicorn”
-  const some = (det = pick(['any', 'every', 'a', 'one (1)', 'each', 'some']), adj = Math.random() < 0.25) => {   // a noun with its determiner (and now and then an adjective)
+  const some = (det = pick(answer ? ['any', 'every', 'a', 'each', 'some'] : ['any', 'every', 'a', 'one (1)', 'each', 'some']), adj = Math.random() < 0.25) => {   // a noun with its determiner (and now and then an adjective)
     const n = (adj ? pick(W.adj) + ' ' : '') + pick(W.noun);   //   “any typo” · “an unresolved apple” · “one (1) dubious footnote”
     return det === 'a' ? an(n) : `${det} ${n}`;
   };
@@ -985,7 +989,7 @@ const TOS = (() => {
   const num = n => `${words(n)} (${n})`;                 // 30 → “thirty (30)”
   const when = () => {                                   // a deadline: half the time a fixed one, else a numbered one
     if (Math.random() < 0.5) return pick(W.when);         //   “within three (3) hedgehog-lengths” · “no later than one (1) Hubble time after the ice-out”
-    const n = pick([1, 1, 2, 3, 3, 5, 7, 12, 30, 42, 48, 50, 99]), [one, many] = pick(W.unit).split('|'), u = `${num(n)} ${n === 1 ? one : many}`;
+    const n = answer ? 42 : pick([1, 1, 2, 3, 3, 5, 7, 12, 30, 42, 48, 50, 99]), [one, many] = pick(W.unit).split('|'), u = `${num(n)} ${n === 1 ? one : many}`;
     return pick([`within ${u}`, `within ${u}`, `no later than ${u} after ${pick(W.event)}`, `at least ${u} before ${pick(W.event)}`]);
   };
   const cond = () => `${pick(W.cond)} ${pick(W.circ)}`;  // “provided always that the Hedgehog is asleep”
@@ -1140,18 +1144,99 @@ const TOS = (() => {
     if (/[a-z0-9)”]\.$/.test(t)) at.push(() => `${t.slice(0, -1)}, ${f}.`);   // at the end (only a plain full stop: not after a list or a ∎)
     return at.length ? at[Math.floor(Math.random() * at.length)]() : t;
   }
-  function chunk() {                                      // one Article: a heading and 3–7 clauses
+  // ── three Articles that are not like the others ──
+  //  XXII (Catch-22): fixed clauses, each one a catch of its own kind (Heller's, the fisherman's, the cricketer's, the programmer's, the salesman's).
+  //  CDIV (404): a single clause, which is not found.
+  //  DCLXVI (the number of the beast): exactly thirteen clauses, each with Maxwell's Demon in it (see demonClause).
+  const SPECIAL = { 22: 'Catch-22 (see Article XXII)', 42: 'Ultimate Questions', 69: 'Nice.', 99: 'Problems', 404: 'Not Found', 666: 'Demonology (Maxwell, 1867)' };   // (headings; the clauses of 42, 69 and 99 are as usual, those of 42 with every number made 42)
+  //  XIII is not: it is XIIB, as there is no thirteenth floor (and its clauses are 12B.1, 12B.2 …).
+  //  III has fourteen clauses, the last of them a joke about π.
+  const PI = [
+    `The ratio of the circumference of this clause to its diameter is approximately three (3), and the Parties agree not to measure it.`,
+    `The Parties agree that pies are round and cornbread is square; the Claimant may exchange the Fifty Dollars for a pie, but not for a circumference.`,
+    `For the purposes of this Agreement, π shall be taken to be twenty-two sevenths (22/7), as in Article XXII, and is hereby declared to be nearly right.`,
+    `Should the Claimant recite π to fifty (50) decimal places, the Fifty Dollars shall be paid in full; should the Claimant reach its last digit, the Claimant shall be deemed to have read this Agreement to the end.`,
+    `Any circle drawn in connection with this Agreement shall be deemed round to within one (1) hedgehog; any circle that is not shall be returned to the Claimant, to be squared.`,
+    `This clause shall be celebrated on the fourteenth of March, at 1:59 in the afternoon, and shall be deemed to have been celebrated in the absence of cake.`,
+    `The digits of π are hereby declared to contain this Agreement somewhere, infinitely often; the Claimant is invited to look for it, and shall not be deemed to have found it.`,
+    `This clause is irrational. It neither terminates nor repeats, and shall not be expressed as the ratio of two (2) clauses.`,
+    `All circles under this Agreement shall be measured in τ (2π), the Parties who prefer π being deemed to have gone only half way.`
+  ];
+  // XLII: every number in a clause is forty-two. The numbers made in the grammar already are (answer); this makes the rest 42:
+  //   the paired ones (“fifty (50) dollars”), then any other figure (“Gödel, 1931”, “±100%”, “Clause 12.3”), leaving tags and entities alone.
+  const to42 = t => {
+    for (const m of [...t.matchAll(/\((\d+)\)/g)]) { const w = words(+m[1]); if (w) t = t.replace(`${w} (${m[1]})`, 'forty-two (42)'); }
+    t = t.split(/(<[^>]+>)/).map(p => p[0] === '<' ? p : p.replace(/(&#?\w+;)|\d+(?:[.,]\d+)*/g, (m, e) => e || '42')).join('');
+    return t.replace(/(forty-two \(42\) (?:Business Day|Hubble time|apple|bit|Cow))\b/g, '$1s');   // (“forty-two (42) apples”, not “apple”)
+  };
+  const CATCH22 = [
+    `Any Claimant may be released from this Agreement on grounds of insanity, provided that the Claimant applies; any Claimant who applies to be released from this Agreement is thereby shown to be sane, and is not released.`,
+    `Only a Claimant who had lost all reason would keep reading this Agreement; a Claimant who has stopped reading it is therefore in full possession of their senses, and is required to continue.`,
+    `The Fifty Dollars shall be paid only to a Claimant who does not need them; any Claimant who does not need them shall not apply, and any Claimant who does apply is deemed to need them.`,
+    `A claim under this Agreement requires prior experience of making a claim under this Agreement. Experience may be gained only by making a claim under this Agreement.`,
+    `Should any exception be thrown by this Agreement, it shall be caught by Article XXII, which shall throw it again, to be caught by Article XXII.`,
+    `A fish shall not be deemed to have been caught until it has been released; a fish that has been released shall not be deemed to have been caught. The Hedgehog, who has never been caught, shall be the judge.`,
+    `There is no catch. Should the Claimant nevertheless discover a catch, it is this clause.`,
+    `Exemption from this Article shall be granted only to Parties who are not bound by it; a Party who is not bound by this Article is not a Party, and is therefore not exempt.`,
+    `This Article shall take effect once it has taken effect, as shall be announced in the Notice of Taking Effect, which shall be published once this Article has taken effect.`
+  ];
+  const NOTFOUND = [`Article CDIV could not be found. It was here a moment ago, but has since been moved, deleted or never written. The Claimant is invited to check the spelling of this Agreement and to try again.`];
+  const DEMONS = [   // the Demon's own clauses: for Article DCLXVI, a half of them (the rest are the ordinary patterns, with the Demon made the party)
+    () => `${DEMON_NAME} shall guard the door between the Claimant and ${obj()}, opening it only for the fast particles, ${cond()}.`,
+    () => `${DEMON_NAME} hereby acknowledges that ${pick(W.fact)}, and that the cost of knowing so has been charged to ${whoElse()}.`,
+    () => `The cost of erasing one (1) bit of memory by ${DEMON_NAME} is kT ln 2, payable by ${whoElse()} ${when()}, ${cond()}.`,
+    () => `${cap(P())} shall not be held responsible for the Second Law of Thermodynamics, which ${DEMON_NAME} has been seen violating ${when()}.`,
+    () => `Any Party observed by ${DEMON_NAME} shall be deemed to have been measured, and shall therefore be ${pred()}.`,
+    () => `In the event of a dispute between ${DEMON_NAME} and ${whoElse()}, the matter shall be ${pick(['referred', 'submitted'])} to ${inst()}, which shall be warmer on one side than on the other.`,
+    () => `${DEMON_NAME} is hereby appointed ${officer()}, a post he may fill without doing any work, ${cond()}.`,
+    () => `Neither ${whoElse()} nor ${DEMON_NAME} shall ${pick(W.verb)} ${obj()} ${when()}, as that would count as work.`,
+    () => `The temperature of this Article shall be uniform, save for ${ref()}, which ${DEMON_NAME} has made warmer than the rest.`,
+    () => `If ${DEMON_NAME} is ever found to exist, the Second Law of Thermodynamics shall be deemed repealed; until then, it is deemed merely to have been strongly implied.`,
+    () => `For the avoidance of doubt, ${DEMON_NAME} is neither a Party, an Officer nor a Hedgehog, and shall not ${pick(W.verb)} ${obj()}, ${cond()}.`,
+    () => `The Claimant may ask ${DEMON_NAME} to ${deed()}; ${DEMON_NAME} shall refuse, on the grounds that the information is worth more than the work.`,
+    () => `All demons other than ${DEMON_NAME} are hereby excluded from this Agreement, with the exception of Laplace's Demon, who has known about this clause since ${pick(W.event)}.`,
+    () => `${DEMON_NAME}, being ${pick(W.adj)}, shall ${deed()} ${when()}.`,
+    () => `Entropy shall not decrease in any part of this Agreement, except where ${DEMON_NAME} is looking.`
+  ];
+  const DEVIL = [                                        // the first clauses of DCLXVI are always these (the Demon is in each of them)
+    `By accepting this Article the Claimant conveys, together with the Fifty Dollars, all right, title and interest in the Claimant's soul, whether or not one is found to exist, to ${DEMON_NAME}, who shall hold it in escrow, sorted by temperature, until the end of the Claimant's natural term.`,
+    `This Agreement is hereby sealed in blood, to be supplied by the Claimant in triplicate; where blood is unavailable, red ink, strong tomato soup or a nearly empty printer cartridge shall be accepted, and ${DEMON_NAME} shall admit through the door only the warm drops.`,
+    `Any sudden chill, flickering of candles or distant laughter experienced while reading this Article shall not constitute a breach of this Agreement, being included in the price; ${DEMON_NAME}, as keeper of the door, shall be deemed responsible for the draught.`
+  ];
+  let demonPool = [];
+  function demonClause() {                               // Maxwell's Demon, guaranteed: half the clauses are his own, the others are ordinary ones with the Demon in the lead
+    if (Math.random() < 0.5) {
+      demon = true;
+      try {
+        for (let i = 0; i < 60; i++) {
+          used = new Set(); let k; do { k = Math.floor(Math.random() * S.length); } while (recent.includes(k)); recent = [k, ...recent].slice(0, 14);
+          const t = fill(S[k]()); if ((t.match(/Maxwell/g) || []).length === 1) return t;   // (once: not “Neither the Demon nor the Demon …”)
+        }
+      } finally { demon = false; }                        // (sixty tries and no Demon: one of his own after all)
+    }
+    if (!demonPool.length) demonPool = DEMONS.map((_, i) => i).sort(() => Math.random() - 0.5);
+    used = new Set(); demon = true;
+    try { return DEMONS[demonPool.pop()](); } finally { demon = false; }
+  }
+  function chunk() {                                      // one Article: a heading and 3–10 clauses
     art++; cl = 0;
-    used = new Set(); let h = `<h4>Article ${ROMAN(art)}. ${art === 1 ? 'Definitions' : heading()}</h4>`;
+    used = new Set(); let h = `<h4>Article ${art === 13 ? 'XIIB' : ROMAN(art)}. ${art === 1 ? 'Definitions' : SPECIAL[art] || heading()}</h4>`;
     if (art === 1009) h += `<div class="mix"><b>Congratulations!</b><span>You have read your way to Article MIX (not to be confused with a Mix of Articles). You have read so far that you began to see real words spelled in Roman numerals! Such dedication is rarely seen. Keep scrolling until you start seeing ghosts!</span></div>`;   // 1009 = MIX
-    else if (art > 1 && Math.random() < TEASE_P) h += `<div class="tease">${tease()}</div>`;   // (now and then)
-    const n = art === 1 ? DEFS.length : 3 + Math.floor(Math.random() * 8);
+    else if (art > 1 && !SPECIAL[art] && Math.random() < TEASE_P) h += `<div class="tease">${tease()}</div>`;   // (now and then)
+    const fixed = art === 22 ? CATCH22 : art === 404 ? NOTFOUND : null;
+    if (art === 666) demonPool = [];                       // (a fresh shuffle of the Demon's own clauses: fifteen of them, ten places, so none twice)
+    const artNo = art === 13 ? '12B' : art;                // (there is no thirteenth floor)
+    answer = art === 42;
+    const n = art === 1 ? DEFS.length : fixed ? fixed.length : art === 666 ? 13 : art === 3 ? 14 : 3 + Math.floor(Math.random() * 8);
     for (let i = 0; i < n; i++) {
-      cl++; const no = `${art}.${cl}`; made.push(no);
-      used = new Set(); let k; do { k = Math.floor(Math.random() * S.length); } while (recent.includes(k)); recent = [k, ...recent].slice(0, 14);   // no pattern twice within fourteen clauses
-      const txt = art === 1 ? DEFS[i] : pending.length ? pending.shift() : fill(S[k]());
+      cl++; const no = `${artNo}.${cl}`; made.push(no);
+      used = new Set(); let k = -1;
+      if (!fixed && art !== 666) { do { k = Math.floor(Math.random() * S.length); } while (recent.includes(k)); recent = [k, ...recent].slice(0, 14); }   // no pattern twice within fourteen clauses
+      let txt = art === 1 ? DEFS[i] : fixed ? fixed[i] : art === 666 ? (i < DEVIL.length ? DEVIL[i] : demonClause()) : art === 3 && i === 13 ? PI[Math.floor(Math.random() * PI.length)] : pending.length ? pending.shift() : fill(S[k]());
+      if (answer) txt = to42(txt);
       h += `<div class="cl" data-i="${made.length}"><span class="no">${no}</span>${txt}</div>`;   // (a div: some clauses carry lists, which a <p> can’t hold)
     }
+    answer = false;
     return h;
   }
   return {
