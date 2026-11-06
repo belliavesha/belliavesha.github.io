@@ -574,7 +574,7 @@ const say = (lines, cls) => (Array.isArray(lines) ? lines : [lines]).forEach(l =
 RV.say = (html, cls) => print(html, cls === 'o warn' || cls === 'warn' ? 'r' : cls || 'o');
 function clearLog() { log.innerHTML = ''; logH = []; store.sset('log', logH); }
 function restoreLog() { log.innerHTML = logH.map(([c, h]) => `<div class="l ${c}">${h}</div>`).join(''); }
-function greet() { print(`<span class="m">moi! this is a small shell for the site. try</span> ${cmdLink('help')}<span class="m">,</span> ${cmdLink('ls')} <span class="m">or</span> ${cmdLink('weather')}<span class="m">. Tab completes, ↑ recalls. Press / anywhere on a page to get back to this line.</span>`, 'm'); }
+function greet() { print(`<span class="m">moi! this is a small shell for the site. try</span> ${cmdLink('help')}<span class="m">,</span> ${cmdLink('ls')} <span class="m">or</span> ${cmdLink('weather')}<span class="m">, some commands are unlisted, for safety. Tab completes, ↑ recalls. Press / anywhere on a page to get back to this line.</span>`, 'm'); }
 const cmdLink = (c, label) => `<button class="e a" data-run="${esc(c)}">${esc(label || c)}</button>`;
 RV.cmdLink = cmdLink;
 const onHome = () => PAGE === 'home';
