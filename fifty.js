@@ -93,7 +93,7 @@ document.body.insertAdjacentHTML('beforeend', `
     <div class="fld"><label for="cDob">Date of birth <small>(Julian date, 7 decimals)</small></label><input id="cDob" name="hog-jd" inputmode="decimal" autocomplete="off"><p class="msg" id="mDob" aria-live="polite"></p></div>
     <div class="fld"><label for="cSkip">Skips in your last throw on <a href="index.html">the lake</a></label><input id="cSkip" name="hog-skips" inputmode="numeric" autocomplete="off"><p class="msg" id="mSkip" aria-live="polite"></p></div>
     <div class="fld"><label for="cSpin">Spin of the black hole in Cyg X-1</label><input id="cSpin" name="hog-spin" inputmode="decimal" placeholder="−1 &lt; a &lt; 1" autocomplete="off"><p class="msg" id="mSpin" aria-live="polite"></p></div>
-    <div class="fld"><label for="cBack">The three numbers on the back of your credit card</label><input id="cBack" name="hog-digits" inputmode="numeric" maxlength="4" autocomplete="off" data-lpignore="true" data-1p-ignore><p class="msg" id="mBack" aria-live="polite"></p></div>
+    <div class="fld"><label for="cBack">The three numbers on the back of a credit card</label><input id="cBack" name="hog-digits" inputmode="numeric" maxlength="4" autocomplete="off" data-lpignore="true" data-1p-ignore><p class="msg" id="mBack" aria-live="polite"></p></div>
     <div class="fld"><span class="lbl">Terms and Conditions</span><div class="row"><button type="button" class="act no" id="cTerms">Read &amp; accept…</button><p class="msg" id="mTerms" aria-live="polite">not accepted yet.</p></div></div>
     <div class="fld" id="robot" hidden><span class="lbl">Confirm you are not a robot</span>
       <p class="hint">A photoelectron track in a gas pixel detector. Draw the direction in which the photoelectron set off.</p>
