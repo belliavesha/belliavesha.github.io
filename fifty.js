@@ -1218,7 +1218,7 @@ const TOS = (() => {
     if (art === 666) demonPool = [];                       // (a fresh shuffle of the Demon's own clauses: fifteen of them, ten places, so none twice)
     const artNo = art === 13 ? '12B' : art;                // (there is no thirteenth floor)
     answer = art === 42;
-    const n = art === 1 ? DEFS.length : fixed ? fixed.length : art === 666 ? 13 : art === 3 ? 14 : 3 + Math.floor(Math.random() * 8);
+    const n = art === 1 ? DEFS.length : fixed ? fixed.length : art === 666 ? 13 : art === 3 ? 14 : 3 + Math.floor(Math.random() * 9.75);
     for (let i = 0; i < n; i++) {
       cl++; const no = `${artNo}.${cl}`; made.push(no);
       used = new Set(); let k = -1;
