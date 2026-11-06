@@ -209,19 +209,10 @@ RV.weather = (ms = RV.now()) => {
   }
   return w;
 };
-const FC = { m0: null, spans: null };          // the forecast depends only on the day: worked out once per day
-RV.forecast = (ms = RV.now()) => {           // today's shower windows (local time, to the minute), [start, end] pairs
-  const m0 = localMidnight(ms);
-  if (FC.m0 === m0) return FC.spans.map(s => s.slice());
-  const spans = []; let cur = null;
-  for (let t = m0; t <= m0 + DAY; t += 6e4) { const on = precipAt(t) > 0; if (on && !cur) cur = [t, t]; if (on) cur[1] = t + 6e4; if (!on && cur) { spans.push(cur); cur = null; } }
-  if (cur) spans.push(cur);
-  // a shower that runs across midnight keeps its real start (yesterday evening) and end (tomorrow morning)
-  if (spans.length && spans[0][0] === m0) { let t = m0; while (t > m0 - DAY / 2 && precipAt(t - 6e4) > 0) t -= 6e4; spans[0][0] = t; }
-  const last = spans[spans.length - 1];
-  if (last && last[1] > m0 + DAY) { let t = last[1]; while (t < m0 + DAY * 1.5 && precipAt(t) > 0) t += 6e4; last[1] = t; }
-  FC.m0 = m0; FC.spans = spans.map(s => s.slice());
-  return spans;
+RV.rainChange = (ms = RV.now()) => {        // the natural sky's next change, within two days: { wet: is it wet now, at: when it turns dry (if wet) or wet (if dry), or null }
+  const wet = precipAt(ms) > 0;
+  for (let t = ms + 6e4; t <= ms + 2 * DAY; t += 6e4) if ((precipAt(t) > 0) !== wet) return { wet, at: t };
+  return { wet, at: null };
 };
 /* the cabin's schedule: sauna on odd days of the year in the evening (or when someone typed `sauna`);
    smoke for the sauna and all through the cold season; steam after sauna, frost on cold mornings */
@@ -352,7 +343,7 @@ function status() {
   drawDial();
   const c = $('#rvClock'); if (!c) return;
   c.classList.toggle('on', RV.simulated());
-  if (RV.simulated()) { const L = local(RV.now()); $('#rvClockT').textContent = `${L.day} ${MON[L.month - 1]} ${hm(RV.now())}${RV.speed() !== 1 ? ' ×' + RV.speed() : ''}`; c.title = 'simulated Turku time. ⟲ returns to now'; }
+  if (RV.simulated()) { const L = local(RV.now()); $('#rvClockT').textContent = `${L.day} ${MON[L.month - 1]} ${hm(RV.now())}${RV.speed() !== 1 ? ' ×' + RV.speed() : ''}`; c.title = 'simulated time at the lake. ⟲ returns to now'; }
   if (RV.hooks.wxChip) RV.hooks.wxChip();
 }
 RV.status = status;
@@ -650,21 +641,30 @@ function parseWhen(s) {
 RV.parseWhen = parseWhen;
 function describeTime() {
   const ms = RV.now(), L = local(ms), sun = sunPos(ms), sp = RV.speed();
-  return [`${when(ms)} in Turku <span class="m">(day ${L.doy} of the year, ${new Date(ms).toISOString().slice(0, 16).replace('T', ' ')} UTC)</span>`,
+  return [`${when(ms)} in southern Finland <span class="m">(day ${L.doy} of the year, ${new Date(ms).toISOString().slice(0, 16).replace('T', ' ')} UTC)</span>`,
     `<span class="m">sun ${sun.alt.toFixed(1)}° ${sun.alt >= 0 ? 'up' : 'below the horizon'}, azimuth ${sun.az.toFixed(0)}°. ${RV.simulated() ? `simulated clock${sp !== 1 ? `, running ×${sp}` : ''}: </span>${cmdLink('date --reset')}` : 'real time</span>'}`];
 }
 function weatherReport() {
-  const ms = RV.now(), e = RV.env(ms), w = e.w, L = w.L, sp = RV.forecast(ms), sun = e.sun;
-  const pct = Math.round(w.p * 100), span = s => `${hm(s[0])}–${hm(s[1])}`;
+  const ms = RV.now(), e = RV.env(ms), w = e.w, L = w.L, sun = e.sun;
+  const pct = Math.round(w.p * 100);
   const season = [3, 4].includes(L.month) ? '; spring is the driest time here' : [10, 11].includes(L.month) ? '; autumn is the wet season' : '';
   const kind = w.kind === 'snow' ? 'snow' : 'rain';
-  const lines = [`<span class="hd">Turku (where the lake is), ${when(ms)}</span>`,
-    `<span class="m">${w.kind === 'snow' ? 'snow' : 'showers'} on ${pct}% of days this time of year${season}.</span>`,
-    sp.length ? `today: ${kind} <span class="a">${sp.map(span).join(', ')}</span>` : 'today: dry all day.'];
   const forced = (RV.opt('rain') !== 'auto' && kind === 'rain') || (RV.opt('snow') !== 'auto' && kind === 'snow');
   const nowTxt = w.raining ? 'raining' : w.snowing ? 'snowing' : 'dry';
-  const curSpan = sp.find(s => ms >= s[0] && ms <= s[1]);
-  lines.push(`now: ${nowTxt}${curSpan && (w.raining || w.snowing) && !forced ? ` <span class="m">(since ${hm(curSpan[0])}, until about ${hm(curSpan[1])})</span>` : ''}${forced ? ' <span class="r">(forced by you: </span>' + cmdLink('weather auto') + '<span class="r">)</span>' : ''}`);
+  // a forecast is one sentence: when the rain (or snow) next starts, if it is dry, or ends, if it is not: to the nearest hour
+  let fc = '';
+  if (!forced) {
+    const ch = RV.rainChange(ms), verb = ch.wet ? 'end' : 'start';
+    if (!ch.at) fc = ch.wet ? `no end to the ${kind} in sight.` : `no ${kind} in sight for the next two days.`;
+    else {
+      const r = Math.round(ch.at / 36e5) * 36e5, days = Math.round((localMidnight(r) - localMidnight(ms)) / DAY);
+      fc = r <= ms ? `${kind} is expected to ${verb} within the hour.`
+        : `${kind} is expected to ${verb} ${days < 1 ? 'at' : days === 1 ? 'tomorrow at' : 'on ' + local(r).weekday + ' at'} <span class="a">${local(r).hour}</span>.`;   // (a plain hour: “at 8”, not “at 08:00”)
+    }
+  }
+  const lines = [`<span class="hd">Southern Finland (where the lake is), ${when(ms)}</span>`,
+    `<span class="m">${w.kind === 'snow' ? 'snow' : 'showers'} on ${pct}% of days this time of year${season}.</span>`,
+    `now: ${nowTxt}.${fc ? ' ' + fc : ''}${forced ? ' <span class="r">(forced by you: </span>' + cmdLink('weather auto') + '<span class="r">)</span>' : ''}`];
   if (w.sinceEnd < 10) lines.push(`<span class="a">the rain stopped at ${hm(w.endedAt || ms)}. rainbow minutes until ${hm((w.endedAt || ms) + 10 * 6e4)}.</span> <span class="m">${sun.alt > 42 ? 'but the sun is too high for a bow.' : sun.alt < -1 ? 'but there is no sunlight.' : 'look away from the sun.'}</span>`);
   lines.push(`<span class="m">chimney: ${e.smoke ? (e.smokeWhy === 'sauna' ? 'smoking: the sauna is on' : e.smokeWhy === 'cold' ? 'smoking: it is cold' : 'smoking') : 'quiet'}. window: ${{ clear: 'clear', steam: 'steamed up', frost: 'frosted' }[e.win]}.</span>`);
   return lines;
@@ -690,13 +690,13 @@ const MAN = {
   vlad: ['VLAD(1)                        Lakeside Manual                        VLAD(1)', '', '<span class="hd">NAME</span>', '    vlad - astrophysicist; X-ray polarimetry, X-ray binaries, relativistic plasma', '', '<span class="hd">SYNOPSIS</span>', '    vlad [--polarize] [--ray-trace] [--simulate-plasma] [--climb 6a] [--fish kuha]', '', '<span class="hd">DESCRIPTION</span>', '    Postdoctoral researcher at the Astronomical Institute of the Czech Academy of', '    Sciences (since October 2026), with Michal Dovčiak: the spectro-polarimetric', '    and timing properties of X-ray binaries and relativistic plasma physics.', '', '<span class="hd">HISTORY</span>', '    MSc Saint Petersburg · PhD Turku (IXPE) · CCA Flatiron · Helsinki (runko) ·', '    Newcastle &amp; Durham (X-MAPS) · ASU CAS.', '', '<span class="hd">BUGS</span>', '    Progressively loses the ability to play the piano and the guitar.', '    Favourite fish (kuha) differs from favourite fish to eat (salmon, tho).', '', '<span class="hd">SEE ALSO</span>', `    ${cmdLink('about')}, ${cmdLink('research')}, ${cmdLink('cv')}, ${cmdLink('contact')}, ${cmdLink('man hedgehog')}, ${cmdLink('man sauna')}`],
   hedgehog: ['<span class="hd">hedgehog</span> - lives on the shore; shy', '    hog on|off · hog come · hog sleep · hog wake · hog roll · hog speed &lt;0.25–4&gt; · hog status', '    Don\'t be afraid of him, but do not scare him either. Come too close and he rolls', '    into a ball; linger and he keeps an eye on you. He can be picked up.', '<span class="hd">NOTES</span>', '    Hedgehogs, as everyone knows, carry apples home on their backs.'],
   sauna: ['<span class="hd">sauna</span>(8) - heat the kiuas, throw löyly', '    On odd days of the year the cabin sauna is heated in the evening: smoke from', '    the chimney, steam on the window. `sauna` heats it now, for 90 lake-minutes.', '<span class="hd">CAVEATS</span>', '    Afterwards, the brave go to the avanto.'],
-  date: ['date                          show the (possibly simulated) time in Turku', 'date -s "2026-12-21 18:00"    set the clock (Turku time). Also: 18:00 · +3h · -2d · tomorrow ·', '                              24.12. · 24 joulukuuta · lokakuu · joulu · juhannus · vappu · kaamos', 'date dawn · sunrise · morning · noon · afternoon · evening · sunset · dusk · night · midnight', '                              (by the sun over Turku on the current day)', 'date --speed 600              time-lapse (×600); 1 = normal', 'date --reset                  back to the real now'],
+  date: ['date                          show the (possibly simulated) time at the lake', 'date -s "2026-12-21 18:00"    set the clock (Finnish time). Also: 18:00 · +3h · -2d · tomorrow ·', '                              24.12. · 24 joulukuuta · lokakuu · joulu · juhannus · vappu · kaamos', 'date dawn · sunrise · morning · noon · afternoon · evening · sunset · dusk · night · midnight', '                              (by the sun over the lake on the current day)', 'date --speed 600              time-lapse (×600); 1 = normal', 'date --reset                  back to the real now'],
   luck: ['luck             how lucky your throws are: the mean number of skips (a Poisson λ)', 'luck 5           a better arm. remembered in this browser; `reset` puts it back to ' + SKIP_LAMBDA],
   ls: ['ls [-a] [-l] [dir]   list the repository of this site (names are clickable)'],
   cd: ['cd &lt;dir&gt;    move around the repository', 'cd &lt;page&gt;   go to a page: ~ (home), research, about, merits, papers, talks, contact'],
   cat: ['cat &lt;file&gt;   print a text file from the repository. head [-n N] &lt;file&gt; prints the first lines.'],
   open: ['open &lt;file|page&gt;   open a PDF, image or page'],
-  weather: ['weather                  today\'s showers over the lake, to the minute', 'rain on|off|auto · snow on|off|auto · aurora on|off|auto', 'weather clear · weather auto', 'rainbow                  what a rainbow needs (and, when the sun is right, a shower)'],
+  weather: ['weather                  now, and when the rain next starts or ends (to the hour)', 'rain on|off|auto · snow on|off|auto · aurora on|off|auto', 'weather clear · weather auto', 'rainbow                  what a rainbow needs (and, when the sun is right, a shower)'],
   motion: ['motion reduced|full|auto   calm the animations (auto follows your system setting)'],
   window: ['window clear|steam|frost|auto   the cabin window (sauna steam, winter frost)'],
   smoke: ['smoke on|off|auto   the chimney (sauna evenings on odd days of the year; all winter)'],
@@ -819,7 +819,7 @@ function skyOut() {
   const now = RV.now(), s = sunPos(now), di = dayInfo(now), ph = moonPhase(now), mo = moonPos(now);
   const pn = ph.frac < 0.04 ? 'new moon' : ph.frac > 0.96 ? 'full moon' : (ph.waxing ? 'waxing ' : 'waning ') + (ph.frac < 0.45 ? 'crescent' : ph.frac < 0.55 ? 'half' : 'gibbous');
   const light = s.alt > 6 ? 'daylight' : s.alt > -0.833 ? 'low sun' : s.alt > -6 ? 'civil twilight' : s.alt > -12 ? 'the blue hour' : s.alt > -18 ? 'astronomical twilight' : 'proper night';
-  return [`<div class="tbl"><span>Turku</span><span>${when(now)} · ${light}</span><span>sun</span><span>${s.alt.toFixed(1)}° up, azimuth ${s.az.toFixed(0)}°</span><span>sunrise · sunset</span><span>${di.rise ? hm(di.rise) : '—'} · ${di.set ? hm(di.set) : '—'}</span><span>daylight</span><span>${Math.floor(di.len / 36e5)} h ${Math.round(di.len % 36e5 / 6e4)} min</span><span>moon</span><span>${pn}, ${(ph.frac * 100).toFixed(0)}% lit, ${mo.alt > 0 ? mo.alt.toFixed(0) + '° up' : 'below the horizon'}</span></div>`];
+  return [`<div class="tbl"><span>Southern Finland</span><span>${when(now)} · ${light}</span><span>sun</span><span>${s.alt.toFixed(1)}° up, azimuth ${s.az.toFixed(0)}°</span><span>sunrise · sunset</span><span>${di.rise ? hm(di.rise) : '—'} · ${di.set ? hm(di.set) : '—'}</span><span>daylight</span><span>${Math.floor(di.len / 36e5)} h ${Math.round(di.len % 36e5 / 6e4)} min</span><span>moon</span><span>${pn}, ${(ph.frac * 100).toFixed(0)}% lit, ${mo.alt > 0 ? mo.alt.toFixed(0) + '° up' : 'below the horizon'}</span></div>`];
 }
 const onoff = v => ({ on: 'on', off: 'off', auto: 'auto', yes: 'on', no: 'off', '1': 'on', '0': 'off', true: 'on', false: 'off', stop: 'off' }[String(v || '').toLowerCase()]);
 function dive() {
@@ -1050,7 +1050,7 @@ const C = {
     const was = RV.weather().raining; RV.setOpt('rain', v);
     if (v === 'off') RV.set({ rainOffAt: was ? RV.now() : 0 });
     const snowy = RV.snowSeason(local(RV.now()));
-    return [v === 'on' ? (snowy ? 'it\'s the snowy season, so it falls as snow.' : 'it\'s raining. (autumn in Turku, basically.)') : v === 'off' ? (was ? 'the rain stops. the next ten minutes are rainbow minutes, if the sun is low in the east or west.' : 'no rain.') : 'rain is back on its own schedule.'].concat(onHome() ? [] : homeOnly('the weather'));
+    return [v === 'on' ? (snowy ? 'it\'s the snowy season, so it falls as snow.' : 'it\'s raining. (autumn in southern Finland, basically.)') : v === 'off' ? (was ? 'the rain stops. the next ten minutes are rainbow minutes, if the sun is low in the east or west.' : 'no rain.') : 'rain is back on its own schedule.'].concat(onHome() ? [] : homeOnly('the weather'));
   },
   snow: a => { const v = onoff(a[0]); if (!v) return [`snow: <span class="a">${RV.opt('snow')}</span>`]; RV.setOpt('snow', v); return [v === 'on' ? 'lumisade! it falls in the snowy season (late Nov – Mar). in summer, try ' + cmdLink('date -s joulu') : v === 'off' ? 'no snow.' : 'snow follows the weather again.'].concat(onHome() ? [] : homeOnly('the snow')); },
   aurora: a => { const v = onoff(a[0]); if (!v) return [`aurora: <span class="a">${RV.opt('aurora')}</span>`, '<span class="m">northern lights show only when the sky is dark enough.</span>']; RV.setOpt('aurora', v); return [v === 'on' ? 'revontulet! they appear once the sun is 10° below the horizon. try ' + cmdLink('date -s 23:30') : v === 'off' ? 'no northern lights.' : 'the aurora follows the sky again.'].concat(onHome() ? [] : homeOnly('the northern lights')); },
@@ -1101,7 +1101,7 @@ const C = {
   moi: () => ['moi! <span class="m">(hello in Finnish. “moi moi” is goodbye. yes, really.)</span>'],
   fortune: () => { const f = SITE.fortunes, p = SITE.psst; if (Math.random() < 0.70) { const x = f[Math.floor(Math.random() * f.length)]; return (x[0] ? [`<b lang="${x[2] || 'fi'}">${esc(x[0])}</b>`] : []).concat([esc(x[1])]); } return [SITE.md(p[Math.floor(Math.random() * p.length)].text)]; },
   uptime: () => ['up since 2013 (astronomy), load average: polarized, turbulent, rotating.'],
-  ping: () => ['pong from a lake at 60.45° N: time=0.04 ms (it\'s all in your browser)'],
+  ping: () => ['pong from a lake at about 60° N: time=0.04 ms (it\'s all in your browser)'],
   uname: () => ['Lakeside 6.0-birch #1 SMP PREEMPT hedgehog-powered aarch64 GNU/Mökki'],
   lorem: () => ['ipsum, especially of the dolor variety, but sit amet.'],
   piano: () => ['♪ … (progressively losing this skill) …'],
