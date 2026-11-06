@@ -1148,7 +1148,7 @@ const TOS = (() => {
   //  XXII (Catch-22): fixed clauses, each one a catch of its own kind (Heller's, the fisherman's, the cricketer's, the programmer's, the salesman's).
   //  CDIV (404): a single clause, which is not found.
   //  DCLXVI (the number of the beast): exactly thirteen clauses, each with Maxwell's Demon in it (see demonClause).
-  const SPECIAL = { 22: 'The Catch (see Article XXII)', 42: 'Ultimate Questions', 69: 'Nice.', 99: 'Problems', 404: 'Not Found', 666: 'Demonology (Maxwell, 1867)' };   // (headings; the clauses of 42, 69 and 99 are as usual, those of 42 with every number made 42)
+  const SPECIAL = { 22: 'The Catch (see Article XXII)', 42: 'Life, the Universe, and Everything', 69: 'Nice.', 99: 'Problems', 404: 'Not Found', 666: 'Demonology (Maxwell, 1867)' };   // (headings; the clauses of 42, 69 and 99 are as usual, those of 42 with every number made 42)
   //  XIII is not: it is XIIB, as there is no thirteenth floor (and its clauses are 12B.1, 12B.2 …).
   //  III has fourteen clauses, the last of them (3.14) about π, in four parts.
   const PI314 = `This clause is irrational (and the irrationality measure is exactly 2) and, being irrational, states that:<ol><li>this Agreement neither terminates nor repeats;</li><li>the Fifty Dollars shall be paid on the fourteenth of March, at 1:59 in the afternoon, and shall be deemed to have been celebrated in the absence of cake; and</li><li>any Party wishing to find the end of this Agreement is invited to look for it in the digits of π, which are hereby declared to contain it somewhere, infinitely often.</li></ol>`;
