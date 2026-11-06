@@ -1150,18 +1150,8 @@ const TOS = (() => {
   //  DCLXVI (the number of the beast): exactly thirteen clauses, each with Maxwell's Demon in it (see demonClause).
   const SPECIAL = { 22: 'Catch-22 (see Article XXII)', 42: 'Ultimate Questions', 69: 'Nice.', 99: 'Problems', 404: 'Not Found', 666: 'Demonology (Maxwell, 1867)' };   // (headings; the clauses of 42, 69 and 99 are as usual, those of 42 with every number made 42)
   //  XIII is not: it is XIIB, as there is no thirteenth floor (and its clauses are 12B.1, 12B.2 …).
-  //  III has fourteen clauses, the last of them a joke about π.
-  const PI = [
-    `The ratio of the circumference of this clause to its diameter is approximately three (3), and the Parties agree not to measure it.`,
-    `The Parties agree that pies are round and cornbread is square; the Claimant may exchange the Fifty Dollars for a pie, but not for a circumference.`,
-    `For the purposes of this Agreement, π shall be taken to be twenty-two sevenths (22/7), as in Article XXII, and is hereby declared to be nearly right.`,
-    `Should the Claimant recite π to fifty (50) decimal places, the Fifty Dollars shall be paid in full; should the Claimant reach its last digit, the Claimant shall be deemed to have read this Agreement to the end.`,
-    `Any circle drawn in connection with this Agreement shall be deemed round to within one (1) hedgehog; any circle that is not shall be returned to the Claimant, to be squared.`,
-    `This clause shall be celebrated on the fourteenth of March, at 1:59 in the afternoon, and shall be deemed to have been celebrated in the absence of cake.`,
-    `The digits of π are hereby declared to contain this Agreement somewhere, infinitely often; the Claimant is invited to look for it, and shall not be deemed to have found it.`,
-    `This clause is irrational. It neither terminates nor repeats, and shall not be expressed as the ratio of two (2) clauses.`,
-    `All circles under this Agreement shall be measured in τ (2π), the Parties who prefer π being deemed to have gone only half way.`
-  ];
+  //  III has fourteen clauses, the last of them (3.14) about π, in four parts.
+  const PI314 = `This clause is irrational (and the irrationality measure is exactly 2) and, being irrational, states that:<ol><li>this Agreement neither terminates nor repeats;</li><li>the Fifty Dollars shall be paid on the fourteenth of March, at 1:59 in the afternoon, and shall be deemed to have been celebrated in the absence of cake; and</li><li>any Party wishing to find the end of this Agreement is invited to look for it in the digits of π, which are hereby declared to contain it somewhere, infinitely often.</li></ol>`;
   // XLII: every number in a clause is forty-two. The numbers made in the grammar already are (answer); this makes the rest 42:
   //   the paired ones (“fifty (50) dollars”), then any other figure (“Gödel, 1931”, “±100%”, “Clause 12.3”), leaving tags and entities alone.
   const to42 = t => {
@@ -1232,7 +1222,7 @@ const TOS = (() => {
       cl++; const no = `${artNo}.${cl}`; made.push(no);
       used = new Set(); let k = -1;
       if (!fixed && art !== 666) { do { k = Math.floor(Math.random() * S.length); } while (recent.includes(k)); recent = [k, ...recent].slice(0, 14); }   // no pattern twice within fourteen clauses
-      let txt = art === 1 ? DEFS[i] : fixed ? fixed[i] : art === 666 ? (i < DEVIL.length ? DEVIL[i] : demonClause()) : art === 3 && i === 13 ? PI[Math.floor(Math.random() * PI.length)] : pending.length ? pending.shift() : fill(S[k]());
+      let txt = art === 1 ? DEFS[i] : fixed ? fixed[i] : art === 666 ? (i < DEVIL.length ? DEVIL[i] : demonClause()) : art === 3 && i === 13 ? PI314 : pending.length ? pending.shift() : fill(S[k]());
       if (answer) txt = to42(txt);
       h += `<div class="cl" data-i="${made.length}"><span class="no">${no}</span>${txt}</div>`;   // (a div: some clauses carry lists, which a <p> can’t hold)
     }
