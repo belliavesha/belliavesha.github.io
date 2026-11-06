@@ -574,7 +574,7 @@ const say = (lines, cls) => (Array.isArray(lines) ? lines : [lines]).forEach(l =
 RV.say = (html, cls) => print(html, cls === 'o warn' || cls === 'warn' ? 'r' : cls || 'o');
 function clearLog() { log.innerHTML = ''; logH = []; store.sset('log', logH); }
 function restoreLog() { log.innerHTML = logH.map(([c, h]) => `<div class="l ${c}">${h}</div>`).join(''); }
-function greet() { print(`<span class="m">moi! this is a small shell for the site. try</span> ${cmdLink('help')}<span class="m">,</span> ${cmdLink('ls')} <span class="m">or</span> ${cmdLink('weather')}<span class="m">, some commands are unlisted, for safety. Tab completes, ↑ recalls. Press / anywhere on a page to get back to this line.</span>`, 'm'); }
+function greet() { print(`<span class="m">moi! this is a small shell for the site. try</span> ${cmdLink('help')}<span class="m">,</span> ${cmdLink('ls')} <span class="m">or</span> ${cmdLink('weather')}<span class="m">. Tab completes, ↑ recalls. Press / anywhere on a page to get back to this line.</span>`, 'm'); }
 const cmdLink = (c, label) => `<button class="e a" data-run="${esc(c)}">${esc(label || c)}</button>`;
 RV.cmdLink = cmdLink;
 const onHome = () => PAGE === 'home';
@@ -723,7 +723,7 @@ const HELP = () => {
     '<span class="hd">comfort</span>',
     `  motion reduced|full|auto · ${cmdLink('settings')} · ${cmdLink('reset')} · ${cmdLink('clear')} · ${cmdLink('history')} · man &lt;cmd&gt;`,
     ...(extraHelp.length ? ['<span class="hd">this page</span>', ...extraHelp.map(h => '  ' + h)] : []),
-    `<span class="m">and: ${cmdLink('whoami')}, ${cmdLink('man vlad')}, ${cmdLink('fortune')}, ${cmdLink('apod')}, sudo …, ${cmdLink('uname')}, ${cmdLink('ping')}. tab completes, ↑ recalls.</span>`
+    `<span class="m">and: ${cmdLink('whoami')}, ${cmdLink('man vlad')}, ${cmdLink('fortune')}, ${cmdLink('apod')}, sudo …, ${cmdLink('uname')}, ${cmdLink('ping')}, some commands are not listed, for safety. tab completes, ↑ recalls.</span>`
   ];
 };
 const extraHelp = [];
