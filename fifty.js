@@ -1143,7 +1143,7 @@ const TOS = (() => {
   function chunk() {                                      // one Article: a heading and 3–7 clauses
     art++; cl = 0;
     used = new Set(); let h = `<h4>Article ${ROMAN(art)}. ${art === 1 ? 'Definitions' : heading()}</h4>`;
-    if (art === 1009) h += `<div class="mix"><b>Congratulations!</b><span>You have read your way to Article MIX (not to be confused with a Mix of Articles). Such dedication is rarely seen. You have read so far that the numbers have turned Roman. Keep scrolling until you start seeing ghosts!</span></div>`;   // 1009 = MIX
+    if (art === 1009) h += `<div class="mix"><b>Congratulations!</b><span>You have read your way to Article MIX (not to be confused with a Mix of Articles). Such dedication is rarely seen. You have read so far that Roman numerals began to spell real words. Keep scrolling until you start seeing ghosts!</span></div>`;   // 1009 = MIX
     else if (art > 1 && Math.random() < TEASE_P) h += `<div class="tease">${tease()}</div>`;   // (now and then)
     const n = art === 1 ? DEFS.length : 3 + Math.floor(Math.random() * 8);
     for (let i = 0; i < n; i++) {
